@@ -1,0 +1,9 @@
+Package: systemsbio
+Type: Package
+Title: Streamlined analysis and integration of systems biology data
+Version: 0.1.0
+Author: Dr. Frank Ruehle
+Maintainer: <ruehle@uni-muenster.de>
+Description: Package provides tools for for analysis and integration of different kinds of omics-data (gene expression, methylation, SNPs)
+License: What license is it under?
+LazyData: TRUE
