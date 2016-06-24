@@ -132,7 +132,7 @@ No value returned. Output files are stored as side-effects.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Dr. Frank Ruehle
+Frank Ruehle
 }
 \note{
 %%  ~~further notes~~

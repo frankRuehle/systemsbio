@@ -99,7 +99,7 @@ List of enrichment-objects defined in 'DOSE'-packagage ('enrichResult'-object fo
 %% ~put references to the literature/web site here ~
 }
 \author{
-Dr. Frank Ruehle}
+Frank Ruehle}
 \note{
 %%  ~~further notes~~
 }

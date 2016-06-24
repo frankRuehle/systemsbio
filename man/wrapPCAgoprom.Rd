@@ -66,7 +66,7 @@ Several plots and files are generated as side-effects and stored are in the desi
 %% ~put references to the literature/web site here ~
 }
 \author{
-Dr. Frank Ruehle}
+Frank Ruehle}
 \note{
 %%  ~~further notes~~
 }

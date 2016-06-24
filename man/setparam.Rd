@@ -137,7 +137,7 @@ List with parameters given or derived from input arguments. A log-file showing t
 %% ~put references to the literature/web site here ~
 }
 \author{
-Dr. Frank Ruehle}
+Frank Ruehle}
 \note{
 %%  ~~further notes~~
 }

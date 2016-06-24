@@ -58,7 +58,7 @@ dataframe filtered for desired criteria and sorted for filtercat1.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Dr. Frank Ruehle}
+Frank Ruehle}
 \note{
 %%  ~~further notes~~
 }
