@@ -3,6 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Annotate gene symbols and EntrezIDs using an organism-specific annotation package.
+temp
 }
 \description{
 If either gene symbols or EntrezIDs are missing in 'data', this annotation is added using the corresponding annotation package of the organism specified in 'org'.
