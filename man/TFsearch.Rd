@@ -9,11 +9,11 @@ Function takes input genes, optionally looks up all promotor sequences by (uniqu
   }
 \usage{
 TFsearch(sequences, newheader = NULL, annoColumn = NULL, name.organism = "hsapiens",
-  projectfolder = pipepar[["outdir"]], projectname = "",
+  projectfolder = "GEX/TFBS", projectname = "",
   applyFilter = FALSE, filtercat1 = "adj.P.Val", filtercat1.decreasing = FALSE,
-  filtercat1.function = abs, filtercat1.threshold = pipepar[["threshold_p"]],
+  filtercat1.function = abs, filtercat1.threshold = 0.05,
   filtercat2 = "logFC", filtercat2.decreasing = TRUE,
-  filtercat2.function = abs, filtercat2.threshold = log2(pipepar[["ThresholdFC"]]),
+  filtercat2.function = abs, filtercat2.threshold = log2(1.5),
   PromLookup = TRUE, Entrez.col = "ENTREZID", PromSeqUpstreamTSS = 2000, PromSeqDownstreamTSS = 200,
   SearchSelMotifs = NULL, motif.min.score = 0.9)
 }

@@ -8,17 +8,17 @@ TFsearch <- function(sequences,
                      newheader = NULL, # c("chr", "start", "stop", "customname", "custom2", "strand"), 
                      annoColumn = NULL, # e.g. "customname" 
                      name.organism="hsapiens", 
-                     projectfolder=pipepar[["outdir"]],
+                     projectfolder= "GEX/TFBS",
                      projectname="",
                      applyFilter = FALSE,
                         filtercat1 = "adj.P.Val",
                         filtercat1.decreasing = FALSE,
                         filtercat1.function = abs,
-                        filtercat1.threshold=pipepar[["threshold_p"]],
+                        filtercat1.threshold= 0.05,
                         filtercat2 = "logFC",
                         filtercat2.decreasing = TRUE,
                         filtercat2.function = abs,
-                        filtercat2.threshold= log2(pipepar[["ThresholdFC"]]),
+                        filtercat2.threshold= log2(1.5),
                      PromLookup = TRUE,
                        Entrez.col = "ENTREZID", 
                        PromSeqUpstreamTSS = 2000,
@@ -28,6 +28,7 @@ TFsearch <- function(sequences,
                     ) {
 
   
+
   ## Arguments
   # sequences: dataframe (or character with file path) with column containing Entrez IDs or sequence coordinates.
   #            Required columns as defined in 'PromLookup' (see below)
@@ -68,12 +69,12 @@ TFsearch <- function(sequences,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
   
   
   # create output directory
-  if (!file.exists(file.path(projectfolder, "TFBS"))) {dir.create(file.path(projectfolder, "TFBS"), recursive=T)}
+  if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T)}
   
   # check organism
   if (!grepl("human|sapiens", name.organism, ignore.case = TRUE)) {stop("TFsearch for human data only")} 
@@ -258,13 +259,11 @@ report = groupReport(res, top=0.05)  # top: what proportion of top motifs should
 
 
 
-cat("\nWriting PWMEnrich report to:\n", file.path(projectfolder, "TFBS", paste0(projectname, "_PWMEnrich_report.txt")), "\n")
+cat("\nWriting PWMEnrich report to:\n", file.path(projectfolder, paste0(projectname, "_PWMEnrich_report.txt")), "\n")
 reportdf <- as.data.frame(report)
-# names(reportdf)[names(reportdf)=="p.value"] <- "avg.log2.p" 
-# reportdf$p.value <- 2^reportdf$avg.log2.p  # das macht keinen Sinn! 
-write.table(reportdf, file=file.path(projectfolder, "TFBS", paste0(projectname, "_PWMEnrich_report.txt")), sep="\t", quote=F, row.names=F)
+write.table(reportdf, file=file.path(projectfolder, paste0(projectname, "_PWMEnrich_report.txt")), sep="\t", quote=F, row.names=F)
 
-pdf(file.path(projectfolder, "TFBS", paste0(projectname, "_PWMEnrich_top.pdf")), paper="a4") 
+pdf(file.path(projectfolder, paste0(projectname, "_PWMEnrich_top.pdf")), paper="a4") 
 plot(report[1:15], fontsize=7, id.fontsize=5)
 dev.off()
 
@@ -275,7 +274,7 @@ dev.off()
 
 ######## Optional Search for preselected motivs given in 'SearchSelMotivs'
 if(!is.null(SearchSelMotifs)) {
-  if (!file.exists(file.path(projectfolder, "TFBS", "Search_Selected_Motifs"))) {dir.create(file.path(projectfolder, "TFBS", "Search_Selected_Motifs"))}
+  if (!file.exists(file.path(projectfolder, "Search_Selected_Motifs"))) {dir.create(file.path(projectfolder, "Search_Selected_Motifs"))}
   cat("\nSearch for selected motivs in input sequences", SearchSelMotifs)
   
   # check if motifs of SearchSelMotifs exist in databse
@@ -287,7 +286,7 @@ if(!is.null(SearchSelMotifs)) {
   # non-existing motifs removed  
   SearchSelMotifs <- SearchSelMotifs[motifexists]
   
-  cat("\nPlotting sequence logos and writing count tables to:\n",file.path(projectfolder, "TFBS", "Search_Selected_Motifs"), "\n")
+  cat("\nPlotting sequence logos and writing count tables to:\n",file.path(projectfolder, "Search_Selected_Motifs"), "\n")
   
   # initialise parameter for motif loop
     listpfm <- list()
@@ -301,7 +300,7 @@ if(!is.null(SearchSelMotifs)) {
     listpcm[[motif]] <-  round(100 * listpfm[[motif]]@mat)  
   
       # plot sequence logo
-      tiff(file.path(projectfolder, "TFBS", "Search_Selected_Motifs", paste0(motif, "_SequenceLogo.tiff")), 
+      tiff(file.path(projectfolder, "Search_Selected_Motifs", paste0(motif, "_SequenceLogo.tiff")), 
            width = 7016 , height = 4960, res=600, compression = "lzw")
       seqLogo(listpfm[[motif]]@mat)
       dev.off()  
@@ -322,7 +321,7 @@ if(!is.null(SearchSelMotifs)) {
   
   tbl.gata  <- data.frame(ENTREZ=entrezIDs, mcols(seqs2search)[metacolumns], countmotif[,,drop=F])
   write.table(tbl.gata, row.names=F, quote=F, sep="\t", 
-              file=file.path(projectfolder, "TFBS", "Search_Selected_Motifs", paste0("Motifcount_", projectname, ".txt")))
+              file=file.path(projectfolder, "Search_Selected_Motifs", paste0("Motifcount_", projectname, ".txt")))
   
   } # end of if(!is.null(SearchSelMotifs))
   

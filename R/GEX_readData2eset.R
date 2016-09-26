@@ -8,7 +8,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
                           sampleColumn = "Sample_Name", 
                           groupColumn  = "Sample_Group",  
                           experimentData = MIAME(),
-                          exprchip=pipepar$ArrayAnnotation.GEX,
+                          arrayAnnotation= "Humanv4",
                           transform = log2 
                           ) {
 
@@ -24,7 +24,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   # sampleColumn: character with name of sample column in 'phenoData'.
   # groupColumn: character with name of group column in 'phenoData'.
   # experimentData: MIAME object with optional experiment description.
-  # exprchip: character string specifying chip annotation package (e.g. "Humanv4"). character() if not available.
+  # arrayAnnotation: character string specifying array annotation package (e.g. "Humanv4"). character() if not available.
   # transform: optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
   #            if NULL, no data transformation is performed.
   
@@ -37,7 +37,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   # Rownames of 'exprsData' must match with rownames of 'featureData' (if given). Column names of 'exprsData'
   # must match with rownames of 'phenoData.' Characters "/" and "-" in sample names or group names are 
   # replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
-  # added using the corresponding annotation package (species name is derived from 'exprchip'). The (optional)
+  # added using the corresponding annotation package (species name is derived from 'arrayAnnotation'). The (optional)
   # Function given in 'transform' is used to transform the expression data.
   
 
@@ -46,7 +46,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
   
   
@@ -98,11 +98,11 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   featureData <- featureData[match(rownames(featureData), rownames(exprsData)),]
 
   # annotate with Gene symbols or ENTREZIDs with annotation package.
-  if(length(exprchip)>0) {  # define organism from exprchip (if given)
+  if(length(arrayAnnotation)>0) {  # define organism from arrayAnnotation (if given)
     organism <- NULL 
-      if(grepl("rat", exprchip, ignore.case=T))   {organism <- "rat"}
-      if(grepl("mouse", exprchip, ignore.case=T)) {organism <- "mouse"}
-      if(grepl("human", exprchip, ignore.case=T)) {organism <- "human"}
+      if(grepl("rat", arrayAnnotation, ignore.case=T))   {organism <- "rat"}
+      if(grepl("mouse", arrayAnnotation, ignore.case=T)) {organism <- "mouse"}
+      if(grepl("human", arrayAnnotation, ignore.case=T)) {organism <- "human"}
         
     Symbol.column.name <- grep("SYMBOL", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
       if(is.na(Symbol.column.name)) {Symbol.column.name <- NULL} # Null if no grep result
@@ -140,7 +140,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   eset <- ExpressionSet(assayData = exprsData,
                             phenoData = AnnotatedDataFrame(phenoData), 
                             experimentData = experimentData,
-                            annotation = exprchip)
+                            annotation = arrayAnnotation)
   
   if (length(featureData)>0) {
     fData(eset) <- featureData # add feature data to eset

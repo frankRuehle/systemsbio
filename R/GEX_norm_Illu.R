@@ -28,7 +28,7 @@
   # ExpressionSet object
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank RÃ¼hle 
   
   
     # load required libraries

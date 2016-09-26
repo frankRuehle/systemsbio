@@ -11,7 +11,7 @@ Wrapper function which uses a genelist and optionally background gene list as in
 DavidEnrich(genes, newheader = NULL,
   backgroundlist = NULL, newheaderBackground = NULL,
   davidAccount = NULL,
-  projectfolder = pipepar[["outdir"]], projectname = "",
+  projectfolder = "GEX/DAVID_Enrichment", projectname = "",
   maxDavid = 100, davidCat = c("GOTERM_BP_ALL", "GOTERM_MF_ALL", "GOTERM_CC_ALL", "KEGG_PATHWAY", "BIOCARTA", "UCSC_TFBS"),
   id.type = "ENTREZ_GENE_ID", id.column = "ENTREZID",
   sortcolumn = "adj.P.Val", sortdecreasing = FALSE, sortcolumn.threshold = 0.05,

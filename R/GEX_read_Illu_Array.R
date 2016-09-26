@@ -10,19 +10,19 @@ read_Illu_Array <- function(
       sampleSheet,
       ProbeID = "PROBE_ID", 
       skip = 0, 
-      controlID="ProbeID", 
+      controlID= "ProbeID", 
       qc.skip = 0, 
       qc.columns = list(exprs = "AVG_Signal", Detection = "Detection Pval"),
-      sampleColumn = pipepar$sampleGEX, 
-      groupColumn  = pipepar$groupGEX,  
-      exprchip=pipepar[["exprchip"]],
-      org=pipepar[["org"]],
+      sampleColumn = "Sample_Name", 
+      groupColumn  = "Sample_Group",  
+      exprchip= "HumanHT-12 v4",
+      org= "human",
       covarfile = NULL, 
       covarsampleID = "ID",   
       matchvar = NULL, 
-      method_norm ="none", 
-      transform="log2",  
-      fields2Add=NULL 
+      method_norm = "none", 
+      transform= "log2",  
+      fields2Add= NULL 
       ) {
 
 
@@ -69,7 +69,7 @@ read_Illu_Array <- function(
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
   
   

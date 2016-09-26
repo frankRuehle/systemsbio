@@ -10,13 +10,13 @@ Function uses genelist and optionally background gene list as input to perform e
 \usage{
 clusterprof(genes, newheader = NULL,
   backgroundlist = NULL, newheaderBackground = NULL,
-  projectfolder = pipepar[["outdirGEX"]], projectname = "",
+  projectfolder = "GEX/clusterProfiler", projectname = "",
   enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
   maxInputGenes = 100,
   id.type = "SYMBOL", id.column = "SYMBOL",
   sortcolumn = "adj.P.Val", sortdecreasing = FALSE,
   sortcolumn.threshold = 0.05, fun.transf.incr.vales = function(x) {-log10(x)},
-  FCcolumn = "logFC", threshold_FC = log2(pipepar[["threshold_FC"]]),
+  FCcolumn = "logFC", threshold_FC = log2(1.5),
   org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
   enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10)
 }

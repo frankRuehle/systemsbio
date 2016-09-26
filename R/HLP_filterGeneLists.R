@@ -6,11 +6,11 @@ filterGeneLists <- function(genes,
                             filtercat1 = "adj.P.Val",
                             filtercat1.decreasing = FALSE,
                             filtercat1.function = abs,
-                            filtercat1.threshold = pipepar$threshold_p,
+                            filtercat1.threshold = 0.05,
                             filtercat2 = "logFC",
                             filtercat2.decreasing = TRUE,
                             filtercat2.function = abs,
-                            filtercat2.threshold = log2(pipepar$ThresholdFC)) {
+                            filtercat2.threshold = log2(1.5)) {
   
   # Filters dataframe or character directing to dataframe for up to two categories (e.g. p-value and foldchange).
   # Columns for filtercriteria must be included.

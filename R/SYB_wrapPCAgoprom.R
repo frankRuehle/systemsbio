@@ -9,7 +9,7 @@ wrapPCAgoprom <- function(expca,
                           groupby ="Sample_Group", 
                           sample.name.column = "Sample_Name",
                           samples2exclude = NULL,
-                          projectfolder=file.path(pipepar[["outdir"]], "GEX", "pcaGoPromoter"), 
+                          projectfolder= file.path("GEX", "pcaGoPromoter"), 
                           projectname=NULL, 
                           inputType="geneSymbol", 
                           org = "Hs", 
@@ -60,7 +60,7 @@ wrapPCAgoprom <- function(expca,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
   
   

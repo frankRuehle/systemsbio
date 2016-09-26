@@ -4,21 +4,21 @@
 
 ## Usage 
 diffLimma <- function(GEXMTSet, 
-                      matchvar=NULL, 
-                      comparisons = pipepar[["groupcomparisonsGEX"]],
-                      p.value.threshold = pipepar$threshold_p, 
+                      comparisons,
+                      p.value.threshold = 0.05, 
                       adjust.method="BH", 
-                      FC.threshold = log2(pipepar$threshold_FC),
+                      FC.threshold = log2(1.5),
                       
-                      projectfolder = file.path(pipepar[["outdir"]], "GEX"),
+                      projectfolder = file.path("GEX/Diff_limma"),
                       projectname = "", 
                       
+                      matchvar=NULL, 
                       Symbol.column = "SYMBOL",
-                      sampleColumn = pipepar$sampleGEX,   
-                      groupColumn=pipepar$groupGEX, 
+                      sampleColumn = "Sample_Name",   
+                      groupColumn= "Sample_Group", 
                       useWeights=TRUE, 
                       geneAnno2keep=NULL, 
-                      venn_comparisons=pipepar[["groupcomparsionsGEX"]], 
+                      venn_comparisons= NULL, 
 
                       # Heatmap parameter:
                       maxHM=50, 
@@ -30,10 +30,10 @@ diffLimma <- function(GEXMTSet,
                       FC.heatmap.geneselection = c("allprobes", "intersect", "union")
                       ) {
 
+
                         
   # ## Arguments
   # GEXMTSet: ExpressionSet or MethylSet
-  # matchvar: (character) if paired design, name of column to be used to group samples. NULL for unpaired design.
   # comparisons: character vector with group comparisons in format "groupA-groupB" or 
   #              nested comparisons in format "(groupA-groupB)-(groupC-groupD)".
   # p.value.threshold: numeric p-value threshold 
@@ -43,6 +43,7 @@ diffLimma <- function(GEXMTSet,
   # projectfolder: character with directory for output files (will be generated if not exisiting).
   # projectname: optional character prefix for output file names.
   # 
+  # matchvar: (character) if paired design, name of column to be used to group samples. NULL for unpaired design.
   # Symbol.column: character with column name of Gene Symbols in 'DEgenes.unfilt' and 'GEXMTSet' or NULL.
   # sampleColumn: character with column name of Sample names in pData(GEXMTSet)
   # groupColumn: character with column name of group names in pData(GEXMTSet). Group names must match comparisons!
@@ -90,7 +91,7 @@ diffLimma <- function(GEXMTSet,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank RÃ¼hle 
   
   
   
@@ -102,7 +103,6 @@ diffLimma <- function(GEXMTSet,
   
   # Create output directories if not yet existing 
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
-  if (!file.exists(file.path(projectfolder, "Diff_limma"))) {dir.create(file.path(projectfolder, "Diff_limma")) }
   if (!file.exists(file.path(projectfolder, "Diff_limma_unfiltered"))) {dir.create(file.path(projectfolder, "Diff_limma_unfiltered")) }
   if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
   
@@ -189,48 +189,103 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
 
 
 # Venn-Diagramm for group comparisons:
-  if(!is.list(venn_comparisons)) {venn_comparisons <- list(venn_comparisons)}
-  for(v in 1:length(venn_comparisons)) {
-    
-    if(is.null(names(venn_comparisons)[v])) {names(venn_comparisons)[v] <- paste0("Vennset",v)}
-    filename.Venn <- file.path(projectfolder, "Diff_limma", paste0("Venn_Diagram_", projectname, names(venn_comparisons)[v], ".pdf"))
-    cat("\nWrite Venn diagramm to", filename.Venn, "\n")
-
-   resultDiffGenes <- decideTests(fit, p.value=p.value.threshold, lfc=FC.threshold, adjust.method=adjust.method) # default adjust.method="BH"
-  if (length(venn_comparisons[[v]]) <= 5) {
-    pdf(filename.Venn, width = 14, height = 7) 
-    vennDiagram(resultDiffGenes[,colnames(resultDiffGenes) %in% venn_comparisons[[v]]], names=NULL)  #optional: select desired group comparisons for Venn diagramm (max: 5)!
-    dev.off()
-    }
-} # end v-loop
-
+  if(!is.null(venn_comparisons)) {
+    if(!is.list(venn_comparisons)) {venn_comparisons <- list(venn_comparisons)}
+    for(v in 1:length(venn_comparisons)) {
+      
+      if(is.null(names(venn_comparisons)[v])) {names(venn_comparisons)[v] <- paste0("Vennset",v)}
+      filename.Venn <- file.path(projectfolder, paste0("Venn_Diagram_", projectname, names(venn_comparisons)[v], ".pdf"))
+      cat("\nWrite Venn diagramm to", filename.Venn, "\n")
+  
+     resultDiffGenes <- decideTests(fit, p.value=p.value.threshold, lfc=FC.threshold, adjust.method=adjust.method) # default adjust.method="BH"
+    if (length(venn_comparisons[[v]]) <= 5) {
+      pdf(filename.Venn, width = 14, height = 7) 
+      vennDiagram(resultDiffGenes[,colnames(resultDiffGenes) %in% venn_comparisons[[v]]], names=NULL)  #optional: select desired group comparisons for Venn diagramm (max: 5)!
+      dev.off()
+      }
+  } # end v-loop
+}
   
 # Diff expressed genes caculated by F-Test via all groups (contr.fit$F.p.value)
 # topTable with coef=NULL is the same as topTableF, unless the fitted model fit has only one column.
 # DiffAllGroups_Ftest contains entries with at least one absolute log-fold-changes greater than lfc. 
 # Filtering for F-Test p-values is done when writing table. 
 # Columns with names of group comparisons represent log foldchanges
-DiffAllGroups_Ftest <- topTable(fit, coef=NULL, confint=TRUE, p.value=1, lfc=FC.threshold, 
-                                adjust.method=adjust.method, number=Inf, 
-                                genelist=featureGEXMTSet[,names(featureGEXMTSet) %in% geneAnno2keep, drop=F])
-if(Exp=="MT") {names(DiffAllGroups_Ftest)[names(DiffAllGroups_Ftest)=="AveExpr"] <- "AveBeta"}
+  DiffAllGroups_Ftest <- topTable(fit, coef=NULL, confint=TRUE, p.value=1, lfc=FC.threshold, 
+                                  adjust.method=adjust.method, number=Inf, 
+                                  genelist=featureGEXMTSet[,names(featureGEXMTSet) %in% geneAnno2keep, drop=F])
+  if(Exp=="MT") {names(DiffAllGroups_Ftest)[names(DiffAllGroups_Ftest)=="AveExpr"] <- "AveBeta"}
+  
+  DiffAllGroups_Ftest <- data.frame(PROBE_ID=rownames(DiffAllGroups_Ftest), DiffAllGroups_Ftest)
+  # in columns names of comparisons hyphend are replaced by dots.
+  # This is reversed here and "logFC_" added to color names of comparisons
+  ftest.columns <- sub("\\.", "-", names(DiffAllGroups_Ftest))
+  columns2replace <- ftest.columns %in% comparisons
+  ftest.columns <- paste0("logFC_", ftest.columns)
+  names(DiffAllGroups_Ftest)[columns2replace] <- ftest.columns[columns2replace]
+  
+  
+  cat("\nWrite F-Test result to", file.path(projectfolder, paste0(projectname, "all_Groups_Ftest.txt")), "\n")
+  DiffAllGroups_Ftest.sign <- DiffAllGroups_Ftest[DiffAllGroups_Ftest$adj.P.Val<p.value.threshold,]
+  write.table(DiffAllGroups_Ftest.sign, 
+              file= file.path(projectfolder, paste0(projectname, "all_Groups_Ftest.txt")), sep="\t", quote=F, row.names=F)
+  
+  
+  
+      ### Heatmap with all samples. Genes selected by F-Test
+      cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), "\n")  
+      
+      if (nrow(DiffAllGroups_Ftest.sign) > maxHM) {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign[1:maxHM,]} else {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign}
+      plotmatrix <- dataGEXMTSet[rownames(dataGEXMTSet) %in% rownames(DEgenesHM.Ftest), ,drop=F]
+      
+      # If Symbols are available, rows are annotated with symbols instead of probe IDs   
+      indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
+      
+      if(!is.null(Symbol.column)) {
+        rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
+                                       as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+      }
+      
+      pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), width = 10, height = 14) 
+      heatmap.2(plotmatrix, main=paste0(projectname, " all_Samples_Ftest"),  
+                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
+                cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
+                key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
+      dev.off()
 
-DiffAllGroups_Ftest <- data.frame(PROBE_ID=rownames(DiffAllGroups_Ftest), DiffAllGroups_Ftest)
-# in columns names of comparisons hyphend are replaced by dots.
-# This in reversed here and "logFC_" added to color names of comparisons
-ftest.columns <- sub("\\.", "-", names(DiffAllGroups_Ftest))
-columns2replace <- ftest.columns %in% comparisons
-ftest.columns <- paste0("logFC_", ftest.columns)
-names(DiffAllGroups_Ftest)[columns2replace] <- ftest.columns[columns2replace]
 
-cat("\nWrite F-Test result to", file.path(projectfolder, "Diff_limma", paste0(projectname, "all_Groups_Ftest.txt")), "\n")
-write.table(DiffAllGroups_Ftest[DiffAllGroups_Ftest$adj.P.Val<p.value.threshold,], 
-            file= file.path(projectfolder, "Diff_limma", paste0(projectname, "all_Groups_Ftest.txt")), sep="\t", quote=F, row.names=F)
+## Diff expressed genes caculated by ANOVA for all groups 
+      
+      aov.result <- apply(dataGEXMTSet, 1, function(x) {
+        unlist(summary(aov(x ~ phenoGEXMTSet[,groupColumn]))[[1]][1, "Pr(>F)"])})  # ANOVA for each gene results in p-value vector
+      
+      aov.result.sign <- aov.result[aov.result< p.value.threshold]  # filtering and sorting ANOVA result
+      aov.result.sign <- sort(aov.result.sign)
+      
+      cat("\nWrite ANOVA result to", file.path(projectfolder, paste0(projectname, "all_Groups_ANOVA.txt")), "\n")
+      write.table(as.data.frame(aov.result.sign), row.names=T, col.names = "Pr(>F)",
+                  file= file.path(projectfolder, paste0(projectname, "all_Groups_ANOVA.txt")), sep="\t", quote=F)
+      
+      
+      
+      ### Heatmap with all samples. Genes selected by ANOVA
+      cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), "\n")  
+      maxgenesANOVA <- 1000
+      if (length(aov.result.sign) > maxgenesANOVA) {aov.result.sign <- aov.result.sign[1:maxgenesANOVA]} 
+      plotmatrix.aov <- dataGEXMTSet[rownames(dataGEXMTSet) %in% names(aov.result.sign), ,drop=F]
 
-
-
-
-
+      pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), width = 10, height = 14) 
+      heatmap.2(plotmatrix.aov, main=paste0(projectname, " all_Samples_ANOVA"),  
+                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", labRow=F, 
+                cexCol=HMcexCol, trace="none", density.info="histogram",  
+                key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
+      dev.off()  
+      
+      
+      
+   
+      
+         
 
 ######### differential group comparisons
 DEgenes.unfilt <- list()
@@ -272,11 +327,11 @@ for (i in 1:length(comparisons)) {
               file= file.path(projectfolder, paste0("Diff_limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")))
   
   write.table(helptable.filt, sep="\t", quote=F, row.names=F,
-              file= file.path(projectfolder, "Diff_limma", paste0(projectname, comparisons[i], ".txt")))
+              file= file.path(projectfolder, paste0(projectname, comparisons[i], ".txt")))
   
   cat(paste("\n", nrow(helptable.filt),"differentially regulated elements for comparison:",comparisons[i]))
   cat(paste("\nWrite gene tables to", file.path(projectfolder, paste0("Diff_limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")),
-            "and", file.path(projectfolder, "Diff_limma", paste0(projectname, comparisons[i], ".txt"))))
+            "and", file.path(projectfolder, paste0(projectname, comparisons[i], ".txt"))))
   
   
   # add adjusted p-value to 'DiffAllGroups_Ftest' for later foldchange heatmaps

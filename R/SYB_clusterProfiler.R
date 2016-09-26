@@ -8,7 +8,7 @@
                            newheader = NULL, 
                            backgroundlist=NULL, 
                            newheaderBackground = NULL,
-                           projectfolder=pipepar[["outdirGEX"]],
+                           projectfolder= "GEX/clusterProfiler",
                            projectname="", 
                            enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
                            maxInputGenes = 100,  
@@ -19,7 +19,7 @@
                            sortcolumn.threshold = 0.05,
                            fun.transf.incr.vales = function(x) {-log10(x)},
                            FCcolumn = "logFC",
-                           threshold_FC= log2(pipepar[["threshold_FC"]]),
+                           threshold_FC= log2(1.5),
                            org = "human",
                            pAdjustMethod = "BH", 
                            enrich.p.valueCutoff = 0.05, 
@@ -97,13 +97,13 @@
    
  
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
     
     
   
     
   ## create output directory
-  if (!file.exists(file.path(projectfolder, "clusterProfiler"))) {dir.create(file.path(projectfolder, "clusterProfiler"), recursive=T)} 
+  if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T)} 
     
   
   # define annotation database for organism
@@ -426,7 +426,7 @@ if ("Reactome" %in% enrichmentCat) {
 
 
 # Creating result tables and plot 
-cat(paste("\nCreating result tables and plots in", file.path(projectfolder, "clusterProfiler"), "\n"))
+cat(paste("\nCreating result tables and plots in", file.path(projectfolder), "\n"))
 
 if(!is.null(projectname)) { # add underline to projectname if given
   if(projectname!="") {
@@ -442,16 +442,16 @@ for(usedcat in names(enrichresult)) {
     cat(paste("\nProcessing", usedcat))
     # Result table
     write.table(summary(enrichresult[[usedcat]]), quote=F, row.names=F, sep="\t",
-                file=file.path(projectfolder, "clusterProfiler", paste0(projectname, usedcat, "_resulttable.txt")))
+                file=file.path(projectfolder, paste0(projectname, usedcat, "_resulttable.txt")))
   
     # Enrichment map
-    tiff(file.path(projectfolder, "clusterProfiler", paste0(projectname, usedcat, "_enrichmentMap.tiff")), 
+    tiff(file.path(projectfolder, paste0(projectname, usedcat, "_enrichmentMap.tiff")), 
          width = 7016 , height = 4960, res=600, compression = "lzw")
     try(enrichMap(enrichresult[[usedcat]], n = 30), silent=T)
     dev.off()
     
     # cnet plot (Remark: legend will be 'Fold change' even if other quantitative data are included)
-    tiff(file.path(projectfolder, "clusterProfiler", paste0(projectname, usedcat, "_cnetPlot.tiff")), 
+    tiff(file.path(projectfolder, paste0(projectname, usedcat, "_cnetPlot.tiff")), 
          width = 7016 , height = 4960, res=600, compression = "lzw")
     try(cnetplot(enrichresult[[usedcat]], showCategory = 5, categorySize="pvalue", 
              foldChange= if(!is.null(FCcolumn)) {filtgenes[,FCcolumn]} else {filtgenes[,sortcolumn]}), silent=T)

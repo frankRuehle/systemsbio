@@ -10,10 +10,10 @@ Filters dataframe or character directing to dataframe for up to two categories (
 \usage{
 filterGeneLists(genes, newheader = NULL,
   filtercat1 = "adj.P.Val", filtercat1.decreasing = FALSE,
-  filtercat1.function = abs, filtercat1.threshold = pipepar$threshold_p,
+  filtercat1.function = abs, filtercat1.threshold = 0.05,
   filtercat2 = "logFC", filtercat2.decreasing = TRUE,
   filtercat2.function = abs,
-  filtercat2.threshold = log2(pipepar$ThresholdFC))
+  filtercat2.threshold = log2(1.5))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -5,12 +5,12 @@
 Wrapper for PCA routines from 'pcaGoPromoter'-package.
 }
 \description{
-2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet (expca). Tables of PC-associated probes and transcription factors and GO terms enriched in top associated probes are generated for any number of principal components in positive and negative orientation. All output data is stored in supplied 'projectfolder'.
+2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet (expca). Tables of PC-associated probes and transcription factors and GO terms enriched in top associated probes are generated for any number of principal components in positive and negative orientation. All output data is stored in 'projectfolder'.
   }
 \usage{
 wrapPCAgoprom(expca, groupsoi = NULL,
   groupby = "Sample_Group", sample.name.column = "Sample_Name", samples2exclude = NULL,
-  projectfolder = file.path(pipepar[["outdir"]], "GEX", "pcaGoPromoter"), projectname = NULL,
+  projectfolder = file.path("GEX", "pcaGoPromoter"), projectname = NULL,
   inputType = "geneSymbol", org = "Hs",
   PCs4table = 2, PCs2plot = c(1, 2, 3), probes2enrich = 0.025)
 }

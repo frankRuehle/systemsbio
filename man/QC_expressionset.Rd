@@ -8,8 +8,8 @@ Quality Control procedures for ExpressionSet data
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-QC_expressionset(eset, projectfolder = pipepar[["outdirGEX"]], projectname = "",
-  groupColumn = pipepar[["groupGEX"]], phDendro = groupColumn,
+QC_expressionset(eset, projectfolder = "GEX/QC", projectname = "",
+  groupColumn = "Sample_Group", phDendro = "Sample_Group",
   flashClustMethod = "average", cex.dendroLabels = 0.6, thresholdZ.k = -5)
 }
 %- maybe also 'usage' for other objects documented here.

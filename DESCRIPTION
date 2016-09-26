@@ -9,4 +9,8 @@ License: GPL-3
 LazyData: TRUE
 URL: https://github.com/frankRuehle/systemsbio.git
 Depends: R (>= 3.0.0)
-Imports: gplots, ggplot2, rJava, VennDiagram, flashClust
+Imports: gplots, ggplot2, rJava, VennDiagram, flashClust,
+    limma
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

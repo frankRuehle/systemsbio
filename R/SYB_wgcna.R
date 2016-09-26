@@ -4,7 +4,7 @@
 
 ## Usage 
 wgcna <- function(GEXMTSet, 
-                  projectfolder=file.path(pipepar[["outdir"]], "GEX"),
+                  projectfolder= "GEX/WGCNA",
                   softThresholdPower="auto", 
                   corType="bicor", 
                   networkType = "signed", 
@@ -13,8 +13,8 @@ wgcna <- function(GEXMTSet,
                   TOMplot=FALSE, MDSplot=FALSE,
                   phDendro=NULL, 
                   phModule=NULL, 
-                  sampleColumn = pipepar$sampleGEX, 
-                  groupColumn  = pipepar$groupGEX,  
+                  sampleColumn = "Sample_Name", 
+                  groupColumn  = "Sample_Group",  
                   groupsets=NULL,  
                   symbolColumn = NULL, 
                   flashClustMethod = "average", 
@@ -26,12 +26,12 @@ wgcna <- function(GEXMTSet,
   ## Arguments
   # GEXMTSet: ExpressionSet or MethylSet. If 'GEXMTSet' is character containing a filepath, the functions assumes
   #            previously stored network object to be loaded from this path. If 'GEXMTSet' is "load_default", network 
-  #            object is loaded from default directory "file.path(projectfolder, "WGCNA", "TOM", "networkConstruction-auto.RData")".
+  #            object is loaded from default directory "file.path(projectfolder, "TOM", "networkConstruction-auto.RData")".
   # projectfolder: character with directory for output files (will be generated if not exisiting).
   # softThresholdPower: soft-thresholding power for network construction. If "auto", function selects 
   #                     soft-thresholding power automatically. If Null, network construction is omitted.
   # corType: character string specifying the correlation to be used. Allowed values are "pearson" and "bicor", corresponding 
-  #          to Pearson and bidweight midcorrelation, respectively. Missing values are handled using the pairwise.complete.obs option.
+  #          to Pearson and biweight midcorrelation, respectively. Missing values are handled using the pairwise.complete.obs option.
   # networkType: character with network type. Allowed values are "unsigned", "signed", "signed hybrid".
   #              "unsigned" means negative correlation of genes are treated the same as positive correlation.
   #              In an "signed" network, negatively correlated genes will not be put into one module, but will be treated as not correlated.
@@ -122,7 +122,7 @@ wgcna <- function(GEXMTSet,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
   
  
@@ -138,14 +138,14 @@ wgcna <- function(GEXMTSet,
 
   
   # Creating output directories if not yet existing
-    if (!file.exists(file.path(projectfolder, "WGCNA"))) {dir.create(file.path(projectfolder, "WGCNA"), recursive=T) }
-    if (!file.exists(file.path(projectfolder, "WGCNA", "TOM"))) {dir.create(file.path(projectfolder, "WGCNA", "TOM")) }
-    if (!file.exists(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Traits"))) {dir.create(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Traits")) }
-    #if (!file.exists(file.path(projectfolder, "WGCNA", "VisANT"))) {dir.create(file.path(projectfolder, "WGCNA", "VisANT")) }
-    #if (!file.exists(file.path(projectfolder, "WGCNA", "Cytoscape"))) {dir.create(file.path(projectfolder, "WGCNA", "Cytoscape")) }
+    if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
+    if (!file.exists(file.path(projectfolder, "TOM"))) {dir.create(file.path(projectfolder, "TOM")) }
+    if (!file.exists(file.path(projectfolder, "Intramodular_analysis_Traits"))) {dir.create(file.path(projectfolder, "Intramodular_analysis_Traits")) }
+    #if (!file.exists(file.path(projectfolder, "VisANT"))) {dir.create(file.path(projectfolder, "VisANT")) }
+    #if (!file.exists(file.path(projectfolder, "Cytoscape"))) {dir.create(file.path(projectfolder, "Cytoscape")) }
     
     if (!is.null(groupsets)) {
-      if (!file.exists(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets"))) {dir.create(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets")) }
+      if (!file.exists(file.path(projectfolder, "Intramodular_analysis_Groupsets"))) {dir.create(file.path(projectfolder, "Intramodular_analysis_Groupsets")) }
     }
     
   
@@ -154,8 +154,8 @@ wgcna <- function(GEXMTSet,
     ### Check if input object 'GEXMTSet' is an ExpressionSet or MethySet object or character containing filepath to 
     # previously strored networl object.
     if(is.character(GEXMTSet)) {
-      if (GEXMTSet=="load_default") {GEXMTSet <- file.path(projectfolder, "WGCNA", "TOM", "networkConstruction-auto.RData")}
-      load(file = GEXMTSet) # file.path(projectfolder, "WGCNA", "TOM", "networkConstruction-auto.RData")
+      if (GEXMTSet=="load_default") {GEXMTSet <- file.path(projectfolder, "TOM", "networkConstruction-auto.RData")}
+      load(file = GEXMTSet) # file.path(projectfolder, "TOM", "networkConstruction-auto.RData")
       } else {
     # Get expression/methylation data, and feature data from input object 
     # for class ExpressionSet
@@ -250,8 +250,8 @@ wgcna <- function(GEXMTSet,
                             networkType = networkType, verbose =5)
   
     # Plot the results:
-    cat("\nPlot SoftThreshold results to", file.path(projectfolder, "WGCNA", "SoftThreshold.pdf"), "\n")
-    pdf(file.path(projectfolder, "WGCNA", "SoftThreshold.pdf"), width = 14, height = 7) 
+    cat("\nPlot SoftThreshold results to", file.path(projectfolder, "SoftThreshold.pdf"), "\n")
+    pdf(file.path(projectfolder, "SoftThreshold.pdf"), width = 14, height = 7) 
     # sizeGrWindow(9, 5)
     par(mfrow = c(1,2))
     cex1 = 0.9
@@ -306,7 +306,7 @@ wgcna <- function(GEXMTSet,
                            corType=corType, 
                            numericLabels = FALSE, # modules labeled by colors (FALSE), or by numbers (TRUE)
                            pamStage = TRUE,  
-                           saveTOMs = TRUE, saveTOMFileBase = file.path(projectfolder, "WGCNA", "TOM", "TOM"),
+                           saveTOMs = TRUE, saveTOMFileBase = file.path(projectfolder, "TOM", "TOM"),
                            verbose = 1, maxBlockSize = maxBlockSize, ...) 
   }
   
@@ -344,13 +344,13 @@ wgcna <- function(GEXMTSet,
   # module eigengenes
   MEs = orderMEs(net$MEs)
   rownames(MEs) <- rownames(traitData)
-  write.table(MEs, file.path(projectfolder, "WGCNA", "ModuleEigengenes_colorLabel.txt"), row.names=F, quote=F, sep="\t")
+  write.table(MEs, file.path(projectfolder, "ModuleEigengenes_colorLabel.txt"), row.names=F, quote=F, sep="\t")
   modNames = substring(names(MEs), 3)  # remove "ME" at the beginning of module eigengene names
 
   
  
   # We now save the module assignment and module eigengene information necessary for subsequent analysis.
-  save(net, objectdat, traitData, MEs, moduleColors, file = file.path(projectfolder, "WGCNA", "TOM", "networkConstruction-auto.RData"))
+  save(net, objectdat, traitData, MEs, moduleColors, file = file.path(projectfolder, "TOM", "networkConstruction-auto.RData"))
   
   
   
@@ -437,8 +437,8 @@ wgcna <- function(GEXMTSet,
   datColors <- data.frame(moduleColors, GS.TraitColor)  
   
   for (b in 1:blockCount) {
-    tiff(filename=file.path(projectfolder, "WGCNA", paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-    # pdf(file.path(projectfolder, "WGCNA", paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".pdf")), width = 14, height = 10) 
+    tiff(filename=file.path(projectfolder, paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
+    # pdf(file.path(projectfolder, paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".pdf")), width = 14, height = 10) 
     # Plot the dendrogram and the module colors underneath
     plotDendroAndColors(net$dendrograms[[b]], colors=datColors[net$blockGenes[[b]],],
                       groupLabels=colnames(datColors),
@@ -495,7 +495,7 @@ wgcna <- function(GEXMTSet,
                      signif(as.matrix(moduleTraitPvalue), 1), sep = "")
   dim(textMatrix) = dim(moduleTraitCor)
   
-  tiff(file.path(projectfolder, "WGCNA", "Heatmap_Module-trait_relationship.tiff"), width = 4960 , height = 7016, res=600, compression = "lzw")
+  tiff(file.path(projectfolder, "Heatmap_Module-trait_relationship.tiff"), width = 4960 , height = 7016, res=600, compression = "lzw")
   par(mar = c(6, 10, 4, 4));
   # Display the correlation values within a heatmap plot
   labeledHeatmap(Matrix = moduleTraitCor,
@@ -551,9 +551,9 @@ wgcna <- function(GEXMTSet,
       
     } # end i-loop 
     
-    cat("\nPhenotype matrix made from group sets: \n(stored in", file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets", "Phenotype_matrix_Groupsets.txt"), ")\n")
+    cat("\nPhenotype matrix made from group sets: \n(stored in", file.path(projectfolder, "Intramodular_analysis_Groupsets", "Phenotype_matrix_Groupsets.txt"), ")\n")
     print(groupsetMat)
-    write.table(groupsetMat, file=file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets", "Phenotype_matrix_Groupsets.txt"), quote=F, sep="\t" )
+    write.table(groupsetMat, file=file.path(projectfolder, "Intramodular_analysis_Groupsets", "Phenotype_matrix_Groupsets.txt"), quote=F, sep="\t" )
     
     #### Correlation coefficient (type of correlation depending on number of groups)  
     # Pearson correlation ME - groupset (only samples without NA used)
@@ -590,7 +590,7 @@ wgcna <- function(GEXMTSet,
                        signif(moduleGroupsetPvalue, 1), sep = "")
     dim(textMatrix) = dim(moduleGroupsetCor)
     
-    tiff(file.path(projectfolder, "WGCNA", "Heatmap_Module-Groupset_relationship.tiff"), width = 4960 , height = 7016, res=600, compression = "lzw")
+    tiff(file.path(projectfolder, "Heatmap_Module-Groupset_relationship.tiff"), width = 4960 , height = 7016, res=600, compression = "lzw")
     par(mar = c(6, 10, 4, 4));
     # Display the correlation values within a heatmap plot
     labeledHeatmap(Matrix = moduleGroupsetCor,
@@ -644,7 +644,7 @@ wgcna <- function(GEXMTSet,
       selectModules <- substring(selectModules,3) # remove substring "ME"
 
       # plot 8 scatter plots for each trait
-      tiff(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Traits", paste0("Intramodular_analysis_", trait, ".tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
+      tiff(file.path(projectfolder, "Intramodular_analysis_Traits", paste0("Intramodular_analysis_", trait, ".tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
       par(mfrow=c(length(selectModules)/2,2))
       par(mar=c(6, 8, 4, 4) + 0.1)
         
@@ -708,7 +708,7 @@ wgcna <- function(GEXMTSet,
     selectModules <- substring(selectModules,3) # remove substring "ME"
       
     # plot 8 scatter plots for each group Groupset
-    tiff(file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets", paste0("Intramodular_analysis_", gset, ".tiff")), 
+    tiff(file.path(projectfolder, "Intramodular_analysis_Groupsets", paste0("Intramodular_analysis_", gset, ".tiff")), 
          width = 4960 , height = 7016, res=600, compression = "lzw")
     par(mfrow=c(length(selectModules)/2,2))
     par(mar=c(6, 8, 4, 4) + 0.1)
@@ -765,8 +765,8 @@ wgcna <- function(GEXMTSet,
        networkDatOutput_MM  = networkDatOutput_MM[geneOrder, ]
        }
   
-  write.table(networkDatOutput0,file.path(projectfolder, "WGCNA", "networkDatOutput.txt"), row.names=F, quote=F, sep="\t")
-  write.table(networkDatOutput_MM,file.path(projectfolder, "WGCNA", "networkDatOutput_incl_MM.txt"), row.names=F, quote=F, sep="\t")
+  write.table(networkDatOutput0,file.path(projectfolder, "networkDatOutput.txt"), row.names=F, quote=F, sep="\t")
+  write.table(networkDatOutput_MM,file.path(projectfolder, "networkDatOutput_incl_MM.txt"), row.names=F, quote=F, sep="\t")
 
   ### saving pruned result tables: the 8 most significant modules for each trait
   for (trait in phModule) {
@@ -784,7 +784,7 @@ wgcna <- function(GEXMTSet,
          moduleColnames <- grep(paste0("MM.",module, "$"), names(networkDatOutput_MM), value=T)
          
          Output.pruned <- networkDatOutput_MM[restModule, c(defColnames, moduleColnames)]
-         write.table(Output.pruned,file.path(projectfolder, "WGCNA", "Intramodular_analysis_Traits", paste0(paste("out",trait,"no",i,"module",module, sep="_"),".txt")), 
+         write.table(Output.pruned,file.path(projectfolder, "Intramodular_analysis_Traits", paste0(paste("out",trait,"no",i,"module",module, sep="_"),".txt")), 
                      row.names=F, quote=F, sep="\t")
        } # end of module-loop
   } # end of trait-loop 
@@ -806,7 +806,7 @@ wgcna <- function(GEXMTSet,
       moduleColnames <- grep(paste0("MM.",module, "$"), names(networkDatOutput_MM), value=T)
       
       Output.pruned <- networkDatOutput_MM[restModule, c(defColnames, moduleColnames)]
-      write.table(Output.pruned,file.path(projectfolder, "WGCNA", "Intramodular_analysis_Groupsets", paste0(paste("out",gsets,"no",i,"module",module, sep="_"),".txt")), 
+      write.table(Output.pruned,file.path(projectfolder, "Intramodular_analysis_Groupsets", paste0(paste("out",gsets,"no",i,"module",module, sep="_"),".txt")), 
                   row.names=F, quote=F, sep="\t")
      } # end of module-loop
     } # end of gsets-loop 
@@ -856,7 +856,7 @@ if (TOMplot | MDSplot) {
     
   ###### load TOM from network
      for (tomfile in net$TOMFiles) {load(tomfile)}
-    # wie kann ich TOMs aus verschiedenen Blöcken mergen??
+    # wie kann ich TOMs aus verschiedenen Bl?cken mergen??
 
     # Distance Matrix
     dissTOM <- 1-TOM
@@ -870,8 +870,8 @@ if(TOMplot) {
     # diag(plotTOM) <- NA; # Error: only matrix diagonals can be replaced
     # Call the plot function: Topological Overlap Matrix
     geneTree <- flashClust(as.dist(dissTOM), method="average")
-    tiff(file.path(projectfolder, "WGCNA", paste("Network_heatmap_plot.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
-    #pdf(file.path(projectfolder, "WGCNA", paste("Network_heatmap_plot.pdf")), width = 10, height = 14) 
+    tiff(file.path(projectfolder, paste("Network_heatmap_plot.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
+    #pdf(file.path(projectfolder, paste("Network_heatmap_plot.pdf")), width = 10, height = 14) 
     TOMplot(dissim=plotTOM, dendro=geneTree, Colors=moduleColors, main = "Network heatmap plot, all genes")                 
     dev.off()
 }
@@ -885,8 +885,8 @@ if(MDSplot) {
   cat("\nGenerating Multidimensional scaling (MDS) Plot\n")
 
   cmd1 <- cmdscale(as.dist(dissTOM), k=2)  # classical MDS plot using 2 scaling dimensions.
-  tiff(file.path(projectfolder, "WGCNA", paste("WGCNA_MDS_plot.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
-  #pdf(file.path(projectfolder, "WGCNA", paste("WGCNA_MDS_plot.pdf")), width = 10, height = 14) 
+  tiff(file.path(projectfolder, paste("WGCNA_MDS_plot.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
+  #pdf(file.path(projectfolder, paste("WGCNA_MDS_plot.pdf")), width = 10, height = 14) 
   plot(cmd1, col=moduleColors, main="WGCNA MDS plot", xlab="Scaling Dimension 1", ylab="Scaling Dimension 2")
   dev.off()
 }
@@ -929,7 +929,7 @@ for (trait in phModule) {
     kIN = softConnectivity(objectdat[, modProbes])
     selectHubs = (rank (-kIN) <= nTopHubs)
     vis = exportNetworkToVisANT(modTOM[selectHubs,selectHubs],
-                file=file.path(projectfolder, "WGCNA", "VisANT", paste0("VisANT_input_", paste(trait, index, module, sep="_"), ".txt")),
+                file=file.path(projectfolder, "VisANT", paste0("VisANT_input_", paste(trait, index, module, sep="_"), ".txt")),
                 weighted=TRUE, threshold = 0, 
                 probeToGene=probeToGene)
         } # end of module loop
@@ -938,7 +938,7 @@ for (trait in phModule) {
 
 
 
-###### Cytoscape  ### oder für mehrere Module gleichzeitig?
+###### Cytoscape  ### oder f?r mehrere Module gleichzeitig?
 cat("\nGenerating input files for Cytoscape\n")
 
 for (trait in phModule) {
@@ -966,8 +966,8 @@ for (trait in phModule) {
     
     # Export the network into edge and node list files for Cytoscape
     cyt = exportNetworkToCytoscape(modTOM,
-                 edgeFile=file.path(projectfolder, "WGCNA", "Cytoscape", paste0("CytoEdge_",paste(trait, index, module, sep="_"),".txt")),
-                 nodeFile=file.path(projectfolder, "WGCNA", "Cytoscape", paste0("CytoNode_",paste(trait, index, module, sep="_"),".txt")),
+                 edgeFile=file.path(projectfolder, "Cytoscape", paste0("CytoEdge_",paste(trait, index, module, sep="_"),".txt")),
+                 nodeFile=file.path(projectfolder, "Cytoscape", paste0("CytoNode_",paste(trait, index, module, sep="_"),".txt")),
                  weighted = TRUE, threshold = 0.02, nodeNames=modProbes,
                  altNodeNames = modGenes, nodeAttr = moduleColors[inModule])
     

@@ -10,14 +10,14 @@
 \usage{
 comparefunc(DEgenes.unfilt,
             newheader=NULL,
-            comparisons=names(DEgenes.unfilt),
-            projectfolder=file.path(pipepar[["outdir"]], "GEX"),
+            comparisons= names(DEgenes.unfilt),
+            projectfolder= "GEX",
             projectname="",
             pvalue = "P.Value",
             adj.pvalue = "adj.P.Val",
-            p.value.threshold = pipepar$threshold_p,
+            p.value.threshold = 0.05,
             effectsize = "logFC",
-            effect.threshold = log2(pipepar$threshold_FC),
+            effect.threshold = log2(1.5),
             Symbol.column = "SYMBOL",
             Entrez.column = "ENTREZID",
 

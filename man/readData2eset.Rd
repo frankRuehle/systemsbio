@@ -11,7 +11,7 @@ Expression data, phenotype data and optional feature data are used to make an Ex
 readData2eset(exprsData, phenoData, featureData = NULL,
   ProbeID = "PROBE_ID", sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
   experimentData = MIAME(),
-  exprchip = pipepar$ArrayAnnotation.GEX,
+  exprchip = "Humanv4",
   transform = log2)
 }
 %- maybe also 'usage' for other objects documented here.

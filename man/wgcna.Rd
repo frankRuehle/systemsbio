@@ -9,7 +9,7 @@ This function makes use of the 'WGCNA'-package from Steve Horvath and  Peter Lan
   }
 \usage{
 wgcna(GEXMTSet,
-  projectfolder = file.path(pipepar[["outdir"]], "GEX"),
+  projectfolder = "WGCNA/GEX",
   softThresholdPower = "auto",
   corType = "bicor",
   networkType = "signed",
@@ -17,7 +17,7 @@ wgcna(GEXMTSet,
   maxBlockSize = 45000,
   TOMplot = FALSE, MDSplot = FALSE,
   phDendro = NULL, phModule = NULL,
-  sampleColumn = pipepar$sampleGEX, groupColumn = pipepar$groupGEX,
+  sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
   groupsets = NULL, symbolColumn = NULL,
   flashClustMethod = "average", dendroRowText = T, autoColorHeight = FALSE,
   colorHeight = 0.1, cex.dendroLabels = 0.6, ...)
@@ -25,7 +25,7 @@ wgcna(GEXMTSet,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{GEXMTSet}{
-ExpressionSet or MethylSet. If 'GEXMTSet' is character containing a filepath, the functions assumes previously stored network object to be loaded from this path. If 'GEXMTSet' is "load_default", network object is loaded from default directory "file.path(projectfolder, "WGCNA", "TOM", "networkConstruction-auto.RData")".
+ExpressionSet or MethylSet. If 'GEXMTSet' is character containing a filepath, the functions assumes previously stored network object to be loaded from this path. If 'GEXMTSet' is "load_default", network object is loaded from default directory "file.path(projectfolder, "TOM", "networkConstruction-auto.RData")".
   }
   \item{projectfolder}{
 character with directory for output files (will be generated if not exisiting).

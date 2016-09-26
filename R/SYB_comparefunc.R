@@ -7,14 +7,14 @@
                            newheader=NULL, 
                            comparisons=names(DEgenes.unfilt), 
                            
-                           projectfolder=file.path(pipepar[["outdir"]], "GEX"),
-                           projectname="", 
+                           projectfolder= "GEX",
+                           projectname= "", 
                            
                            pvalue = "P.Value", 
                            adj.pvalue = "adj.P.Val", 
-                           p.value.threshold = pipepar$threshold_p, 
+                           p.value.threshold = 0.05, 
                            effectsize = "logFC",     
-                           effect.threshold = log2(pipepar$threshold_FC), 
+                           effect.threshold = log2(1.5), 
                            Symbol.column = "SYMBOL", 
                            Entrez.column = "ENTREZID",
                            
@@ -32,6 +32,7 @@
                            # Further Subroutines 
                            use.pwOmics = FALSE   # not implemented yet
                            ) {
+  
   
   
   ## Arguments
@@ -94,7 +95,7 @@
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
     
     
     
@@ -105,6 +106,7 @@
     attach_package(pkg.bioc=annopkg)
     
     
+  
     
     ### Create result directory if not yet existing 
     if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
@@ -217,7 +219,7 @@
                            newheader = NULL, 
                            backgroundlist=DEgenes.unfilt[[comparisons[i]]], 
                            newheaderBackground = NULL,
-                           projectfolder=projectfolder,
+                           projectfolder=file.path(projectfolder, "clusterProfiler"),
                            projectname=comparisons[i], 
                            enrichmentCat = enrichmentCat,
                            maxInputGenes = maxInputGenes,  
@@ -266,7 +268,7 @@
                                          backgroundlist=DEgenes.unfilt[[comparisons[i]]], 
                                          newheaderBackground = NULL,
                                          davidAccount = david, # email account for DAVID's Web Service connectivity or DAVIDWebService object
-                                         projectfolder=projectfolder,
+                                         projectfolder= file.path(projectfolder, "DAVID_Enrichment"),
                                          projectname=comparisons[i], # prefix for output file names
                                          maxInputGenes = maxInputGenes,  # max number of diff expressed probes used for enrichment analysis
                                          davidCat = enrichmentCat, # categories to enrich for
@@ -306,7 +308,7 @@
         
     TFreport <-  TFsearch(DEgenes[[i]], 
                           name.organism="hsapiens", 
-                          projectfolder=projectfolder,
+                          projectfolder=file.path(projectfolder, "TFBS"),
                           projectname=paste(projectname, comparisons[i], sep="_"),
                           applyFilter = FALSE,
                           filtercat1 = pvalue,

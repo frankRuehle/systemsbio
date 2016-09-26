@@ -5,10 +5,10 @@
 
   ## Usage 
   QC_expressionset <- function(eset, 
-                     projectfolder=pipepar[["outdirGEX"]],
+                     projectfolder= "GEX/QC",
                      projectname="", 
-                     groupColumn = pipepar[["groupGEX"]],
-                     phDendro = groupColumn, 
+                     groupColumn = "Sample_Group",
+                     phDendro = "Sample_Group", 
                      flashClustMethod = "average", 
                      cex.dendroLabels = 0.6,
                      thresholdZ.k=-5
@@ -46,7 +46,7 @@
     
     
   ## Author(s) 
-  # Frank Rühle  
+  # Frank R?hle  
   
     
    
@@ -54,7 +54,7 @@
   
   
   # Creating QC directory if not yet existing
-  if (!file.exists(file.path(projectfolder, "QC"))) {dir.create(file.path(projectfolder, "QC"), recursive=T) }
+  if (!file.exists(projectfolder)) {dir.create(projectfolder, recursive=T) }
                              
 
   
@@ -69,7 +69,7 @@ cat("\nPrepare arrayQualityMetrics.")
 # arrayQualityMetrics works for ExpressionSet, AffyBatch, NChannelSet, ExpressionSetIllumina, RGList, MAList.
 # how to fix error message "Only one 'gridsvg' device may be used at a time"???
   try(
-  aqMetrics <- arrayQualityMetrics(eset, outdir=file.path(projectfolder, "QC", "quality_metrics"), 
+  aqMetrics <- arrayQualityMetrics(eset, outdir=file.path(projectfolder, "quality_metrics"), 
                                      force=T, spatial=T, do.logtransform=F, intgroup=groupColumn,
                                      reporttitle = paste("arrayQualityMetrics report"))
   ,silent=F)
@@ -81,18 +81,18 @@ closeAllConnections() # if arrayQualityMetrics produces error and leaves connect
 # par(cex.axis=cex.dendroLabels)
 
 # Boxplot with regular probes
-cat("\nprepare boxplot of probes in:", file.path(projectfolder, "QC", paste0(projectname, "boxplot_probes.pdf\n")))  
+cat("\nprepare boxplot of probes in:", file.path(projectfolder, paste0(projectname, "boxplot_probes.pdf")), "\n")  
 if("Status" %in% names(fData(eset))) {
   regularIDs <- featureNames(eset[which(fData(eset)[,"Status"] == "regular"),])
   } else {regularIDs <- 1:nrow(fData(eset))}
 
-tiff(file=file.path(projectfolder, "QC", paste0(projectname,"boxplot_probes.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
+tiff(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
 print(BiocGenerics::boxplot(eset[regularIDs,]))
 dev.off()
 
 # Boxplot with number of observations
-cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, "QC", paste0(projectname, "boxplot_nObservations.pdf\n")))  
-tiff(file=file.path(projectfolder, "QC", paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
+cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.pdf")), "\n")  
+tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
 print(BiocGenerics::boxplot(eset, what="nObservations"))
 dev.off()
 
@@ -111,19 +111,19 @@ dev.off()
 
 if(class(eset)=="ExpressionSetIllumina") {
   if("Status" %in% names(fData(eset))) {
-      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, "QC", paste0(projectname, "boxplot_controlprofile.pdf\n")))  
+      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.pdf")), "\n")  
       ERCClevels <- grepl("ERCC", levels(fData(eset)$Status)  )  # fData are character, no factors
       if (any(ERCClevels)) {levels(fData(eset)$Status)[ERCClevels] <- "ERCC"}
-      tiff(file=file.path(projectfolder, "QC", paste0(projectname, "boxplot_controlprofile.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
+      tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
     print(BiocGenerics::boxplot(eset, probeFactor = "Status", scales=list(cex.lab=cex.dendroLabels, cex.axis=cex.dendroLabels)))
     dev.off()
   }
 }
   
 # MA-Plots for all Samples separately (ERCC-probes are bundled, if present)
-cat("\nprepare MA-plots of all samples in:", file.path(projectfolder, "QC", paste0(projectname, "MAplots.pdf\n")))  
+cat("\nprepare MA-plots of all samples in:", file.path(projectfolder, paste0(projectname, "MAplots.pdf")), "\n")  
 class(eset) <- "ExpressionSet"  # plotMA not working with ExpressionSetIllumina- Object
-pdf(file=file.path(projectfolder, "QC", paste0(projectname, "MAplots.pdf")))
+pdf(file=file.path(projectfolder, paste0(projectname, "MAplots.pdf")))
 for (i in 1:length(sampleNames(eset))) {
   limma::plotMA(eset, i, status=fData(eset)$Status)
   }
@@ -184,11 +184,11 @@ datTraits = as.data.frame(traitData[,phDendro])  # choose phenotypes for Dendrog
 names(datTraits) <- phDendro
 
 traitColors = labels2colors(datTraits); 
-datColors=data.frame(outlier=outlierColor,traitColors)  # Zeile hinzufügen mit Outlier detection
+datColors=data.frame(outlier=outlierColor,traitColors)  # Zeile hinzuf?gen mit Outlier detection
 
 # Plot the sample dendrogram and the colors underneath.
-cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, "QC", paste0(projectname, "SampleDendrogram_noNorm_adjacency.pdf\n")))  
-tiff(file.path(projectfolder, "QC", paste0(projectname, "SampleDendrogram_noNorm_adjacency.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
+cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.pdf")), "\n")  
+tiff(file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
 par(cex = 0.6);
 par(mar = c(0,4,2,0))
 plotDendroAndColors(sampleTree_noNorm_adj, colors=datColors, addGuide = T, guideAll=T,
