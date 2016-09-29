@@ -46,7 +46,7 @@
     
     
   ## Author(s) 
-  # Frank R?hle  
+  # Frank Ruehle  
   
     
    
@@ -68,10 +68,14 @@
 cat("\nPrepare arrayQualityMetrics.")  
 # arrayQualityMetrics works for ExpressionSet, AffyBatch, NChannelSet, ExpressionSetIllumina, RGList, MAList.
 # how to fix error message "Only one 'gridsvg' device may be used at a time"???
-  try(
-  aqMetrics <- arrayQualityMetrics(eset, outdir=file.path(projectfolder, "quality_metrics"), 
+
+  aqmdir <- file.path(projectfolder, "quality_metrics")
+  if(file.exists(aqmdir)) {aqmdir <- paste0(aqmdir, "_new")}
+  
+try(
+  aqMetrics <- arrayQualityMetrics(eset, outdir= aqmdir, 
                                      force=T, spatial=T, do.logtransform=F, intgroup=groupColumn,
-                                     reporttitle = paste("arrayQualityMetrics report"))
+                                     reporttitle = paste("arrayQualityMetrics_report"))
   ,silent=F)
 
 closeAllConnections() # if arrayQualityMetrics produces error and leaves connection open
@@ -87,13 +91,13 @@ if("Status" %in% names(fData(eset))) {
   } else {regularIDs <- 1:nrow(fData(eset))}
 
 tiff(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-print(BiocGenerics::boxplot(eset[regularIDs,]))
+  BiocGenerics::boxplot(eset[regularIDs,])
 dev.off()
 
 # Boxplot with number of observations
 cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.pdf")), "\n")  
 tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-print(BiocGenerics::boxplot(eset, what="nObservations"))
+  BiocGenerics::boxplot(eset, what="nObservations")
 dev.off()
 
 
@@ -217,7 +221,7 @@ par(orig_par) # restore settings
 
 
 # Detaching libraries not needed any more
-detach_package(c(pkg.cran, pkg.bioc))
+# detach_package(c(pkg.cran, pkg.bioc))
 
 
 return(gsg)

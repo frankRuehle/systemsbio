@@ -30,7 +30,7 @@ basicAnno <- function(data,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank R?hle 
   
 
 
@@ -38,7 +38,7 @@ basicAnno <- function(data,
   annopkg <- switch(org, human = "Homo.sapiens", 
                     mouse = "Mus.musculus",
                     rat="Rattus.norvegicus")
-  attach_package(pkg.bioc=annopkg)
+  attach_package(pkg.bioc=annopkg, pkg.cran = "plyr")
   
   
   

@@ -97,7 +97,7 @@
    
  
   ## Author(s) 
-  # Frank R?hle 
+  # Frank Ruehle 
     
     
   
@@ -115,7 +115,7 @@
   
   ## install/load required packages from CRAN and Bioconductor
   pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", annotationdb)
-  pkg.cran <- NULL
+  pkg.cran <- c("plyr")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   if(!is.null(id.column)) {
@@ -160,12 +160,16 @@
       if (sortcolumn %in% names(genes)) {    
         cat(paste("\nSorting input dataframe for", sortcolumn, ", decreasing =", sortdecreasing, "\n"))
         genes <- genes[order(genes[,sortcolumn], decreasing=sortdecreasing),] # sorting genes for quantitative variable
-      }}
+        
+        # if multiple probes per gene, only the first gene entry is used 
+        genes <- genes[!duplicated(genes[,id.column]),] 
+        }}
      
       
       
   ## convert IDs to ENTREZ IDs if necessary
-  if(id.type!="ENTREZID") {
+  ### bitr noch ersetzen durch basic_anno!
+    if(id.type!="ENTREZID") {
     cat(paste("\nConverting", id.type, "from input list to ENTREZIDs\n"))
     entrezids <- bitr(genes[,id.column], fromType=id.type, toType="ENTREZID", annoDb=annotationdb)
     cat(paste(nrow(entrezids), " of ",  length(unique(genes[,id.column])), "unique", id.type, "mapped to ENTREZIDs\n"))

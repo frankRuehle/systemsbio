@@ -95,7 +95,7 @@ diffLimma <- function(GEXMTSet,
   
   
   
-  # load required packages. limma and Biobase are not detached afterwards
+  # load required packages. Packages are not detached afterwards
   pkg.cran <- c("gplots")
   pkg.bioc <- c("limma", "Biobase")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
@@ -233,6 +233,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
   
   
       ### Heatmap with all samples. Genes selected by F-Test
+      if(!is.null(DiffAllGroups_Ftest.sign)) {
       cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), "\n")  
       
       if (nrow(DiffAllGroups_Ftest.sign) > maxHM) {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign[1:maxHM,]} else {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign}
@@ -252,7 +253,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
                 cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
                 key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()
-
+      }
 
 ## Diff expressed genes caculated by ANOVA for all groups 
       

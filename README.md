@@ -1,5 +1,8 @@
 # systemsbio
 Streamlined analysis package for omics-data
 
+Author:
+Frank Ruehle
 
-install_github("frankRuehle/systemsbio")
+Installation:
+devtools::install_github("frankRuehle/systemsbio")
