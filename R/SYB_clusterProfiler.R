@@ -118,6 +118,7 @@
   pkg.cran <- c("plyr")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
+  
   if(!is.null(id.column)) {
   if(id.column!="ENTREZID" && "ENTREZID" %in% names(genes)) {
     warning("Column ENTREZIDs found. Consider these data for id.column")

@@ -9,7 +9,8 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
                           groupColumn  = "Sample_Group",  
                           experimentData = MIAME(),
                           arrayAnnotation= "Humanv4",
-                          transform = log2 
+                          transform = log2,
+                          organism= "human"
                           ) {
 
   
@@ -86,7 +87,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
       featureData <- read.table(featureData, header=T, sep="\t", na.strings = c("", " ", "NA"), check.names =F) 
       }
     
-  } else { # if now separate feature file loaded, use annotation columns from 'exprsData'
+  } else { # if no separate feature file loaded, use annotation columns from 'exprsData'
     featureData <- annodata
   }
   
@@ -106,7 +107,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
         
     Symbol.column.name <- grep("SYMBOL", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
       if(is.na(Symbol.column.name)) {Symbol.column.name <- NULL} # Null if no grep result
-    Entrez.column.name <- grep("ENTREZID", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
+    Entrez.column.name <- grep("ENTREZ", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
       if(is.na(Entrez.column.name)) {Entrez.column.name <- NULL} # Null if no grep result
     
     if(!is.null(organism)) {
@@ -125,11 +126,12 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
     phenoData <- read.table(phenoData, header=T, sep="\t", na.strings = c("", " ", "NA"), check.names =F) 
     }
   
-  if(.row_names_info(phenoData, type=1L) <0) { # if just automatically generated rownames, use sampleColumn as rownames
+  # if(.row_names_info(phenoData, type=1L) <0) { # if just automatically generated rownames, use sampleColumn as rownames
     rownames(phenoData) <- phenoData[,sampleColumn]
-  }
+  # } # if condition not necessary
   
   phenoData <- phenoData[sort(rownames(phenoData)),] # sorting rows (samples)
+  
   
   # check if feature names are congruent
   if(any(rownames(phenoData) != colnames(exprsData))) {stop("\nSample names of 'exprsData' and 'phenoData' don't match\n")}

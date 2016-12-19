@@ -66,8 +66,8 @@ diffLimma <- function(GEXMTSet,
   #                           Which probes shall be used for foldchange heatmaps? "allprobes": no restriction,  
   #                           "intersect": only probes are used which are differentially expressed in all respective group comparisons.
   #                           "union": only probes are used which are differentially expressed in any of the respective group comparisons.
-  #                           Probes are prioritised by F-Test p-value calculated for all group comparisons 
-  #                           as well as by minimum adjusted p-value of respective group comparisons
+  #                           Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in 'comparisons'
+  #                           as well as by minimum adjusted p-value of respective group comparisons plotted in this heatmap.
   #                           Obsolete if 'FC.heatmap.comparisons' is NULL.
   
   
@@ -91,7 +91,7 @@ diffLimma <- function(GEXMTSet,
   
   
   ## Author(s) 
-  # Frank Rühle 
+  # Frank Ruehle 
   
   
   

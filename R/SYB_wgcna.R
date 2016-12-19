@@ -339,7 +339,7 @@ wgcna <- function(GEXMTSet,
   cat("\n\nNetwork Modules\n")
   moduleColors = net$colors
   print(table(moduleColors))
-  write.table(table(moduleColors), file.path(projectfolder, "WGCNA/Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
+  write.table(table(moduleColors), file.path(projectfolder, "Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
 
   # module eigengenes
   MEs = orderMEs(net$MEs)
@@ -364,8 +364,8 @@ wgcna <- function(GEXMTSet,
   if (dendroRowText==F) {rowText=NULL} else {rowText=datTraits.dendro}
   
   ### plot sample dendrogram with phenotypes given in 'phDendro'
-  tiff(file.path(projectfolder, "WGCNA/Sample_Dendrogram.tiff"), width = 7016 , height = 4960, res=600, compression = "lzw")
-  # pdf(file.path(projectfolder, "WGCNA/Sample_Dendrogram.pdf"), width = 12, height = 9) 
+  tiff(file.path(projectfolder, "Sample_Dendrogram.tiff"), width = 7016 , height = 4960, res=600, compression = "lzw")
+  # pdf(file.path(projectfolder, "Sample_Dendrogram.pdf"), width = 12, height = 9) 
   par(cex = 0.6);
   par(mar = c(0,4,2,0))
   plotDendroAndColors(sampleTree, colors=traitColors, 

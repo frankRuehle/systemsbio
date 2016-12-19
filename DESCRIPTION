@@ -4,20 +4,30 @@ Title: Streamlined Analysis and Integration of Systems Biology Data
 Version: 0.1.0
 Author: Frank Ruehle [aut, cre]
 Maintainer: Frank Ruehle <ruehle@uni-muenster.de>
-Description: Tools for for analysis and integration of different kinds of omics-data. 
-    Currently implemented methods refer to gene expression data. Illumina microarray data
-    or custom microarray data are loaded into an Expressionet object and are normalised 
-    and QC-controlled. Limma package is used for differential expression analysis of all
-    indicated group comparisons. Differential expressed genes are analysed for enriched 
-    GO terms, KEGG pathways and transcription factor binding sites using clusterProfiler 
-    and PWMEnrich. Principal component analysis and whole genome coexpression network analysis is
-    performed using WGCNA and pcaGoPromoter packages. Methods for methylation analysis, GWAS
-    and QTL analyses will be added soon.
+Description: Tools for for analysis and integration of different kinds of omics-
+    data. Currently implemented methods refer to gene expression data. Illumina
+    microarray data or custom microarray data are loaded into an Expressionet object
+    and are normalised and QC-controlled. Limma package is used for differential
+    expression analysis of all indicated group comparisons. Differential expressed
+    genes are analysed for enriched GO terms, KEGG pathways and transcription factor
+    binding sites using clusterProfiler and PWMEnrich. Principal component analysis
+    and whole genome coexpression network analysis is performed using WGCNA and
+    pcaGoPromoter packages. Methods for methylation analysis, GWAS and QTL analyses
+    will be added soon.
 License: GPL-3
 LazyData: TRUE
 URL: https://github.com/frankRuehle/systemsbio.git
-Depends: R (>= 3.0.0)
-Imports: gplots, ggplot2, rJava, VennDiagram, flashClust, plyr
-Suggests: knitr,
+Depends:
+    R (>= 3.0.0)
+Imports:
+    gplots,
+    ggplot2,
+    rJava,
+    VennDiagram,
+    flashClust,
+    plyr
+Suggests:
+    knitr,
     rmarkdown
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
