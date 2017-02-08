@@ -58,4 +58,6 @@ Samples are assigned to clusters and colored accordingly in PCA plots. Sample as
 up to \code{maxCenters} cluster centers. All cluster sample lists are stored in a subfolder "ClusterLists".
 The QC-purified gwaa object may be exported to PLINK-compatible file formats.
 }
-
+\author{
+Frank Ruehle
+}

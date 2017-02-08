@@ -11,7 +11,7 @@
 #' Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
 #' beneath the diagram. 
 #' Modified graphical parameters are resetted at the end of the function. Nevertheless, 
-#' this function is not compatible with using par(mfrow()) for multiple plots.
+#' this function is not compatible with using \code{par(mfrow())} for multiple plots.
 #' 
 #' @param region Character with region of interest of form "chr1:20000-30000" or "chr1:20000".
 #' @param window numeric with window size in bp to plot. Only applied when a single basepair position 
@@ -31,6 +31,10 @@
 #' @param numberOfRowsForGenePlotting numeric number of rows used for plotting genes
 #' 
 #' @return no value returned. Figure is plotted in current graphics device.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export plot.region
 
 
 

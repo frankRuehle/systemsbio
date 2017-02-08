@@ -1,35 +1,38 @@
 
 
 
-  ## Description
-  # Normalisation and filtering of Expression data
-  
-  ## Usage 
-  norm_Illu <- function(eset, 
+#' Processing of expression data
+#' 
+#' Normalisation, transformation and/or probe quality filtering of expression data.
+#' 
+#'  
+#' Expression data is normalised and/or transformed by algorithms dedicated in 'method_norm' and/or 'transform'.
+#' If a column \code{PROBEQUALITY} is available within the feature data as for Illumina expression arrays, 
+#' probes assigned a `Bad' or `No match' quality score after normalisiation are removed from the dataset.
+#' Lastly, if the input object is of class \code{ExpressionSetIllumina}, it is changed to \code{ExpressionSet} to avoid later
+#' incompabilities with the 'limma'-package.
+#' 
+#' 
+#' @param eset ExpressionSet or ExpressionSetIllumina 
+#' @param method_norm character with normalisation method. Options are "quantile", "qspline", "vsn", "rankInvariant", "median" and "none"
+#' @param transform character with data transformation method. Options are "none", "log2", "neqc", "rsn" and "vst".
+#' 
+#' @return processed ExpressionSet object
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export norm_exprs
+
+
+
+
+ 
+  norm_exprs <- function(eset, 
                          method_norm="quantile", 
                          transform="none"     
                          )  {
 
 
-  ## Arguments
-  # eset: ExpressionSet or ExpressionSetIllumina 
-  # method_norm: character with normalisation method. Options are "quantile", "qspline", "vsn", "rankInvariant", "median" and "none"
-  # transform: character with data transformation method. Options are "none", "log2", "neqc", "rsn" and "vst".
-  
-  
-  ## Details
-  # Expression data is normalised and/or transformed by algorithms dedicated in 'method_norm' and/or 'transform'.
-  # Probes assigned a `Bad' or `No match' quality score after normalisiation are removed from the dataset.
-  # Lastly, the object class is changed from 'ExpressionSetIllumina' to 'ExpressionSet' to avoid later
-  # incompabilities with the 'limma'-package.
-  
-    
-  ## value 
-  # ExpressionSet object
-  
-  ## Author(s) 
-  # Frank Rühle 
-  
   
     # load required libraries
     pkg.cran <- NULL

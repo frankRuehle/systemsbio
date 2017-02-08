@@ -1,7 +1,43 @@
 
 
-  ## Description
-  # Quality Control procedures for Bead-Summary Data
+#' Quality Control procedures for expression data
+#' 
+#' Application of diverse quality control metrix for gene expression data.
+#' 
+#' 
+#' Function implements several approaches for quality control of expression data, which
+#' are stored in a newly generated 'project folder.
+#' - Illumina internal control plots, box-plots and MA-plots (if applicable).
+#' - Quality control as implemented in the \code{arrayQualityMetrics}-package (subfolder 'quality_metrics')
+#' - Quality control routines implemented in \code{WGCNA}-package. This comprises a sample dendrogram
+#'   with included outlier prediction as well as boolean vectors for sample and gene quality
+#'   calculated by the \code{goodSamplesGenes}-function.
+#'   
+#'   
+#' @param eset ExpressionSet or ExpressionSetIllumina object  
+#' @param projectfolder character vector with name of desired output folder (will be generated if not exisiting).
+#' @param projectname character vector containing prefix for names of output files.
+#' @param groupColumn character vector with name of group column in phenotype data.   
+#' @param phDendro character vector with phenotypes of eset object to be displayed in sample Dendrogram 
+#' @param flashClustMethod character vector with the agglomeration method to be used in \code{WGCNA} package. 
+#'                   Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".      
+#' @param cex.dendroLabels numeric. Controls size of labels sample in dendrogram.
+#' @param thresholdZ.k numeric. Threshold for outlier prediction WGCNA package (outlier samples are highlighted 
+#'               in red in sample dendrogram).
+#'               
+#'               
+#' @return The returned value is a list of 3
+#' - goodGenes: boolean vector indicating genes passing QC-criteria as implemented in \code{WGCNA}.
+#' - goodSamples: boolean vector indicating samples passing QC-criteria as implemented in \code{WGCNA}.
+#' - allOK: boolean. If TRUE all samples and all genes pass QC-criteria as implemented in \code{WGCNA}.
+#' Several plots and files are generated as side-effects and stored in the output folder. 
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export QC_expressionset
+
+
+
 
   ## Usage 
   QC_expressionset <- function(eset, 
@@ -14,40 +50,6 @@
                      thresholdZ.k=-5
                      ) {
 
-  ## Arguments  
-  # eset: ExpressionSet or ExpressionSetIllumina object  
-  # projectfolder: character vector with name of desired output folder (will be generated if not exisiting).
-  # projectname: character vector containing prefix for names of output files.
-  # groupColumn: character vector with name of group column in phenotype data.   
-  # phDendro: character vector with phenotypes of eset object to be displayed in sample Dendrogram 
-  # flashClustMethod: character vector with the agglomeration method to be used in WGCNA package. 
-  #                   Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".      
-  # cex.dendroLabels: numeric. Controls size of labels sample in dendrogram.
-  # thresholdZ.k: numeric. Threshold for outlier prediction WGCNA package (outlier samples are highlighted 
-  #               in red in sample dendrogram).
-  
- 
-  ## Details  
-  # Function implements several approaches for quality control of expression data, which
-  # are stored in a newly generated 'QC'-folder.
-  # - Illumina internal control plots, box-plots and MA-plots (if applicable).
-  # - Quality control as implemented in the arrayQualityMetrics-package (subfolder 'quality_metrics')
-  # - Quality control routines implemented in WGCNA-package. This comprises a sample dendrogram
-  #   with included outlier prediction as well as boolean vectors for sample and gene quality
-  #   calculated by the goodSamplesGenes()-function.
-  
-    
-  ##  Value
-  # The returned value is a list of 3
-  # goodGenes: boolean vector indicating genes passing QC-criteria as implemented in WGCNA.
-  # goodSamples: boolean vector indicating samples passing QC-criteria as implemented in WGCNA.
-  # allOK: boolean. If TRUE all samples and all genes pass QC-criteria as implemented in WGCNA.
-  # Several plots and files are generated as side-effects and stored in the 'QC'-folder. 
-    
-    
-  ## Author(s) 
-  # Frank Ruehle  
-  
     
    
   orig_par <- par(no.readonly=T)      # make a copy of current settings

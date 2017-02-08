@@ -52,6 +52,8 @@ If given, recombination rates for that region are added to the plot with a separ
 Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
 beneath the diagram. 
 Modified graphical parameters are resetted at the end of the function. Nevertheless, 
-this function is not compatible with using par(mfrow()) for multiple plots.
+this function is not compatible with using \code{par(mfrow())} for multiple plots.
 }
-
+\author{
+Frank Ruehle
+}

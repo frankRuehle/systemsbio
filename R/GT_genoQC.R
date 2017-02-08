@@ -32,6 +32,10 @@
 #' @return list containing two objects. First the QC-purified GenABEL gwaa object whith all samples  
 #' removed as recomended. Second an object of class check.marker containing the quality control information.
 #' Intermediary results and plots are stored in \code{projectfolder} as side effects.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export genoQC
 
 
 genoQC <- function(gwaa,  

@@ -1,105 +1,101 @@
 
 
-  ## Description
-  # Wrapper for enrichment analysis using clusterProfiler
-  
-  ## Usage 
-  clusterprof <- function (genes, 
-                           newheader = NULL, 
-                           backgroundlist=NULL, 
-                           newheaderBackground = NULL,
-                           projectfolder= "GEX/clusterProfiler",
-                           projectname="", 
-                           enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
-                           maxInputGenes = 100,  
-                           id.type = "SYMBOL",
-                           id.column = "SYMBOL",   
-                           sortcolumn ="adj.P.Val",  
-                           sortdecreasing = FALSE, 
-                           sortcolumn.threshold = 0.05,
-                           fun.transf.incr.vales = function(x) {-log10(x)},
-                           FCcolumn = "logFC",
-                           threshold_FC= log2(1.5),
-                           org = "human",
-                           pAdjustMethod = "BH", 
-                           enrich.p.valueCutoff = 0.05, 
-                           enrich.q.valueCutoff = 0.05,
-                           nPerm        = 1000,
-                           minGSSize    = 10) 
-                           {
+#' Wrapper for gene enrichment analysis using clusterProfiler
+#' 
+#' Applying overrepresentation analysis and gene set enrichment analysis to supplied gene list
+#' 
+#' Function uses genelist and optionally background gene list as input to perform enrichment analysis 
+#' using the \code{clusterProfiler}-package. By default, overrepresentation analysis and gene set enrichment analysis 
+#' (GSEA) is performed for all categories given in \code{enrichmentCat}.
+#' The Gene list can be supplied as vector with ids given in \code{id.type},
+#' dataframe with IDs of type \code{id.type} given in column \code{id.column} or character string with path of data file.
+#' The IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the annotation package
+#' for the species denoted in \code{org}.
+#' Optionally, quanitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
+#' the data. If quantitative data are no fold changes, fold changes may be given additionally in \code{FCcolumn}.
+#' They are used only for cnetplot of enrichment results only. If Null the data in \code{sortcolumn} is also used for 
+#' the cnetplots. Be aware that the legend of the cnetplots will be "Fold Change" anyway!
+#' If no quantitative data is provided, sorting and GSEA will be skipped.
+#' Optionally, a background list can be provided for enrichment analysis.   
+#'
+#' 
+#' @param genes vector with gene names to analyse or dataframe or character with path to dataframe. Supplied
+#'        dataframe needs to include a column with identifiers specified in 'id.column'.
+#' @param newheader optional character vector with new header information for 'genes' dataframe. Only relevant 
+#'            if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
+#'            NULL otherwise.
+#' @param backgroundlist optional background list for enrichment analysis. Can either be a vector with gene IDs 
+#'                 or dataframe or character with path to dataframe. If given, an 'id.column' needed as in 'genes'. 
+#'                 If "genome", all ENTREZ IDs from the annotation package of the respective org
+#'                 (denoted in 'org') are used as background.
+#'                 If NULL, full ID list from 'genes' is used as background.
+#' @param newheaderBackground optional character vector with new header information for 'backgroundlist' dataframe.
+#' @param projectfolder character with directory for output files (will be generated if not exisiting).
+#' @param projectname optional character prefix for output file names.
+#' @param enrichmentCat character vector with categories to be enriched (GO: gene ontology (MF, BP, CC), 
+#'                KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).
+#' @param maxInputGenes (numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).
+#' @param id.type character with identifier type from annotation package (e.g. "ENTREZID", "SYMBOL", "UNIGENE")
+#'          IDs Will be converted to EntrezIDs prior to enrichment analysis.
+#' @param id.column character with column name for identifier variable in 'genes'. 
+#' @param sortcolumn character with column name of quantitative data in 'genes' used for ordering.
+#'             If Null, ranking of genes is omitted and GSEA not possible.
+#' @param sortdecreasing (boolean) order parameter for hierarchy of values in 'sortcolumn'.
+#'                 FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
+#'                 If FALSE, values in sortcolumn will be transformed prior to GSEA.
+#' @param sortcolumn.threshold numeric threshold for 'sortcolumn' to be included in overepresentation analysis.
+#'                       If sortdecreasing=F, value < sortcolumn.threshold 
+#'                       else value > sortcolumn.threshold
+#' @param fun.transf.incr.vales function definition for transforming values in 'sortcolumn' prior to GSEA.
+#'                        Is applied if sortdecreasing=F.
+#' @param FCcolumn (character) optional column name of foldchanges in 'genes' if 'sortcolumn' is used elsewhere.
+#'           Used only for cnetplot of enrichment results. Omitted if NULL
+#' @param threshold_FC (numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
+#'               Only relevant for overrepresentation analysis if an unfiltered gene list is given in 'genes'
+#'               to allow for parallel GSEA.
+#' @param pAdjustMethod method for adjusting for multiple testing. 
+#'                One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
+#' @param org character with name of organism ("human", "mouse", "rat").
+#' @param enrich.p.valueCutoff numeric p-value threshold for returned enrichment terms.
+#' @param enrich.q.valueCutoff numeric q-value threshold for returned enrichment terms.
+#' @param nPerm permutation numbers
+#' @param minGSSize minimal size of genes annotated by Ontology term for testing.
+#' 
+#' 
+#' @return List of enrichment-objects defined in \code{DOSE}-package (\code{enrichResult}-object for overrepresentation 
+#'   analysis, \code{gseaResult}-objects for gene set enrichment analysis).                          
+#'   Enrichment tables and plots are stored in the project folder as side effects.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
 
+    
+## Usage 
+clusterprof <- function (genes, 
+                         newheader = NULL, 
+                         backgroundlist=NULL, 
+                         newheaderBackground = NULL,
+                         projectfolder= "GEX/clusterProfiler",
+                         projectname="", 
+                         enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
+                         maxInputGenes = 100,  
+                         id.type = "SYMBOL",
+                         id.column = "SYMBOL",   
+                         sortcolumn ="adj.P.Val",  
+                         sortdecreasing = FALSE, 
+                         sortcolumn.threshold = 0.05,
+                         fun.transf.incr.vales = function(x) {-log10(x)},
+                         FCcolumn = "logFC",
+                         threshold_FC= log2(1.5),
+                         org = "human",
+                         pAdjustMethod = "BH", 
+                         enrich.p.valueCutoff = 0.05, 
+                         enrich.q.valueCutoff = 0.05,
+                         nPerm        = 1000,
+                         minGSSize    = 10) 
+{
   
-  ## Arguments
-  # genes: vector with gene names to analyse or dataframe or character with path to dataframe. Supplied
-  #        dataframe needs to include a column with identifiers specified in 'id.column'.
-  # newheader: optional character vector with new header information for 'genes' dataframe. Only relevant 
-  #            if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
-  #            NULL otherwise.
-  # backgroundlist: optional background list for enrichment analysis. Can either be a vector with gene IDs 
-  #                 or dataframe or character with path to dataframe. If given, an 'id.column' needed as in 'genes'. 
-  #                 If "genome", all ENTREZ IDs from the annotation package of the respective org
-  #                 (denoted in 'org') are used as background.
-  #                 If NULL, full ID list from 'genes' is used as background.
-  # newheaderBackground: optional character vector with new header information for 'backgroundlist' dataframe.
-  # projectfolder: character with directory for output files (will be generated if not exisiting).
-  # projectname: optional character prefix for output file names.
-  # enrichmentCat: character vector with categories to be enriched (GO: gene ontology (MF, BP, CC), 
-  #                KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).
-  # maxInputGenes: (numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).
-  # id.type: character with identifier type from annotation package (e.g. "ENTREZID", "SYMBOL", "UNIGENE")
-  #          IDs Will be converted to EntrezIDs prior to enrichment analysis.
-  # id.column: character with column name for identifier variable in 'genes'. 
-  # sortcolumn: character with column name of quantitative data in 'genes' used for ordering.
-  #             If Null, ranking of genes is omitted and GSEA not possible.
-  # sortdecreasing: (boolean) order parameter for hierarchy of values in 'sortcolumn'.
-  #                 FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
-  #                 If FALSE, values in sortcolumn will be transformed prior to GSEA.
-  # sortcolumn.threshold: numeric threshold for 'sortcolumn' to be included in overepresentation analysis.
-  #                       If sortdecreasing=F, value < sortcolumn.threshold 
-  #                       else value > sortcolumn.threshold
-  # fun.transf.incr.vales: function definition for transforming values in 'sortcolumn' prior to GSEA.
-  #                        Is applied if sortdecreasing=F.
-  # FCcolumn: (character) optional column name of foldchanges in 'genes' if 'sortcolumn' is used elsewhere.
-  #           Used only for cnetplot of enrichment results. Omitted if NULL
-  # threshold_FC: (numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
-  #               Only relevant for overrepresentation analysis if an unfiltered gene list is given in 'genes'
-  #               to allow for parallel GSEA.
-  # pAdjustMethod: method for adjusting for multiple testing. 
-  #                One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
-  # org: character with name of organism ("human", "mouse", "rat").
-  # enrich.p.valueCutoff: numeric p-value threshold for returned enrichment terms.
-  # enrich.q.valueCutoff: numeric q-value threshold for returned enrichment terms.
-  # nPerm: permutation numbers
-  # minGSSize: minimal size of genes annotated by Ontology term for testing.
-    
-    
-  ## Details
-  # Function uses genelist and optionally background gene list as input to perform enrichment analysis 
-  # using the 'clusterProfiler'-package. By default, overrepresentation analysis and gene set enrichment analysis 
-  # (GSEA) is performed for all categories given in 'enrichmentCat'.
-  # The Gene list can be supplied as vector with ids given in 'id.type',
-  # dataframe with IDs of type 'id.type' given in column 'id.column' or character string with path of data file.
-  # The IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the annotation package
-  # for the species denoted in 'org'.
-  # Optionally, quanitative data can be included in 'sortcolumn' for sorting and filtering (using sortcolumn.threshold) 
-  # the data. If quantitative data are no fold changes, fold changes may be given additionally in 'FCcolumn'.
-  # They are used only for cnetplot of enrichment results only. If Null the data in sortcolumn is also used for 
-  # the cnetplots. Be aware that the legend of the cnetplots will be "Fold Change" anyway!
-  # If no quantitative data is provided, sorting and GSEA will be skipped.
-  # Optionally, a background list can be provided for enrichment analysis.                              
-
-  
-    
-  ## value
-  # List of enrichment-objects defined in 'DOSE'-packagage ('enrichResult'-object for overrepresentation 
-  # analysis, 'gseaResult'-objects for gene set enrichment analysis).                          
-  # Enrichment tables and plots are stored in the project folder as side effects.
-   
- 
-  ## Author(s) 
-  # Frank Ruehle 
-    
-    
   
     
   ## create output directory

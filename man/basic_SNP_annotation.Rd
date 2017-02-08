@@ -65,4 +65,6 @@ If a \code{annotationFile} is specified, all included data is merged to the inpu
 The \code{annotationFile} may be supplied directly as dataframe or as character containing a 
 file path. In latter case, the file is automatically loaded.
 }
-
+\author{
+Frank Ruehle
+}

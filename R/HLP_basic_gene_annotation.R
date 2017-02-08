@@ -1,37 +1,34 @@
 
-## Description
-# Annotate gene symbols and EntrezIDs using an organism-specific annotation package. 
+#' Basic gene annotation
+#'
+#' Annotate gene symbols and EntrezIDs using an organism-specific annotation package. 
+#' 
+#' This function adds annotation of either gene symbol or EntrezID to \code{data}
+#' using the corresponding annotation package of the organism specified in \code{org}.
+#' 
+#' 
+#' @param data dataframe or character with filepath to data to be loaded.
+#' @param Symbol.column character with column name of Gene Symbols in \code{data}.
+#'                if NULL, SYMBOLs are derived from \code{Entrez.column} using the annotation package for \code{org}.
+#' @param Entrez.column character with column name of ENTREZ IDs in \code{data}.
+#'                if NULL, ENTREZ IDs are derived from \code{Symbol.column} using the annotation package for \code{org}.
+#'                Either \code{Symbol.column} or \code{Entrez.column} must be specified.
+#' @param org character with species name ("human", "mouse", "rat").
+#' 
+#' 
+#' @return dataframe with added annotation column.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
 
-## Usage 
+
 basicAnno <- function(data, 
                       Symbol.column = "SYMBOL",
                       Entrez.column = "ENTREZID",
                       org ="human"
                       ) {
 
-
-  ## Arguments
-  # data: dataframe or character with filepath to data to be loaded.
-  # Symbol.column: character with column name of Gene Symbols in 'data'.
-  #                if NULL, SYMBOLs are derived from 'Entrez.column' using the annotation package for 'org'.
-  # Entrez.column: character with column name of ENTREZ IDs in 'data'.
-  #                if NULL, ENTREZ IDs are derived from 'Symbol.column' using the annotation package for 'org'.
-  #                Either 'Symbol.column' or 'Entrez.column' must be specified.
-  # org: character with species name ("human", "mouse", "rat").
-  
-  
-  ## Details
-  # If either gene symbols or EntrezIDs are missing in 'data', this annotation is
-  # added using the corresponding annotation package of the organism specified in 'org'.
-  
-
-  ## value:
-  # dataframe with added annotation column.
-  
-  
-  ## Author(s) 
-  # Frank R?hle 
-  
 
 
   # Load genomic annotation package (includes OrgDb, TxDb and GODb)

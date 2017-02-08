@@ -1,6 +1,44 @@
 
-## Description
-# Make ExpressionSet object from expression data
+#' Create ExpressionSet object from expression data
+#' 
+#' ExpressionSet object assembled from expression, feature and phenotype data.
+#' 
+#' Expression data, phenotype data and optional feature data are used to make an ExpressionSet object.
+#' Only numeric columns in \code{exprsData} are used. If no feature data is given, non-numeric data columns 
+#' from \code{exprsData} are used as feature data (if any). If dataframes don't contain rownames as identifier, 
+#' the column \code{ProbeID} is used as rownames in \code{exprsData} and \code{featureData} and column \code{sampleColumn} in \code{phenoData}.
+#' Rownames of \code{exprsData} must match with rownames of \code{featureData} (if given). Column names of \code{exprsData}
+#' must match with rownames of \code{phenoData}. Characters "/" and "-" in sample names or group names are 
+#' replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
+#' added using the corresponding annotation package (species name is derived from \code{arrayAnnotation}). The optional
+#' Function given in 'transform' is used to transform the expression data.
+#' 
+#' 
+#' @param exprsData dataframe or character with filepath to expression data to be loaded.
+#'            If no rownames are included, a column containing ProbeIDs is expected and used as feature names.
+#' @param phenoData dataframe or character with filepath to sample sheet / phenotype data to be loaded.
+#' @param featureData dataframe or character with filepath to feature data to be loaded.
+#'              If NULL, non-numeric data columns from 'exprsData' are used as feature data (if any).
+#' @param ProbeID character with name of the column in 'exprsData' and 'featureData' that contains 
+#'          identifiers used to uniquely identify each probe. 
+#' @param sampleColumn character with name of sample column in 'phenoData'.
+#' @param groupColumn character with name of group column in 'phenoData'.
+#' @param experimentData MIAME object with optional experiment description.
+#' @param arrayAnnotation character string specifying array annotation package (e.g. "Humanv4"). character() if not available.
+#' @param transform optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
+#'            if NULL, no data transformation is performed.
+#'            
+#' @return Annotated and transformed ExpressionSet object
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export readData2eset
+
+
+
+
+
+
 
 ## Usage 
 readData2eset <- function(exprsData, phenoData, featureData=NULL,
@@ -13,42 +51,6 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
                           organism= "human"
                           ) {
 
-  
-  ## Arguments
-  # exprsData: dataframe or character with filepath to expression data to be loaded.
-  #            If no rownames are included, a column containing ProbeIDs is expected and used as feature names.
-  # phenoData: dataframe or character with filepath to sample sheet / phenotype data to be loaded.
-  # featureData: dataframe or character with filepath to feature data to be loaded.
-  #              If NULL, non-numeric data columns from 'exprsData' are used as feature data (if any).
-  # ProbeID: character with name of the column in 'exprsData' and 'featureData' that contains 
-  #          identifiers used to uniquely identify each probe. 
-  # sampleColumn: character with name of sample column in 'phenoData'.
-  # groupColumn: character with name of group column in 'phenoData'.
-  # experimentData: MIAME object with optional experiment description.
-  # arrayAnnotation: character string specifying array annotation package (e.g. "Humanv4"). character() if not available.
-  # transform: optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
-  #            if NULL, no data transformation is performed.
-  
-  
-  ## Details
-  # Expression data, phenotype data and optional feature data are used to make an ExpressionSet object.
-  # Only numeric columns in 'exprsData' are used. If no feature data is given, non-numeric data columns 
-  # from 'exprsData' are used as feature data (if any). If dataframes don't contain rownames as identifier, 
-  # the column 'ProbeID' is used as rownames in 'exprsData' and 'featureData' and column 'sampleColumn' in 'phenoData'.
-  # Rownames of 'exprsData' must match with rownames of 'featureData' (if given). Column names of 'exprsData'
-  # must match with rownames of 'phenoData.' Characters "/" and "-" in sample names or group names are 
-  # replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
-  # added using the corresponding annotation package (species name is derived from 'arrayAnnotation'). The (optional)
-  # Function given in 'transform' is used to transform the expression data.
-  
-
-  ## value:
-  # Annotated and transformed ExpressionSet object
-  
-  
-  ## Author(s) 
-  # Frank R?hle 
-  
   
   
   

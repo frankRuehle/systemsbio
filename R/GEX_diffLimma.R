@@ -1,8 +1,67 @@
 
-## Description
-# Differential expression analysis with limma
+#' Differential expression analysis with limma
+#' 
+#' Differential Gene expression analysis for multiple group comparisons incl. output of Venn diagrams and heatmaps.
+#' 
+#' Function generates design matrix, fit and differential expression results for dedicated group comparisons of input object.
+#' Analysis is performed either for one group comparison in paired design or for any number of unpaired group comparisons.
+#' The group designations in the groupColumn must match the contrasts given in comparisons ("groupA-groupB").
+#' P-value and foldchange thresholds may be applied to filter result data. 
+#' Heatmaps with sample signal intensities are generated for top differentially expressed genes for each group comparison 
+#' given in 'comparisons'. Additionally heatmaps indicating foldchanges are generated for each set of group comparisons
+#' given in 'FC.heatmap.comparisons'. Selection of probes with respect to these group comparisons is characterised in 
+#' 'FC.heatmap.geneselection'. If the resulting number of probes exceeds 'maxHM', probes are prioritized by either 
+#' F-Test p-value or by minimum p-value of selected group comparisons.
+#' 
+#' 
+#' @param GEXMTSet ExpressionSet or MethylSet
+#' @param comparisons character vector with group comparisons in format "groupA-groupB" or 
+#'              nested comparisons in format "(groupA-groupB)-(groupC-groupD)".
+#' @param p.value.threshold numeric p-value threshold 
+#' @param adjust.method adjustment method for multiple testing ("none", "BH", "BY" and "holm")
+#' @param FC.threshold numeric foldchange threshold. If data is log2-transformed, mind to transform threshold too.
+#' 
+#' @param projectfolder character with directory for output files (will be generated if not exisiting).
+#' @param projectname optional character prefix for output file names.
+#' 
+#' @param matchvar (character) if paired design, name of column to be used to group samples. NULL for unpaired design.
+#' @param Symbol.column character with column name of Gene Symbols in 'DEgenes.unfilt' and 'GEXMTSet' or NULL.
+#' @param sampleColumn character with column name of Sample names in pData(GEXMTSet)
+#' @param groupColumn character with column name of group names in pData(GEXMTSet). Group names must match comparisons!
+#' @param useWeights (boolean) if TRUE, arrays are weighted for their quality.
+#' @param geneAnno2keep (character vector) annotation columns in feature data to keep in output
+#' @param venn_comparisons character vector or (named) list of character vectors with group comparisons to be included 
+#'                   in Venn Diagram (max 5 comparisons per Venn diagramm)
+#'
+#' @param maxHM (numeric) max number of top diff. regulated elements printed in Heatmap
+#' @param HMcexRow labelsize for rownames in Heatmap
+#' @param HMcexCol labelsize for colnames in Heatmap
+#' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
+#'                                which are in groups of the respective group comparison.  
+#' @param color.palette select color palette for heatmaps                     
+#' @param FC.heatmap.comparisons character vector or (named) list of character vectors with group comparsions to be 
+#'                         included in foldchange heatmaps. One FC heatmap is generated for each character vector.
+#'                         If NULL no FC heatmaps are generated.
+#' @param FC.heatmap.geneselection character vector containing elements of c("all", "intersect", "union"). 
+#'                           Which probes shall be used for foldchange heatmaps? "allprobes": no restriction,  
+#'                           "intersect": only probes are used which are differentially expressed in all respective group comparisons.
+#'                           "union": only probes are used which are differentially expressed in any of the respective group comparisons.
+#'                           Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in 'comparisons'
+#'                           as well as by minimum adjusted p-value of respective group comparisons plotted in this heatmap.
+#'                           Obsolete if 'FC.heatmap.comparisons' is NULL.
+#'                           
+#'
+#' @return List of dataframes with unfiltered differential expression data for each comparison (sorted by p-value).
+#' List elements are named by the respective group comparison. 
+#' An F-Test and a Venn Diagramm of all comparisons as well as filtered and unfiltered result tables and heatmaps 
+#' for each group comparison are stored as side-effects in the project folder.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export diffLimma
 
-## Usage 
+
+
 diffLimma <- function(GEXMTSet, 
                       comparisons,
                       p.value.threshold = 0.05, 
@@ -32,67 +91,8 @@ diffLimma <- function(GEXMTSet,
 
 
                         
-  # ## Arguments
-  # GEXMTSet: ExpressionSet or MethylSet
-  # comparisons: character vector with group comparisons in format "groupA-groupB" or 
-  #              nested comparisons in format "(groupA-groupB)-(groupC-groupD)".
-  # p.value.threshold: numeric p-value threshold 
-  # adjust.method: adjustment method for multiple testing ("none", "BH", "BY" and "holm")
-  # FC.threshold: numeric foldchange threshold. If data is log2-transformed, mind to transform threshold too.
-  # 
-  # projectfolder: character with directory for output files (will be generated if not exisiting).
-  # projectname: optional character prefix for output file names.
-  # 
-  # matchvar: (character) if paired design, name of column to be used to group samples. NULL for unpaired design.
-  # Symbol.column: character with column name of Gene Symbols in 'DEgenes.unfilt' and 'GEXMTSet' or NULL.
-  # sampleColumn: character with column name of Sample names in pData(GEXMTSet)
-  # groupColumn: character with column name of group names in pData(GEXMTSet). Group names must match comparisons!
-  # useWeights: (boolean) if TRUE, arrays are weighted for their quality.
-  # geneAnno2keep: (character vector) annotation columns in feature data to keep in output
-  # venn_comparisons: character vector or (named) list of character vectors with group comparisons to be included 
-  #                   in Venn Diagram (max 5 comparisons per Venn diagramm)
-  #
-  # # Heatmap parameter:
-  # maxHM: (numeric) max number of top diff. regulated elements printed in Heatmap
-  # HMcexRow: labelsize for rownames in Heatmap
-  # HMcexCol: labelsize for colnames in Heatmap
-  # HMincludeRelevantSamplesOnly: (boolean) if TRUE include only Samples in heatmap, 
-  #                                which are in groups of the respective group comparison.  
-  # color.palette: select color palette for heatmaps                     
-  # FC.heatmap.comparisons: character vector or (named) list of character vectors with group comparsions to be 
-  #                         included in foldchange heatmaps. One FC heatmap is generated for each character vector.
-  #                         If NULL no FC heatmaps are generated.
-  # FC.heatmap.geneselection: character vector containing elements of c("all", "intersect", "union"). 
-  #                           Which probes shall be used for foldchange heatmaps? "allprobes": no restriction,  
-  #                           "intersect": only probes are used which are differentially expressed in all respective group comparisons.
-  #                           "union": only probes are used which are differentially expressed in any of the respective group comparisons.
-  #                           Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in 'comparisons'
-  #                           as well as by minimum adjusted p-value of respective group comparisons plotted in this heatmap.
-  #                           Obsolete if 'FC.heatmap.comparisons' is NULL.
   
-  
-  ## Details
-  # Function generates design matrix, fit and differential expression results for dedicated group comparisons of input object.
-  # Analysis is performed either for one group comparison in paired design or for any number of unpaired group comparisons.
-  # The group designations in the groupColumn must match the contrasts given in comparisons ("groupA-groupB").
-  # P-value and foldchange thresholds may be applied to filter result data. 
-  # Heatmaps with sample signal intensities are generated for top differentially expressed genes for each group comparison 
-  # given in 'comparisons'. Additionally heatmaps indicating foldchanges are generated for each set of group comparisons
-  # given in 'FC.heatmap.comparisons'. Selection of probes with respect to these group comparisons is characterised in 
-  # 'FC.heatmap.geneselection'. If the resulting number of probes exceeds 'maxHM', probes are prioritized by either 
-  # F-Test p-value or by minimum p-value of selected group comparisons.
-  
-  
-  ## Value 
-  # List of dataframes with unfiltered differential expression data for each comparison (sorted by p-value).
-  # List elements are named by the respective group comparison. 
-  # An F-Test and a Venn Diagramm of all comparisons as well as filtered and unfiltered result tables and heatmaps 
-  # for each group comparison are stored as side-effects in the project folder.
-  
-  
-  ## Author(s) 
-  # Frank Ruehle 
-  
+ 
   
   
   # load required packages. Packages are not detached afterwards
@@ -150,7 +150,7 @@ diffLimma <- function(GEXMTSet,
 
   ### Prepare Design Matrix:
 
-  # no contrasts generated from a 0/1 phenotype. Therefor recoded to "y"/"n"
+  # no contrasts generated from a 0/1 phenotype. Therefore recoded to "y"/"n"
   if(is.numeric(phenoGEXMTSet[,groupColumn]) & all(phenoGEXMTSet[,groupColumn] %in% c(0,1))) {
       rna <- factor(ifelse(phenoGEXMTSet[,groupColumn]==0, "n", "y"))
            } else {
@@ -199,7 +199,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
   
      resultDiffGenes <- decideTests(fit, p.value=p.value.threshold, lfc=FC.threshold, adjust.method=adjust.method) # default adjust.method="BH"
     if (length(venn_comparisons[[v]]) <= 5) {
-      pdf(filename.Venn, width = 14, height = 7) 
+      pdf(filename.Venn, width = 7, height = 7) 
       vennDiagram(resultDiffGenes[,colnames(resultDiffGenes) %in% venn_comparisons[[v]]], names=NULL)  #optional: select desired group comparisons for Venn diagramm (max: 5)!
       dev.off()
       }

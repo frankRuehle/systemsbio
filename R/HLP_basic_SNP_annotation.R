@@ -36,6 +36,11 @@
 #' @return input dataframe annotated with biomaRt and/or manufacturer data in additional columns 
 #' (starting with "SNPMart_" or "Annofile_", respectively). Order of entries within the dataframe 
 #' remains unchanged.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
+
 
 basic_SNP_annotation <- function(data,
                                  max.SNPs.per.biomaRt.call = 30000,

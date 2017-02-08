@@ -1,9 +1,52 @@
 
 
-## Description
-# Get TF Binding sites from input genes
+#' Transcription factor binding site enrichment
+#' 
+#' Function uses \code{PWMEnrich}-package for TFBS enrichment.
+#' 
+#' Function takes input genes, optionally looks up all promotor sequences by (unique) entrezID, 
+#' or looks up sequences defined by coordinates, optionally filters \code{sequences} for given categories 
+#' and calls \code{motifEnrichment} from \code{PWMEnrich}-package to identify enriched Transcription factor binding motivs. 
+#' Optionally, tables are generated for in 'SearchSelMotifs' preselected Motivs looked up in 'sequences'.
+#' 
+#' 
+#' @param sequences dataframe (or character with file path) with column containing Entrez IDs or sequence coordinates.
+#'            Required columns as defined in \code{PromLookup} (see below).
+#' @param newheader NULL if \code{sequences} already supplied with header. Character vector with new header otherwise.
+#' @param annoColumn (character or vector of characters) column name(s) of \code{sequences}-object with sequence annotation to maintain.
+#' @param name.organism currently human data only (hg19).
+#' @param projectfolder output directory.
+#' @param projectname character prefix for output name.
+#' @param applyFilter (boolean) If TRUE, sequences are filtered for applied categories and thresholds. Filter Values converted to ABSOLUTE values.
+#'     Optional Filtering criteria (Ignored if \code{applyFilter=FALSE}):
+#' @param filtercat1 column name of first category to filter \code{sequences} (e.g. p-values). 
+#' @param filtercat1.decreasing (boolean) direction to order \code{filtercat1}.
+#' @param filtercat1.function select transforming function for filter category1 (no quotes). e.g. \code{abs} for absolute values, \code{identity} for no transformation
+#' @param filtercat1.threshold Threshold for \code{filtercat1} or 'top123' for top Hits
+#' @param filtercat2 column name of second category to filter \code{sequences} (e.g. effect size).
+#' @param filtercat2.decreasing (boolean) direction to order \code{filtercat2}.
+#' @param filtercat2.function select transforming function for filter category2 (no quotes). E.g. \code{abs} for foldchanges
+#' @param filtercat2.threshold Threshold for \code{filtercat2} or 'top123' for top Hits
+#' @param PromLookup (boolean) if TRUE, all promotor sequences corresponding to genes in \code{sequences} are downloaded. Therefore a
+#'                         column with EntrezIDs is requried (column name given in \code{Entrez.col})!
+#'                       if FALSE, Sequences are downloaded according to given coordinates in \code{sequences}. Therefore columns 
+#'                         for chromosome, start, stop and strand information required! Additional meta columns allowed.
+#' @param Entrez.col name of column containing Entrez IDs
+#' @param PromSeqUpstreamTSS definition of promotor regions to download upstream to TSS.
+#' @param PromSeqDownstreamTSS: definition of promotor regions to download downstream to TSS.
+#' @param SearchSelMotivs Character Vector of selected motives to search in \code{sequences} seperately to enrichment or NULL.
+#' @param motif.min.score minimum score to match motif pwm to target sequence (ignored if SearchSelMotifs = NULL).
+#' 
+#' @return groupReport of motifEnrichment results.
+  
+#' @seealso MotifDb, PWMEnrich, PWMEnrich.Hsapiens.background
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
+#' 
 
-## Usage
+
 TFsearch <- function(sequences, 
                      newheader = NULL, # c("chr", "start", "stop", "customname", "custom2", "strand"), 
                      annoColumn = NULL, # e.g. "customname" 
@@ -11,65 +54,21 @@ TFsearch <- function(sequences,
                      projectfolder= "GEX/TFBS",
                      projectname="",
                      applyFilter = FALSE,
-                        filtercat1 = "adj.P.Val",
-                        filtercat1.decreasing = FALSE,
-                        filtercat1.function = abs,
-                        filtercat1.threshold= 0.05,
-                        filtercat2 = "logFC",
-                        filtercat2.decreasing = TRUE,
-                        filtercat2.function = abs,
-                        filtercat2.threshold= log2(1.5),
+                     filtercat1 = "adj.P.Val",
+                     filtercat1.decreasing = FALSE,
+                     filtercat1.function = abs,
+                     filtercat1.threshold= 0.05,
+                     filtercat2 = "logFC",
+                     filtercat2.decreasing = TRUE,
+                     filtercat2.function = abs,
+                     filtercat2.threshold= log2(1.5),
                      PromLookup = TRUE,
-                       Entrez.col = "ENTREZID", 
-                       PromSeqUpstreamTSS = 2000,
-                       PromSeqDownstreamTSS = 200,
+                     Entrez.col = "ENTREZID", 
+                     PromSeqUpstreamTSS = 2000,
+                     PromSeqDownstreamTSS = 200,
                      SearchSelMotifs = NULL,
                      motif.min.score = 0.9 
-                    ) {
-
-  
-
-  ## Arguments
-  # sequences: dataframe (or character with file path) with column containing Entrez IDs or sequence coordinates.
-  #            Required columns as defined in 'PromLookup' (see below)
-  # newheader: NULL if 'sequences' already supplied with header. Character vector with new header otherwise.
-  # annoColumn (character or vector of characters): column name(s) of 'sequences'-object with sequence annotation to maintain
-  # name.organism: currently human data only (hg19)
-  # projectfolder: output directory
-  # projectname: character merged to output name
-  # applyFilter (boolean): If TRUE, sequences are filtered for applied categories and thresholds. Filter Values converted to ABSOLUTE values.
-  #     Optional Filtering criteria (Ignored if applyFilter==FALSE):
-  #     filtercat1: column name of first category to filter 'sequences' (e.g. p-values). 
-  #     filtercat1.decreasing (boolean): direction to order filtercat1
-  #     filtercat1.function: select transforming function for filter category1 (no quotes). e.g. abs for absolute values, identity for no transformation
-  #     filtercat1.threshold: Threshold for filtercat1 or 'top123' for top Hits
-  #     filtercat2: column name of second category to filter 'sequences' (e.g. effect size).
-  #     filtercat2.decreasing (boolean): direction to order filtercat2
-  #     filtercat2.function: select transforming function for filter category2 (no quotes). E.g. abs for foldchanges
-  #     filtercat2.threshold: Threshold for filtercat2 or 'top123' for top Hits
-  # PromLookup (boolean): if TRUE, all promotor sequences corresponding to genes in 'sequences' are downloaded. Therefore a
-  #                         column with EntrezIDs is requried (column name given in 'Entrez.col')!
-  #                       if FALSE, Sequences are downloaded according to given coordinates in 'sequences'. Therefore columns 
-  #                         for chromosome, start, stop and strand information required! Additional meta columns allowed.
-  #   Entrez.col: name of column containing Entrez IDs
-  #   PromSeqUpstreamTSS, PromSeqDownstreamTSS: definition of promotor regions to download respective to TSS
-  # SearchSelMotivs: Character Vector of selected motives to search in 'sequences' seperately to enrichment or NULL
-  # motif.min.score: minimum score to match motif pwm to target sequence (ignored if SearchSelMotifs = NULL)
-  
-  
-  ## Details
-  # Function takes input sequences, optionally looks up all promotor sequences by (unique) entrezID, 
-  # or looks up sequences defined by coordinates, optionally filters 'sequences' for given 
-  # categories and calls motifEnrichment() to identify enriched Transcription factor binding motivs. 
-  # Optionally tables generated for in 'SearchSelMotifs' preselected Motivs looked up in 'sequences'.
-  
-  
-  ## Value
-  # groupReport of motifEnrichment results.
-  
-  
-  ## Author(s) 
-  # Frank R?hle 
+) {
   
   
   

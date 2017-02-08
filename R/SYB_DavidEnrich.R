@@ -1,99 +1,85 @@
 
 
-  ## Description
-  # Wrapper for DAVID enrichment analysis using the RDAVIDWebService
-  
-  ## Usage 
-  DavidEnrich <- function (genes, 
-                           newheader = NULL, 
-                           backgroundlist=NULL, 
-                           newheaderBackground = NULL,
-                           davidAccount = NULL, 
-                           projectfolder= "GEX/DAVID_Enrichment",
-                           projectname="", 
-                           maxDavid = 100,  
-                           davidCat = c("GOTERM_BP_ALL", "GOTERM_MF_ALL", "GOTERM_CC_ALL", "KEGG_PATHWAY", "BIOCARTA", "UCSC_TFBS"), 
-                           id.type = "ENTREZ_GENE_ID",
-                           id.column = "ENTREZID",   
-                           sortcolumn ="adj.P.Val",  
-                           sortdecreasing = FALSE, 
-                           sortcolumn.threshold = 0.05,
-                           org = "Homo sapiens",
-                           threshold4enrich = 0.05, 
-                           mincount=2L 
-                           ) 
-                           {
+#' Gene enrichment analysis using the DAVID Database 
+#' 
+#' Wrapper for gene enrichment analysis using the Database for Annotation, Visualization and Integrated Discovery (DAVID) 
+#' accessed by the RDAVIDWebService.
+#' 
+#' Function uses genelist and optionally background gene list as input to perform enrichment analysis 
+#' using the RDAVIDWebService. Registration for RDAVIDWebService is required at 
+#' \code{https://david.ncifcrf.gov/webservice/register.htm}.
+#' Gene list can be supplied as character vector with ids given in \code{id.type}, as dataframe
+#' or as character string with path of data file. If a vector is given, sorting parameter will be ignored.
+#' Enrichment categories for a defined organism are defined in \code{davidCat}.
+#' If no connection to \code{RDAVIDWebService} can be established, NULL is returned.
+#' 
+#' 
+#' @param genes vector with gene names to analyse or dataframe or character with path to dataframe. Supplied
+#'        dataframe needs to include a column with identifiers specified in \code{id.column}.
+#' @param newheader optional character vector with new header information for \code{genes} dataframe. Only relevant 
+#'            if \code{genes} is a dataframe or character string with filepath to a table with wrong or missing header. 
+#'            NULL otherwise.
+#' @param backgroundlist optional dataframe containing background list for enrichment analysis. 
+#'                 If NULL, species specific background from DAVID is used instead.
+#' @param newheaderBackground optional character vector with new header information for \code{backgroundlist} dataframe.
+#' @param davidAccount email account for DAVID's Web Service connectivity or DAVIDWebService object.
+#' @param projectfolder character with directory for output files (will be generated if not exisiting).
+#' @param projectname optional character prefix for output file names.
+#' @param maxDavid (numeric) max number of top diff regulated elements used for enrichment analysis.
+#' @param davidCat character vector with DAVID categories to enrich for. 
+#' @param id.type character with identifier DAVID uses to enrich for (e.g. "ENTREZ_GENE_ID" or "OFFICIAL_GENE_SYMBOL")
+#' @param id.column character with respective column name for \code{id.type} in \code{genes}.
+#' @param sortcolumn character with column name to be sorted for selecting top entries.
+#' @param sortdecreasing (boolean) drecreasing parameter for order of \code{sortcolumn}.
+#' @param sortcolumn.threshold numeric threshold for \code{sortcolumn} to be included in overepresentation analysis.
+#'                       \code{If sortdecreasing=F, value < sortcolumn.threshold 
+#'                       else value > sortcolumn.threshold}
+#' @param org character with species name DAVID uses for enrichment (e.g."Homo sapiens" or "Mus musculus").
+#' @param threshold4enrich numeric p-value threshold for enrichment terms.
+#' @param mincount numeric minimum gene count in enrichment terms.  
+#' 
+#' 
+#' @return  Functional annotation chart as R object. 
+#' Additionally, a functional annotation chart is stored in the project folder as side effect.
 
+#' @references https://david.ncifcrf.gov/   
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
+
+    
+DavidEnrich <- function (genes, 
+                         newheader = NULL, 
+                         backgroundlist=NULL, 
+                         newheaderBackground = NULL,
+                         davidAccount = NULL, 
+                         projectfolder= "GEX/DAVID_Enrichment",
+                         projectname="", 
+                         maxDavid = 100,  
+                         davidCat = c("GOTERM_BP_ALL", "GOTERM_MF_ALL", "GOTERM_CC_ALL", "KEGG_PATHWAY", "BIOCARTA", "UCSC_TFBS"), 
+                         id.type = "ENTREZ_GENE_ID",
+                         id.column = "ENTREZID",   
+                         sortcolumn ="adj.P.Val",  
+                         sortdecreasing = FALSE, 
+                         sortcolumn.threshold = 0.05,
+                         org = "Homo sapiens",
+                         threshold4enrich = 0.05, 
+                         mincount=2L 
+                          ) {
   
-  ## Arguments
-  # genes: vector with gene names to analyse or dataframe or character with path to dataframe. Supplied
-  #        dataframe needs to include a column with identifiers specified in 'id.column'.
-  # newheader: optional character vector with new header information for 'genes' dataframe. Only relevant 
-  #            if 'genes' is a dataframe or character string with filepath to a table with wrong or missing header. 
-  #            NULL otherwise.
-  # backgroundlist: optional dataframe containing background list for enrichment analysis. 
-  #                 If NULL, species-specific background from DAVID is used instead.
-  # newheaderBackground: optional character vector with new header information for 'backgroundlist' dataframe.
-  # davidAccount: email account for DAVID's Web Service connectivity or DAVIDWebService object.
-  #               Registration for RDAVIDWebService is required at "https://david.ncifcrf.gov/webservice/register.htm".
-  # projectfolder: character with directory for output files (will be generated if not exisiting).
-  # projectname: optional character prefix for output file names.
-  # maxDavid: (numeric) max number of top diff regulated elements used for enrichment analysis.
-  # davidCat: character vector with DAVID categories to enrich for. 
-  # id.type: character with identifier DAVID uses to enrich for (e.g. "ENTREZ_GENE_ID" or "OFFICIAL_GENE_SYMBOL")
-  # id.column: character with respective column name for id.type in DEgenes.unfilt'.
-  # sortcolumn: character with column name to be sorted for selecting top entries.
-  # sortdecreasing: (boolean) drecreasing parameter for order of 'sortcolumn'.
-  # sortcolumn.threshold: numeric threshold for 'sortcolumn' to be included in overepresentation analysis.
-  #                       If sortdecreasing=F, value < sortcolumn.threshold 
-  #                       else value > sortcolumn.threshold
-  # org: character with species name DAVID uses for enrichment (e.g."Homo sapiens" or "Mus musculus").
-  # threshold4enrich: numeric p-value threshold for enrichment terms.
-  # mincount: numeric minimum gene count in enrichment terms.  
-    
-    
-    
-  ## Details
-  # Function uses genelist and optionally background gene list as input to perform enrichment analysis 
-  # using the RDAVIDWebService. Gene list can be supplied as vector with ids given in id.type, dataframe
-  # with or character string with path of data file. If a vector is given, sorting parameter will be ignored.
-  # Enrichment categories are defined in 'davidCat' and species is defined in 'org'.
-  # If no connection to RDAVIDWebService can be established, NULL is returned.
-  
-    
-  ## value
-  # Functional annotation chart as R object. 
-  # Additionally, a functional annotation chart is stored in the project folder as side effect.
-   
- 
-  ## Author(s) 
-  # Frank R?hle 
-    
-    
   
     
   # create output directory
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T)} 
   
+
+  # load required libraries
+  pkg.cran <- NULL
+  pkg.bioc <- c("RDAVIDWebService", "GSEABase", "KEGG.db", "KEGGgraph") 
+  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
-  
-  
-  
-  ## install/load required packages from CRAN and Bioconductor
-  source("http://bioconductor.org/biocLite.R")
-  pcksBioc <- c("RDAVIDWebService", "GSEABase", "KEGG.db", "KEGGgraph")
-  
-  for (lib in pcksCRAN) { # CRAN packages
-    if (!is.element(pcksCRAN[p], installed.packages()[,1])) {
-      install.packages(pcksCRAN[p], dependencies=TRUE)}
-    require(pcksCRAN[p], character.only = TRUE) 
-  }
  
-  
-  
-  
-  
-  
   # read file if 'genes' is character string with file path
   if(is.character(genes) & length(genes)==1) {
     cat("\n\nReading gene list:", genes, "\n")
@@ -175,8 +161,9 @@
     }
 
   
+ 
   # Detaching libraries not needed any more
-  for (lib in pcksCRAN) {detach_package(lib)}
+  detach_package(c(pkg.cran, pkg.bioc))
   
   return(davidResult) # Get functional annotation chart as R object.
 } # end of function definition 

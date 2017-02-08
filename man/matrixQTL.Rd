@@ -91,4 +91,6 @@ for genes and SNPs are either given in \code{SNPfile_transpAddCoded_name} or \co
 or are downloaded from biomaRt. Model type and optional covariates can be selected for analysis. 
 Analysis can be perfomed for either cis or trans QTLs or both simulatanously.
 }
-
+\author{
+Frank Ruehle
+}

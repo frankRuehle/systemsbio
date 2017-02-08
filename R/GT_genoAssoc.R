@@ -24,6 +24,10 @@
 #' 
 #' @return Association results as scan.gwaa object. Intermediary results and plots are stored in \code{projectfolder} 
 #' as side effects.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export genoAssoc
 
 
 genoAssoc <- function(gwaa, 

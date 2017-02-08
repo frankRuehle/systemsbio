@@ -82,4 +82,6 @@ is generated 0/1 coded (1=male, 0=female) as required by GenABEL. Optionally, nu
 character names (e.g. "X", "Y"). If \code{removeNullPositions} is set TRUE, variants without valid coordinates are
 removed from the generated \code{gwaa} dataset.
 }
-
+\author{
+Frank Ruehle
+}

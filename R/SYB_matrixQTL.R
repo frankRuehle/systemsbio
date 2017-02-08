@@ -46,6 +46,10 @@
 #'  
 #' @return list containing analysis parameter and QTL results. Intermediary results and plots 
 #' are stored in \code{projectfolder} as side effects.
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export 
 
 
 matrixQTL <- function(eset = NULL, 

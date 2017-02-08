@@ -43,4 +43,6 @@ Use phdata() for checking which trait names ara avalable. If \code{times} is set
 empirical p-values are calculated using \code{times} permutations.
 A table and a Manhattan plot with association results are stored in \code{projectfolder}.
 }
-
+\author{
+Frank Ruehle
+}

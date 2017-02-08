@@ -43,6 +43,10 @@
 #' @param GTarrayDescription.colname.strand Character with colnames for strand information.
 #' 
 #' @return GenABEL gwaa object
+#' 
+#' @author Frank Ruehle
+#' 
+#' @export readGeno
 
 
 readGeno <- function (genoFilename, 
@@ -101,6 +105,14 @@ readGeno <- function (genoFilename,
 
     # Covariate file must start with unique identifier in first column
   covar <- covar[,c(covarsampleID, setdiff(names(covar), covarsampleID)) ]
+  
+  # no white space allowed in character elements -> replaced by underline
+  for(c in names(covar)) {
+   if(is.character(covar[,c])) {
+     covar[,c] <- gsub(" ", "_", covar[,c])
+     }
+  }
+  
   
   modcovarFilename <- file.path(projectfolder, paste0(projectname, "GenABEL.cov"))
   cat("\nWriting covariates file to", modcovarFilename, "\n")
