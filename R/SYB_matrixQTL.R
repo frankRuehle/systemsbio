@@ -441,8 +441,9 @@ for (qtl in helpvec) {
   cat("\nAnalysis done in: ", resultQTL$time.in.sec, " seconds", "\n");
   cat("\nResults stored in", file.path(projectfolder, qtl), "\n\n")
   ## Plot qq-plot of cis and trans p-values
-  tiff(filename=file.path(projectfolder, qtl, paste0(projectNameSuffix, "qq_plot_", QTLtype,".tiff")), width = 210 , height = 210, units = "mm", res=600, compression = "lzw")
-    plot(resultQTL)
+  png(filename=file.path(projectfolder, qtl, paste0(projectNameSuffix, "qq_plot_", QTLtype,".png")), width = 210 , 
+      height = 210, units = "mm", res=600)
+      plot(resultQTL)
   dev.off()
   
   

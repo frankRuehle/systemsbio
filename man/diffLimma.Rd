@@ -17,14 +17,14 @@ diffLimma(GEXMTSet, comparisons, p.value.threshold = 0.05,
 \arguments{
 \item{GEXMTSet}{ExpressionSet or MethylSet}
 
-\item{comparisons}{character vector with group comparisons in format "groupA-groupB" or 
-nested comparisons in format "(groupA-groupB)-(groupC-groupD)".}
+\item{comparisons}{character vector with group comparisons in format \code{"groupA-groupB"} or 
+nested comparisons in format \code{"(groupA-groupB)-(groupC-groupD)"}.}
 
 \item{p.value.threshold}{numeric p-value threshold}
 
-\item{adjust.method}{adjustment method for multiple testing ("none", "BH", "BY" and "holm")}
+\item{adjust.method}{adjustment method for multiple testing (\code{"none", "BH", "BY" and "holm"})}
 
-\item{FC.threshold}{numeric foldchange threshold. If data is log2-transformed, mind to transform threshold too.}
+\item{FC.threshold}{numeric foldchange threshold. If data is log2-transformed, mind to transform threshold too!}
 
 \item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
 
@@ -32,11 +32,11 @@ nested comparisons in format "(groupA-groupB)-(groupC-groupD)".}
 
 \item{matchvar}{(character) if paired design, name of column to be used to group samples. NULL for unpaired design.}
 
-\item{Symbol.column}{character with column name of Gene Symbols in 'DEgenes.unfilt' and 'GEXMTSet' or NULL.}
+\item{Symbol.column}{character with column name of Gene Symbols in \code{GEXMTSet} or NULL.}
 
-\item{sampleColumn}{character with column name of Sample names in pData(GEXMTSet)}
+\item{sampleColumn}{character with column name of Sample names in \code{GEXMTSet}}
 
-\item{groupColumn}{character with column name of group names in pData(GEXMTSet). Group names must match comparisons!}
+\item{groupColumn}{character with column name of group names in \code{GEXMTSet}. Group names must match \code{comparisons}!}
 
 \item{useWeights}{(boolean) if TRUE, arrays are weighted for their quality.}
 
@@ -60,11 +60,11 @@ which are in groups of the respective group comparison.}
 included in foldchange heatmaps. One FC heatmap is generated for each character vector.
 If NULL no FC heatmaps are generated.}
 
-\item{FC.heatmap.geneselection}{character vector containing elements of c("all", "intersect", "union"). 
-Which probes shall be used for foldchange heatmaps? "allprobes": no restriction,  
-"intersect": only probes are used which are differentially expressed in all respective group comparisons.
-"union": only probes are used which are differentially expressed in any of the respective group comparisons.
-Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in 'comparisons'
+\item{FC.heatmap.geneselection}{character vector containing elements of \code{c("all", "intersect", "union")}. 
+Which probes shall be used for foldchange heatmaps? \code{"allprobes"}: no restriction,  
+\code{"intersect"}: only probes are used which are differentially expressed in all respective group comparisons.
+\code{"union"}: only probes are used which are differentially expressed in any of the respective group comparisons.
+Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in \code{comparisons}
 as well as by minimum adjusted p-value of respective group comparisons plotted in this heatmap.
 Obsolete if 'FC.heatmap.comparisons' is NULL.}
 }
@@ -78,14 +78,14 @@ for each group comparison are stored as side-effects in the project folder.
 Differential Gene expression analysis for multiple group comparisons incl. output of Venn diagrams and heatmaps.
 }
 \details{
-Function generates design matrix, fit and differential expression results for dedicated group comparisons of input object.
+Function generates design matrix, fit and differential expression results for dedicated group comparisons of the input object.
 Analysis is performed either for one group comparison in paired design or for any number of unpaired group comparisons.
-The group designations in the groupColumn must match the contrasts given in comparisons ("groupA-groupB").
+The group designations in the \code{groupColumn} must match the contrasts given in \code{comparisons} (\code{"groupA-groupB"}).
 P-value and foldchange thresholds may be applied to filter result data. 
 Heatmaps with sample signal intensities are generated for top differentially expressed genes for each group comparison 
-given in 'comparisons'. Additionally heatmaps indicating foldchanges are generated for each set of group comparisons
-given in 'FC.heatmap.comparisons'. Selection of probes with respect to these group comparisons is characterised in 
-'FC.heatmap.geneselection'. If the resulting number of probes exceeds 'maxHM', probes are prioritized by either 
+given in \code{comparisons}. Additionally heatmaps indicating foldchanges are generated for each set of group comparisons
+given in \code{FC.heatmap.comparisons}. Selection of probes with respect to these group comparisons is characterised in 
+\code{FC.heatmap.geneselection}. If the resulting number of probes exceeds \code{maxHM}, probes are prioritized by either 
 F-Test p-value or by minimum p-value of selected group comparisons.
 }
 \author{

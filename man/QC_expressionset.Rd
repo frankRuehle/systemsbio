@@ -6,7 +6,8 @@
 \usage{
 QC_expressionset(eset, projectfolder = "GEX/QC", projectname = "",
   groupColumn = "Sample_Group", phDendro = "Sample_Group",
-  flashClustMethod = "average", cex.dendroLabels = 0.6, thresholdZ.k = -5)
+  flashClustMethod = "average", cex.dendroLabels = 0.6,
+  threshold.Z.k = -5)
 }
 \arguments{
 \item{eset}{ExpressionSet or ExpressionSetIllumina object}
@@ -17,14 +18,14 @@ QC_expressionset(eset, projectfolder = "GEX/QC", projectname = "",
 
 \item{groupColumn}{character vector with name of group column in phenotype data.}
 
-\item{phDendro}{character vector with phenotypes of eset object to be displayed in sample Dendrogram}
+\item{phDendro}{character vector with phenotypes of \code{eset} to be displayed in sample dendrogram.}
 
 \item{flashClustMethod}{character vector with the agglomeration method to be used in \code{WGCNA} package. 
 Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".}
 
 \item{cex.dendroLabels}{numeric. Controls size of labels sample in dendrogram.}
 
-\item{thresholdZ.k}{numeric. Threshold for outlier prediction WGCNA package (outlier samples are highlighted 
+\item{threshold.Z.k}{numeric. Threshold for outlier prediction \code{WGCNA} package (outlier samples are highlighted 
 in red in sample dendrogram).}
 }
 \value{

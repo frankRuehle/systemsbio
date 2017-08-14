@@ -5,10 +5,11 @@
 \title{Plot p-values in genomic context}
 \usage{
 \method{plot}{region}(region, window = 50000, title = NULL, data = list(),
-  variant2highlight = "lead.SNP", EFFECT2highlight = c("miss", "frame",
+  variant2highlight = "centered", EFFECT2highlight = c("miss", "frame",
   "splice", "start", "stop"),
   recombination.rate = "V:/proj/public_data/genetic_map_human/NCBI_genetic_map_GRCh37",
-  biomaRt, LNCipedia = NULL, numberOfRowsForGenePlotting = 3)
+  biomaRt, hgnc.symbols.only = TRUE, LNCipedia = NULL,
+  numberOfRowsForGenePlotting = 3)
 }
 \arguments{
 \item{region}{Character with region of interest of form "chr1:20000-30000" or "chr1:20000".}
@@ -18,22 +19,26 @@ is given in \code{region}. The window is centered around this position.}
 
 \item{title}{character with title to be used in plot.}
 
-\item{data}{named ist of dataframes containing p-vales to be plotted. Required columns of each data frame are "CHR", "POS" and "P".
+\item{data}{named list of dataframes containing p-vales to be plotted. Required columns of each data frame are "CHR", "POS" and "P".
 An additionally column "EFFECT" with functional characterisation of the locus may be given optionally.}
 
 \item{variant2highlight}{character vector with variant to be highligthed as filled symbols. For this, an additionally
-column \code{ID} is required within \code{data}. Omitted if NULL, If "lead.SNP", the lead SNP is highlighted (applicable
-if \code{region} is of form "chr1:20000").}
+column \code{ID} is required within \code{data}. Omitted if NULL, If "centered", the centered SNP is highlighted if available
+(applicable e.g. if \code{region} is of form "chr1:20000"). Vertical lines are added for highligted SNPs or to the center
+of the plot, respectively.}
 
 \item{EFFECT2highlight}{character vector with regular expressions (case insensitive). If an \code{EFFECT} column with 
 functional annotation is given within a dataset, variants containing any of these expressions are highlighted in red.}
 
 \item{recombination.rate}{character with path to file or to folder containing recombination rates to be plotted. 
-Alternatively, a dataframe object may be commited. Omitted if NULL.}
+Alternatively, a dataframe object can be supplied. Omitted if NULL.}
 
 \item{biomaRt}{biomaRt object to be used for gene annotation. If NULL, biomaRt annotation is skipped.}
 
-\item{LNCipedia}{character with path to LNCipedia file. If given lncRNA genes are added to the plot. Omitted if NULL}
+\item{hgnc.symbols.only}{logical. If TRUE, only genes plotted with annotated HGNC Symbol. If FALSE, non-annotated
+genes in the plot are labeled with Ensembl gene id if available.}
+
+\item{LNCipedia}{character with path to LNCipedia bed file. If given lncRNA genes are added to the plot. Omitted if NULL}
 
 \item{numberOfRowsForGenePlotting}{numeric number of rows used for plotting genes}
 }

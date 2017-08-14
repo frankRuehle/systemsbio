@@ -15,6 +15,9 @@
 #' @param pkg Character vector with names of packages to be detached
 #' @param character.only a logical indicating whether name can be assumed to be a character string.
 #' 
+#' @return character vector with package names which have not yet been attached to workspace before call of
+#'         \code{attach_package}. This vector may be used to detach packages not needed any more with \code{detach_package}. 
+#' 
 #' @author Frank Ruehle
 #' 
 #' @export attach_package 
@@ -26,9 +29,13 @@
 ##### Attach packages
 # either from CRAN or Bioconductor
 attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bioconductor.org/biocLite.R") {
+ 
+  not.yet.attached.pkg.cran <- NULL
+  not.yet.attached.pkg.bioc <- NULL
   
   # install CRAN libraries
   if(!is.null(pkg.cran)) {
+    not.yet.attached.pkg.cran <- pkg.cran[!(pkg.cran %in% loadedNamespaces())]
     for (p in 1:length(pkg.cran)) {  
       if (!is.element(pkg.cran[p], installed.packages()[,1])) {
         install.packages(pkg.cran[p], dependencies=TRUE)}
@@ -38,6 +45,7 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bio
   
   # install Bioconductor libraries
   if(!is.null(pkg.bioc)) {
+    not.yet.attached.pkg.bioc <- pkg.bioc[!(pkg.bioc %in% loadedNamespaces())]
     source(source.bioc)
     for (p in 1:length(pkg.bioc)) {  
       if (!is.element(pkg.bioc[p], installed.packages()[,1])) {
@@ -45,7 +53,10 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bio
       require(pkg.bioc[p], character.only = TRUE) 
     }
   }
-  
+
+  pkg2detach <- c(unique(not.yet.attached.pkg.cran, not.yet.attached.pkg.bioc))
+   
+  return(pkg2detach) 
 } # end function definition
 
 

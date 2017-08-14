@@ -28,8 +28,15 @@
 #'         summarized according to the attributes in \code{biomaRt.attributes.groupColumns} (separated by ";").
 #' @param annotationFile dataframe or character with path to dataframe containing annotation data by the 
 #'         assay manufacturer. If NULL, annotation is skipped.
+#' @param lines2skip.start Numeric with number of rows to skip when loading \code{annotationFile} or 
+#'                         regular expression for character string to identify corresponding row number 
+#'                         to be skipped, e.g. \code{[Assay]} in Illumina annotation files.
+#' @param lines2skip.end Numeric with number of rows to read when loading \code{annotationFile} or 
+#'                        regular expression for character string to identify corresponding row number to be read,
+#'                        e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
+#'                        All rows from that number on (incl. \code{lines2skip.end}) are skipped. Negative and other 
+#'                        invalid values are ignored.
 #' @param annofile.SNP.columnName character with column name of SNP IDs in \code{annotationFile}.
-#' @param annofile.skip.rows Numeric with number of descripten files to skip when loading \code{annotationFile}.
 #' @param annofile.columns Optional character vector with column names of \code{annotationFile} to be included.
 #' If NULL, all columns of \code{annotationFile} are merged
 #'
@@ -43,7 +50,7 @@
 
 
 basic_SNP_annotation <- function(data,
-                                 max.SNPs.per.biomaRt.call = 30000,
+                                 max.SNPs.per.biomaRt.call = 10000,
                                  data.SNP.columnName = "SNP",
                                  snpmaRt = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org", dataset="hsapiens_snp"), # GRCh37.p13, latest hg19 annotation
                                  biomaRt.SNP.columnName = "refsnp_id", 
@@ -51,8 +58,9 @@ basic_SNP_annotation <- function(data,
                                  biomaRt.attributes.groupColumns  = c("refsnp_id", "chr_name", "chrom_start"),
                                  biomaRt.attributes.summarized = c("ensembl_gene_stable_id", "ensembl_type"),
                                  annotationFile = NULL,
+                                 lines2skip.start = 0,
+                                 lines2skip.end = -1,
                                  annofile.SNP.columnName ="Name",
-                                 annofile.skip.rows = 0,
                                  annofile.columns = NULL 
                                  ) {
   
@@ -85,10 +93,10 @@ basic_SNP_annotation <- function(data,
             stop <- c(seq(from = max.SNPs.per.biomaRt.call, to = nrow(data), by = max.SNPs.per.biomaRt.call),  nrow(data))
    }
  
-  cat("\nAnnotate SNP-IDs with data from biomaRt")
+  cat("\nAnnotate SNP-IDs with data from biomaRt\n")
   snp.anno <- data.frame()
   for(i in 1:length(start)){
-    cat("\nbiomaRt query", i, "of", length(start))
+    cat("biomaRt query", i, "of", length(start), "\n")
     snp.temp <- getBM(attributes = c(biomaRt.attributes.groupColumns, biomaRt.attributes.summarized), 
                       filters = biomaRt.filter, 
                       values = if(data.SNP.columnName == "row.names") {rownames(data[start[i]:stop[i],])
@@ -121,8 +129,13 @@ basic_SNP_annotation <- function(data,
    
   # merge with data
   data <- merge(data, snp.anno, by.x= data.SNP.columnName, by.y=paste0("SNPMart_", biomaRt.SNP.columnName), all.x=T)
-
-  } # end if snpmaRt
+  
+  # rename column rows if overwritten and remove temporara row.name columns
+  if(data.SNP.columnName == "row.names") {
+    rownames(data) <- data$Row.names
+    data <- data[, !(names(data) %in% c("Row.names"))]
+  }
+} # end if snpmaRt
   
   if(!is.null(annotationFile)) {
     
@@ -130,8 +143,21 @@ basic_SNP_annotation <- function(data,
     if(is.character(annotationFile) && length(annotationFile)==1) {
       cat("\nReading Annotation File:", annotationFile, "\n")
       separator <- if(grepl("\\.csv", annotationFile)) {","} else {"\t"}
-      annotationFile <- read.table(annotationFile, header=T, sep= separator, na.strings = c("", " ", "NA"), 
-                                   check.names =T, stringsAsFactors = F, skip = annofile.skip.rows) 
+   
+      if(is.character(lines2skip.start)) {
+        lines2skip.start <- grep(lines2skip.start, readLines(annotationFile), ignore.case = T)
+        if (length(lines2skip.start==0)) {stop("\nCharacter in lines2skip.start not found!\n")}
+        if (length(lines2skip.start>=2)) {stop(paste("\nCharacter in lines2skip.start found multiple times:", print(lines2skip.start), "\n"))}
+      }
+      
+      if(is.character(lines2skip.end)) {
+        lines2skip.end <- grep(lines2skip.end, readLines(annotationFile), ignore.case = T)
+        if (length(lines2skip.end==0)) {stop("\nCharacter in lines2skip.end not found!\n")}
+        if (length(lines2skip.end>=2)) {stop(paste("\nCharacter in lines2skip.end found multiple times:", print(lines2skip.end), "\n"))}
+        }
+      
+    annotationFile <- read.table(annotationFile, header=T, sep= separator, na.strings = c("", " ", "NA"), check.names =F, 
+                                   stringsAsFactors = F, skip = lines2skip.start, nrow= lines2skip.end-2-lines2skip.start) 
     }
     
     cat("\nAnnotate SNP-IDs with data from annotation file")
@@ -146,8 +172,16 @@ basic_SNP_annotation <- function(data,
     # merge data with annotation file
     names(annotationFile) <- paste0("Annofile_", names(annotationFile))
     data <- merge(data, annotationFile, by.x= data.SNP.columnName, by.y=paste0("Annofile_", annofile.SNP.columnName), all.x=T)
+    
+    # rename column rows if overwritten and remove temporara row.name columns
+    if(data.SNP.columnName == "row.names") {
+    rownames(data) <- data$Row.names
+    data <- data[, !(names(data) %in% c("Row.names"))]
+    }
   }
  
+ 
+  
   # re-order data and remove temporary index column
   data <- data[order(data$temp.index), !(names(data) %in% c("temp.index"))]
   

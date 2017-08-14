@@ -16,10 +16,10 @@
 #' @param groupsoi character vector with sample groups of interest to be included in PCA. 
 #'           Respective samples are taken from \code{phenoData} of \code{expca}.
 #'           groupnames must match entries in column given in \code{groupby}. 
-#' @param groupby Column name of phenoData of \code{expca} used for group names
-#' @param sample.name.column Column name of \code{phenoData} of \code{expca} used for sample names
+#' @param groupby Column name of phenoData of \code{expca} used for group names.
+#' @param sample.name.column Column name of phenoData of \code{expca} used for sample names
 #' @param samples2exclude Character vector for optionally exclusion of individual samples. Used as 
-#'                  regular expression for lookup of samples.
+#'                  regular expression for lookup of samples. \code{Null} if no sample to exlude.
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
 #' @param inputType a character vector description of the input type. Must be Affymetrix chip type, 
@@ -145,7 +145,7 @@ wrapPCAgoprom <- function(expca,
   ### Make PCA informative plot. Restricted to PC1 and PC2 only!
   filename.pcaInfoPlot <- file.path(projectfolder, paste(projectname, "pcainfoplot_PC1_2.tiff", sep="_"))
   cat("\n\nSave pcaInfoPlot for PC1 and PC2 to", filename.pcaInfoPlot, "\n")
-  tiff(filename= filename.pcaInfoPlot, width = 7016 , height = 4960, res=600, compression = "lzw")
+  tiff(filename= filename.pcaInfoPlot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
   pcaInfoPlot(exprs(expca),inputType=inputType, org = org, 
               printNames = TRUE,
               groups=factor(pData(expca)[,groupby]), 
@@ -169,7 +169,7 @@ wrapPCAgoprom <- function(expca,
     
     filename.pcaplot <- file.path(projectfolder, paste0(projectname, "_pcaplot_PC", PCs[1], "_", PCs[2], ".tiff"))
     cat("\nSave pcaplot to", filename.pcaplot, "\n")
-    tiff(filename=filename.pcaplot, width = 7016 , height = 4960, res=600, compression = "lzw")
+    tiff(filename=filename.pcaplot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
     plot.pca(pcaOutput, groups=factor(pData(expca)[,groupby]), PCs = PCs, 
              printNames = print.sample.names, symbolColors = TRUE, plotCI = TRUE)
     dev.off()

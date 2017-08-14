@@ -69,8 +69,9 @@ genoQC <- function(gwaa,
   if(!is.null(trait.name)) {
      an1 <- qtscore(phdata(gwaa)[,trait.name], gwaa, trait= trait.type)
     lambda_beforeQC <- round(lambda(an1)$estimate, digits=4)
-    cat(paste("\nlambda =", lambda_beforeQC, "\n\n"))
-    tiff(filename=file.path(projectfolder, paste0(projectname, "qqPlot_before_QC.tiff")), width = 210 , height = 210, units = "mm", res=600, compression = "lzw")
+    cat(paste("\nlambda before QC =", lambda_beforeQC, "\n\n"))
+    png(filename=file.path(projectfolder, paste0(projectname, "qqPlot_before_QC.png")), width = 210 , 
+        height = 210, units = "mm", res=600)
       estlambda(an1[, "P1df"], plot=TRUE, main=paste0("qqPlot before QC (lambda = ", lambda_beforeQC, ")" ))
     dev.off()
   } else {cat("\nNo trait.name specified. qq-plot is omitted.")}
@@ -140,9 +141,9 @@ genoQC <- function(gwaa,
 
   
   # PCA plot with first 2 PCs:
-  cat(paste("\nWrite PCA plot to"), file.path(projectfolder, paste0(projectname, "PCAplot.tiff")))  
-  tiff(filename=file.path(projectfolder, paste0(projectname, "PCAplot.tiff")), width = 210 , 
-       height = 210, units = "mm", res=600, compression = "lzw")
+  cat(paste("\nWrite PCA plot to"), file.path(projectfolder, paste0(projectname, "PCAplot.png")))  
+  png(filename=file.path(projectfolder, paste0(projectname, "PCAplot.png")), width = 210 , 
+      height = 210, units = "mm", res=600)
       plot(gwaaqc.mds[,1:2], main=paste0(projectname, "PCA plot"), xlab="PC1", ylab="PC2", 
            pch= if(!is.null(trait.name) && trait.type=="binomial") {phdata(gwaaqc)[,trait.name]} else {1})
       text(gwaaqc.mds[,1:2], sub("@.*$", "", rownames(gwaaqc.mds)), pos=1, cex=0.4) # remove SNPZone suffix from sample names if necessary
@@ -162,7 +163,8 @@ genoQC <- function(gwaa,
       cat(paste("\nassign samples to", i, "clusters"))
       km <- kmeans(gwaaqc.mds[,1:2], centers=i, nstart=1000)
       
-      tiff(filename=file.path(projectfolder, paste0(projectname, "PCAplot_",i,"_center.tiff")), width = 210 , height = 210, units = "mm", res=600, compression = "lzw")
+      png(filename=file.path(projectfolder, paste0(projectname, "PCAplot_",i,"_center.png")), width = 210 , 
+          height = 210, units = "mm", res=600)
         plot(gwaaqc.mds[,1:2], main=paste("PCAplot",i,"center"), xlab="PC1", ylab="PC2", col=km$cluster, 
              pch= if(!is.null(trait.name) && trait.type=="binomial") {phdata(gwaaqc)[,trait.name]} else {1})
         text(gwaaqc.mds[,1:2], sub("@.*$", "", rownames(gwaaqc.mds)), pos=1, cex=0.4) # remove SNPZone suffix from sample names if necessary
@@ -188,7 +190,8 @@ genoQC <- function(gwaa,
     an2 <- qtscore(phdata(gwaaqc)[,trait.name], gwaaqc, trait= trait.type)
     lambda_afterQC <- round(lambda(an2)$estimate, digits=4)
     cat(paste("\n\nlambda of QC purified dataset =", lambda_afterQC))
-    tiff(filename=file.path(projectfolder, paste0(projectname, "qqPlot_after_QC.tiff")), width = 210 , height = 210, units = "mm", res=600, compression = "lzw")
+    png(filename=file.path(projectfolder, paste0(projectname, "qqPlot_after_QC.png")), width = 210 , 
+        height = 210, units = "mm", res=600)
       estlambda(an2[, "P1df"], plot=TRUE, main=paste0("qqPlot after QC (lambda = ", lambda_afterQC, ")" ))
     dev.off()
   }

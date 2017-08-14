@@ -46,14 +46,10 @@ matching the data in 'DEgenes.unfilt'.}
 if NULL, SYMBOLs are derived from 'Entrez.column' using the annotation package for 'org'.}
 
 \item{Entrez.column}{character with column name of ENTREZ IDs in 'DEgenes.unfilt'.
-               if NULL, ENTREZ IDs are derived from 'Symbol.column' using the annotation package for 'org'.
-               Either 'Symbol.column' or 'Entrez.column' must be specified.
+if NULL, ENTREZ IDs are derived from 'Symbol.column' using the annotation package for 'org'.
+Either 'Symbol.column' or 'Entrez.column' must be specified.}
 
-# Volcano plot parameter:}
-
-\item{volcanoP}{specify if adjusted (adj.pvalue) or unadjusted (pvalue) p-values shall be used for volcano plots. 
-
-# Enrichment parameter:}
+\item{volcanoP}{specify if adjusted (adj.pvalue) or unadjusted (pvalue) p-values shall be used for volcano plots.}
 
 \item{use.clusterProfiler}{(boolean) use clusterProfiler for enrichment analysis.}
 

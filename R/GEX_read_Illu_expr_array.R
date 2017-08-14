@@ -43,11 +43,11 @@
 #' 
 #' @author Frank Ruehle
 #' 
-#' @export read_Illu_Array
+#' @export 
 
 
 ## Usage 
-read_Illu_Array <- function(
+read_Illu_expr_array <- function(
       dataFile, 
       qcFile, 
       sampleSheet,

@@ -41,10 +41,8 @@
 #'                  if NULL, ENTREZ IDs are derived from 'Symbol.column' using the annotation package for 'org'.
 #'                  Either 'Symbol.column' or 'Entrez.column' must be specified.
 #'   
-#'   # Volcano plot parameter:
 #' @param volcanoP specify if adjusted (adj.pvalue) or unadjusted (pvalue) p-values shall be used for volcano plots. 
 #'   
-#'   # Enrichment parameter:
 #' @param use.clusterProfiler (boolean) use clusterProfiler for enrichment analysis. 
 #' @param use.davidAccount email account for DAVID's Web Service connectivity or DAVIDWebService object.
 #'                 If NULL or FALSE, DAVID enrichment analysis is skipped.

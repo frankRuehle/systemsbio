@@ -81,7 +81,7 @@ regionalplot.genelabels <- function(
         ybottom = exons$ypos - 0.2 / scale.factor^2,
         xright = exons$end,
         ytop = exons$ypos + 0.2 / scale.factor^2,
-        border = NA,
+        border = "black",
         col = "black"
       )
     }

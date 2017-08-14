@@ -10,7 +10,8 @@ readGeno(genoFilename, mapFilename, covarFilename, existingRawFile = NULL,
   removeNullPositions = T, updateSNPpos = NULL,
   snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org",
   dataset = "hsapiens_snp"), GTarrayDescriptionFile = NULL,
-  GTarrayDescription.rows2skip = 7,
+  GTarrayDescription.lines2skip.start = "\\\\[Assay\\\\]",
+  GTarrayDescription.lines2skip.end = "\\\\[Controls\\\\]",
   GTarrayDescription.colname.identifier = "Name",
   GTarrayDescription.colname.coding = "SNP",
   GTarrayDescription.colname.strand = "RefStrand",
@@ -45,13 +46,19 @@ and supersedes any other files. Omitted if NULL.}
 in map-file will be updated by biomaRt. If "descriptionfile", they will be updated by the supplied \code{GTarrayDescriptionFile}.
 If NULL chromosome and SNP positions are not updated.}
 
-\item{snpmart}{biomaRt object to be used for updating SNP positions.}
+\item{snpmart}{biomaRt object to be used for updating SNP positions (or NULL).}
 
 \item{GTarrayDescriptionFile}{Optional character with path to Illumina array description file. If given, 
 strand and allele coding data will be added to map file.}
 
-\item{GTarrayDescription.rows2skip}{Numeric indicating description rows in Array description file to be skipped.
-Omitted if \code{GTarrayDescriptionFile} is NULL.}
+\item{GTarrayDescription.lines2skip.start}{Numeric with number of rows to skip when loading \code{annotationFile} or 
+regular expression for character string to identify corresponding row number 
+to be skipped, e.g. \code{[Assay]} in Illumina annotation files.}
+
+\item{GTarrayDescription.lines2skip.end}{Numeric with number of rows to read when loading \code{annotationFile} or 
+regular expression for character string to identify corresponding row number to be read,
+e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
+All rows from that number on (incl. \code{GTarrayDescription.lines2skip.end}) are skipped.}
 
 \item{GTarrayDescription.colname.identifier}{Character with colnames for SNP identifier in Array description file.}
 
@@ -66,12 +73,14 @@ GenABEL gwaa object
 \code{readGeno} reads genotype data stored in ped/map files, adjusts format for GenABEL package and processes it for further analysis.
 }
 \details{
-If a GenABEL raw data file given in \code{existingRawFile} already exists, this file is directly loaded into a gwaa 
-object. Otherwise this file has to be created first. For this, the map file in \code{mapFilename} is loaded, the 
-linkage column (column 3) removed if present and a headerline is added. If an Array description file is supplied 
+If a GenABEL raw data file given in \code{existingRawFile} already exists, this file is directly loaded into a gwaa object. 
+Otherwise this file has to be created first from the supplied ped and map file. For this, the map file in \code{mapFilename} is 
+loaded, the linkage column (column 3) removed if present and a headerline is added. If an Array description file is supplied 
 in \code{GTarrayDescriptionFile}, an extended map file is generated for GenABEL including strand and allele coding 
-information. Otherwise strand information is set to unknown. If a biomaRt object is given in \code{snpmart} SNP 
-chromosomal postions can be updated according either to biomaRt or to \code{GTarrayDescriptionFile}.
+information. Otherwise strand information is set to unknown. If indicated in \code{updateSNPpos} SNP 
+chromosomal postions can be updated according either to biomaRt (if a biomaRt object is given in \code{snpmart}) or 
+to \code{GTarrayDescriptionFile}. Mind that GenABEL does not allow strings of characters as alleles in the 
+corresponding ped-file (as for Indels), but just 1-character-alleles or "-".
 
 After loading the GenABEL raw file, phenotype information is added from the supplied covariates file \code{covarFilename}.
 I.e. no phenotype or gender data is considered from initial ped-file. No white space allowed in phenotype entries.

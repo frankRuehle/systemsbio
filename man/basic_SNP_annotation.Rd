@@ -4,14 +4,14 @@
 \alias{basic_SNP_annotation}
 \title{SNP annotation using biomaRt and/or manufacturer data}
 \usage{
-basic_SNP_annotation(data, max.SNPs.per.biomaRt.call = 30000,
+basic_SNP_annotation(data, max.SNPs.per.biomaRt.call = 10000,
   data.SNP.columnName = "SNP", snpmaRt = useMart("ENSEMBL_MART_SNP", host =
   "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"),
   biomaRt.SNP.columnName = "refsnp_id", biomaRt.filter = "snp_filter",
   biomaRt.attributes.groupColumns = c("refsnp_id", "chr_name", "chrom_start"),
   biomaRt.attributes.summarized = c("ensembl_gene_stable_id", "ensembl_type"),
-  annotationFile = NULL, annofile.SNP.columnName = "Name",
-  annofile.skip.rows = 0, annofile.columns = NULL)
+  annotationFile = NULL, lines2skip.start = 0, lines2skip.end = -1,
+  annofile.SNP.columnName = "Name", annofile.columns = NULL)
 }
 \arguments{
 \item{data}{dataframe containing SNP IDs.}
@@ -34,9 +34,17 @@ summarized according to the attributes in \code{biomaRt.attributes.groupColumns}
 \item{annotationFile}{dataframe or character with path to dataframe containing annotation data by the 
 assay manufacturer. If NULL, annotation is skipped.}
 
-\item{annofile.SNP.columnName}{character with column name of SNP IDs in \code{annotationFile}.}
+\item{lines2skip.start}{Numeric with number of rows to skip when loading \code{annotationFile} or 
+regular expression for character string to identify corresponding row number 
+to be skipped, e.g. \code{[Assay]} in Illumina annotation files.}
 
-\item{annofile.skip.rows}{Numeric with number of descripten files to skip when loading \code{annotationFile}.}
+\item{lines2skip.end}{Numeric with number of rows to read when loading \code{annotationFile} or 
+regular expression for character string to identify corresponding row number to be read,
+e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
+All rows from that number on (incl. \code{lines2skip.end}) are skipped. Negative and other 
+invalid values are ignored.}
+
+\item{annofile.SNP.columnName}{character with column name of SNP IDs in \code{annotationFile}.}
 
 \item{annofile.columns}{Optional character vector with column names of \code{annotationFile} to be included.
 If NULL, all columns of \code{annotationFile} are merged}

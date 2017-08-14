@@ -2,12 +2,14 @@
 #'
 #' \code{readGeno} reads genotype data stored in ped/map files, adjusts format for GenABEL package and processes it for further analysis.
 #'
-#' If a GenABEL raw data file given in \code{existingRawFile} already exists, this file is directly loaded into a gwaa 
-#' object. Otherwise this file has to be created first. For this, the map file in \code{mapFilename} is loaded, the 
-#' linkage column (column 3) removed if present and a headerline is added. If an Array description file is supplied 
+#' If a GenABEL raw data file given in \code{existingRawFile} already exists, this file is directly loaded into a gwaa object. 
+#' Otherwise this file has to be created first from the supplied ped and map file. For this, the map file in \code{mapFilename} is 
+#' loaded, the linkage column (column 3) removed if present and a headerline is added. If an Array description file is supplied 
 #' in \code{GTarrayDescriptionFile}, an extended map file is generated for GenABEL including strand and allele coding 
-#' information. Otherwise strand information is set to unknown. If a biomaRt object is given in \code{snpmart} SNP 
-#' chromosomal postions can be updated according either to biomaRt or to \code{GTarrayDescriptionFile}. 
+#' information. Otherwise strand information is set to unknown. If indicated in \code{updateSNPpos} SNP 
+#' chromosomal postions can be updated according either to biomaRt (if a biomaRt object is given in \code{snpmart}) or 
+#' to \code{GTarrayDescriptionFile}. Mind that GenABEL does not allow strings of characters as alleles in the 
+#' corresponding ped-file (as for Indels), but just 1-character-alleles or "-". 
 #' 
 #' After loading the GenABEL raw file, phenotype information is added from the supplied covariates file \code{covarFilename}.
 #' I.e. no phenotype or gender data is considered from initial ped-file. No white space allowed in phenotype entries.
@@ -33,11 +35,16 @@
 #' @param updateSNPpos Character with value "biomaRt" or "descriptionfile". For "biomaRt", chromosome and SNP positions 
 #' in map-file will be updated by biomaRt. If "descriptionfile", they will be updated by the supplied \code{GTarrayDescriptionFile}.
 #' If NULL chromosome and SNP positions are not updated.
-#' @param snpmart biomaRt object to be used for updating SNP positions. 
+#' @param snpmart biomaRt object to be used for updating SNP positions (or NULL). 
 #' @param GTarrayDescriptionFile Optional character with path to Illumina array description file. If given, 
 #' strand and allele coding data will be added to map file. 
-#' @param GTarrayDescription.rows2skip Numeric indicating description rows in Array description file to be skipped.
-#' Omitted if \code{GTarrayDescriptionFile} is NULL.
+#' @param GTarrayDescription.lines2skip.start Numeric with number of rows to skip when loading \code{annotationFile} or 
+#'                         regular expression for character string to identify corresponding row number 
+#'                         to be skipped, e.g. \code{[Assay]} in Illumina annotation files.
+#' @param GTarrayDescription.lines2skip.end Numeric with number of rows to read when loading \code{annotationFile} or 
+#'                        regular expression for character string to identify corresponding row number to be read,
+#'                        e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
+#'                        All rows from that number on (incl. \code{GTarrayDescription.lines2skip.end}) are skipped.  
 #' @param GTarrayDescription.colname.identifier Character with colnames for SNP identifier in Array description file.
 #' @param GTarrayDescription.colname.coding Character with colnames for allele coding information
 #' @param GTarrayDescription.colname.strand Character with colnames for strand information.
@@ -63,7 +70,8 @@ readGeno <- function (genoFilename,
                     updateSNPpos = NULL,     
                     snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org", dataset="hsapiens_snp"), # GRCh37.p13, latest hg19 annotation
                     GTarrayDescriptionFile = NULL,
-                      GTarrayDescription.rows2skip = 7, 
+                      GTarrayDescription.lines2skip.start = "\\[Assay\\]",
+                      GTarrayDescription.lines2skip.end = "\\[Controls\\]",
                       GTarrayDescription.colname.identifier = "Name",  
                       GTarrayDescription.colname.coding = "SNP",
                       GTarrayDescription.colname.strand = "RefStrand",
@@ -129,13 +137,13 @@ if (!is.null(existingRawFile) && file.exists(file.path(existingRawFile))) {
  
   cat("\nReading map file", if(!is.null(GTarrayDescriptionFile)){"and Array description file"}, "\n")    
 
-    # Introducing headerline and removing linkage column if present
+    # Introducing headerline and removing linkage column if present (required for GenABEL)
     mapfilemod <- read.table(mapFilename, header = FALSE, stringsAsFactors = F)
     if (length(mapfilemod)==4) {mapfilemod <- mapfilemod[,-3]}
     names(mapfilemod) <- c("chr", "name", "pos")
     
     # purify map file from optional characters such as "chr", "---", "null"
-    mapfilemod$chr <- sub("chr", "", mapfilemod$chr)
+    mapfilemod$chr <- sub("chr", "", mapfilemod$chr, ignore.case = T)
     mapfilemod$chr[!is.na(mapfilemod$chr) & mapfilemod$chr=="---"] <- 0
     mapfilemod$pos[!is.na(mapfilemod$pos) & mapfilemod$pos=="null"] <- 0
     
@@ -154,7 +162,8 @@ if (!is.null(existingRawFile) && file.exists(file.path(existingRawFile))) {
                    biomaRt.attributes.summarized = NULL,
                    annotationFile = GTarrayDescriptionFile,
                    annofile.SNP.columnName = GTarrayDescription.colname.identifier,
-                   annofile.skip.rows = GTarrayDescription.rows2skip,
+                   lines2skip.start = GTarrayDescription.lines2skip.start,
+                   lines2skip.end = GTarrayDescription.lines2skip.end,
                    annofile.columns = NULL #c(GTarrayDescription.colname.identifier, GTarrayDescription.colname.strand, 
                                         #GTarrayDescription.colname.coding, GTarrayDescription.colname.chromosome,
                                         #GTarrayDescription.colname.position)
@@ -178,7 +187,7 @@ if (!is.null(existingRawFile) && file.exists(file.path(existingRawFile))) {
         mapfilemod <- data.frame(mapfilemod, 
                                strand = mapfilemod.anno[,paste0("Annofile_", GTarrayDescription.colname.strand)],
                                coding = mapfilemod.anno[,paste0("Annofile_", GTarrayDescription.colname.coding)])
-      } else {cat("\nno strand and/or allele coding information found.")}
+        } else {cat("\nno strand and/or allele coding information found.")}
       if(!is.null(updateSNPpos)) {
         if(tolower(updateSNPpos) == "descriptionfile") {
           if(all(c(paste0("Annofile_", GTarrayDescription.colname.chromosome), 
@@ -199,6 +208,7 @@ if (!is.null(existingRawFile) && file.exists(file.path(existingRawFile))) {
  
 filename.mapfilemod <- file.path(projectfolder, paste0(projectname, "GenABEL.map"))
 cat("\nWriting modified map file to", filename.mapfilemod, "\n")
+mapfilemod$pos <- format(mapfilemod$pos, scientific = FALSE) # otherwise some BP pos are stored in scientific format!
 write.table(mapfilemod, filename.mapfilemod, quote=F, row.names=F, sep="\t")
 
 
@@ -208,10 +218,10 @@ write.table(mapfilemod, filename.mapfilemod, quote=F, row.names=F, sep="\t")
                 mapfile = filename.mapfilemod,
                 mapHasHeaderLine=TRUE,
                 format = "premakeped",
-                traits = 1,  # usually 1 (affection) or 2 (affection and liability)
+                traits = 1,  # How many traits are specified in the pedigree file? Usually 1 (affection) or 2 (affection and liability)
                 wslash=FALSE, # assumed that alleles are separated with space.
                 outfile = file.path(projectfolder, paste0(projectname, "GenABEL.raw")),
-                strand = if(paste0("Annofile_", GTarrayDescription.colname.strand) %in% names(mapfilemod)) {"file"} else {"u"}) 
+                strand = if("strand" %in% names(mapfilemod)) {"file"} else {"u"}) 
       # if strand = "file", strand information from extended map file is used. Otherwise strand = unknown.
       existingRawFile <- file.path(projectfolder, paste0(projectname, "GenABEL.raw"))
 } # end of condition if GenABEL.raw already exists
@@ -256,11 +266,11 @@ levels(genos@gtdata@chromosome)[levels(genos@gtdata@chromosome) == "26"] <- "mt"
 ### remove Chr=0 and pos=0
 if(removeNullPositions) {
   cat("\nRemoving SNPs chr=0 or pos=0.")
-  chromo0 <- genos@gtdata@chromosome==0
+  chromo0 <- chromosome(genos)==0
   cat("\n", sum(chromo0), "SNPs removed with chromosome = 0.")
   genos <- genos[,!chromo0]
 
-  Position0 <- genos@gtdata@map==0
+  Position0 <- map(genos)==0
   cat("\n", sum(Position0), "SNPs removed with bp position = 0.")
   genos <- genos[,!Position0]
   }

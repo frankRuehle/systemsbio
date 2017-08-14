@@ -4,7 +4,7 @@
 #' 
 #' The qtscore()-function from GenABEL package is used for association analysis of a gwaa object.
 #' The trait of interest is given in \code{trait.name} either as single trait (e.g. "affection")
-#' or as formula (e.g. "affection01 ~ Age + sex") if association has to be adjusted for covariates.
+#' or as formula (e.g. "affection01 ~ Age + sex") if association shall be adjusted for covariates.
 #' All traitnames in \code{trait.name} must exist within the phenotype data of the gwaa object. 
 #' Use phdata() for checking which trait names ara avalable. If \code{times} is set to more than 1,
 #' empirical p-values are calculated using \code{times} permutations.
@@ -32,7 +32,7 @@
 
 genoAssoc <- function(gwaa, 
                     projectfolder = "GT/Assoc_GenAbel",
-                    projectname = "", 
+                    projectname = NULL, 
                     trait.name = "affection01 ~ Age + sex", 
                     trait.type = "binomial", # "gaussian" or "binomial" 
                     times = 1,   
@@ -42,7 +42,7 @@ genoAssoc <- function(gwaa,
 
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }  
 
-  projectname <- if (!is.null(projectname)) {paste0(projectname, "_")} else {""}
+  projectname <- if (!is.null(projectname) && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
   
 
   ## install/load required packages from CRAN and Bioconductor
@@ -75,9 +75,10 @@ genoAssoc <- function(gwaa,
   cat(paste("\nWrite first", TopHitsReported, "results to"), result.filename)  
   write.table(AssocResults, row.names=F, quote=F, sep="\t", file=result.filename)
   
-  manhattan.filename <- file.path(projectfolder, paste0(projectname, "ManhattanPlot.tiff"))
+  manhattan.filename <- file.path(projectfolder, paste0(projectname, "ManhattanPlot.png"))
   cat(paste("\nWrite Manhattan plot to"), manhattan.filename)  
-  tiff(filename= manhattan.filename, width = 297 , height = 210, units = "mm", res=600, compression = "lzw")
+  png(filename=manhattan.filename, width = 297, height = 210, units = "mm", res=600)
+  
     plot(gwaa.qt, df="Pc1df",col=c("black", "gray"), 
          main=paste0("Manhattanplot, GC corrected p-values: ", trait.name, if(times>1) {paste(", ", times, " permutations.")}))
     abline(h= -log10(5*1e-8), col="red") # significance line

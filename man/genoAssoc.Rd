@@ -4,7 +4,7 @@
 \alias{genoAssoc}
 \title{Association analysis with GenABEL}
 \usage{
-genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = "",
+genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
   trait.name = "affection01 ~ Age + sex", trait.type = "binomial",
   times = 1, quiet = FALSE, TopHitsReported = 1000)
 }
@@ -37,7 +37,7 @@ as side effects.
 \details{
 The qtscore()-function from GenABEL package is used for association analysis of a gwaa object.
 The trait of interest is given in \code{trait.name} either as single trait (e.g. "affection")
-or as formula (e.g. "affection01 ~ Age + sex") if association has to be adjusted for covariates.
+or as formula (e.g. "affection01 ~ Age + sex") if association shall be adjusted for covariates.
 All traitnames in \code{trait.name} must exist within the phenotype data of the gwaa object. 
 Use phdata() for checking which trait names ara avalable. If \code{times} is set to more than 1,
 empirical p-values are calculated using \code{times} permutations.

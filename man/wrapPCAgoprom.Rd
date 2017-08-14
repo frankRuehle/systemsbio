@@ -18,12 +18,12 @@ observations in columns (samples).}
 Respective samples are taken from \code{phenoData} of \code{expca}.
 groupnames must match entries in column given in \code{groupby}.}
 
-\item{groupby}{Column name of phenoData of \code{expca} used for group names}
+\item{groupby}{Column name of phenoData of \code{expca} used for group names.}
 
-\item{sample.name.column}{Column name of \code{phenoData} of \code{expca} used for sample names}
+\item{sample.name.column}{Column name of phenoData of \code{expca} used for sample names}
 
 \item{samples2exclude}{Character vector for optionally exclusion of individual samples. Used as 
-regular expression for lookup of samples.}
+regular expression for lookup of samples. \code{Null} if no sample to exlude.}
 
 \item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
 

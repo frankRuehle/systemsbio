@@ -18,6 +18,10 @@ attach_package(pkg.cran = NULL, pkg.bioc = NULL,
 
 \item{character.only}{a logical indicating whether name can be assumed to be a character string.}
 }
+\value{
+character vector with package names which have not yet been attached to workspace before call of
+        \code{attach_package}. This vector may be used to detach packages not needed any more with \code{detach_package}.
+}
 \description{
 Attach required packages which may be detached after function run.
 }

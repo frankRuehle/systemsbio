@@ -18,11 +18,11 @@
 #' @param projectfolder character vector with name of desired output folder (will be generated if not exisiting).
 #' @param projectname character vector containing prefix for names of output files.
 #' @param groupColumn character vector with name of group column in phenotype data.   
-#' @param phDendro character vector with phenotypes of eset object to be displayed in sample Dendrogram 
+#' @param phDendro character vector with phenotypes of \code{eset} to be displayed in sample dendrogram. 
 #' @param flashClustMethod character vector with the agglomeration method to be used in \code{WGCNA} package. 
 #'                   Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".      
 #' @param cex.dendroLabels numeric. Controls size of labels sample in dendrogram.
-#' @param thresholdZ.k numeric. Threshold for outlier prediction WGCNA package (outlier samples are highlighted 
+#' @param threshold.Z.k numeric. Threshold for outlier prediction \code{WGCNA} package (outlier samples are highlighted 
 #'               in red in sample dendrogram).
 #'               
 #'               
@@ -47,7 +47,7 @@
                      phDendro = "Sample_Group", 
                      flashClustMethod = "average", 
                      cex.dendroLabels = 0.6,
-                     thresholdZ.k=-5
+                     threshold.Z.k=-5
                      ) {
 
     
@@ -171,9 +171,9 @@ k=as.numeric(apply(adjMatrix,2,sum))-1
 # standardized connectivity
 Z.k=scale(k)
 # Designate samples as outlying if their Z.k value is below the threshold
-# thresholdZ.k=-5 # often -2.5    # defined in function call
+# threshold.Z.k=-5 # often -2.5    # defined in function call
 # the color vector indicates outlyingness (red)
-outlierColor=ifelse(Z.k<thresholdZ.k,"red","black") # Outlier highlighted in red
+outlierColor=ifelse(Z.k<threshold.Z.k,"red","black") # Outlier highlighted in red
 
 
 
@@ -190,7 +190,7 @@ datTraits = as.data.frame(traitData[,phDendro])  # choose phenotypes for Dendrog
 names(datTraits) <- phDendro
 
 traitColors = labels2colors(datTraits); 
-datColors=data.frame(outlier=outlierColor,traitColors)  # Zeile hinzuf?gen mit Outlier detection
+datColors=data.frame(outlier=outlierColor,traitColors)  # add line for Outlier detection
 
 # Plot the sample dendrogram and the colors underneath.
 cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.pdf")), "\n")  
