@@ -5,11 +5,11 @@
 \title{Association analysis with GenABEL}
 \usage{
 genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
-  trait.name = "affection01 ~ Age + sex", trait.type = "binomial",
-  times = 1, quiet = FALSE, TopHitsReported = 1000)
+  trait.name, trait.type = "binomial", fun.assoc = "mlreg",
+  gtmode = "additive", times = 1, quiet = FALSE, TopHitsReported = 1000)
 }
 \arguments{
-\item{gwaa}{gwaa object from GenABEL}
+\item{gwaa}{\code{gwaa} object from GenABEL}
 
 \item{projectfolder}{character containing path to output folder (will be generated if not existing).}
 
@@ -18,29 +18,40 @@ genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
 \item{trait.name}{character indicating trait(s) of interest.}
 
 \item{trait.type}{character with data type of analysed trait. Either "gaussian", "binomial" or "guess" 
-(later option guesses trait type).}
+(latter option guesses trait type).}
 
-\item{times}{If more than one, the number of permutations to be used for empirical p-values.}
+\item{fun.assoc}{character with association function from GenABEL package to be used. 
+Either \code{mlreg} for logistic regression or \code{qtscore} for fast score test.}
+
+\item{gtmode}{character with mode of inheritence if logistic regression is used. 
+Either \code{additive}, \code{dominant}, \code{recessive} or \code{overdominant}.}
+
+\item{times}{If more than one, the number of permutations to be used for calculationg empirical p-values.
+Relevant for score test only.}
 
 \item{quiet}{boolean. Do not print warning messages.}
 
-\item{TopHitsReported}{numeric with number of "top" hits to describe. Use nsnps(gwaa.object) for
-all SNPs}
+\item{TopHitsReported}{numeric with number of top hits to report. Use nsnps(gwaa.object) for
+all SNPs.}
 }
 \value{
-Association results as scan.gwaa object. Intermediary results and plots are stored in \code{projectfolder} 
-as side effects.
+\code{scan.gwaa} object with Association results. Intermediary results and plots are stored 
+in \code{projectfolder} as side effects.
 }
 \description{
-\code{genoAssoc} takes genotype data in GenABEL gwaa format and performs association analysis.
+\code{genoAssoc} takes genotype data in GenABEL \code{gwaa} format and performs association analysis.
 }
 \details{
-The qtscore()-function from GenABEL package is used for association analysis of a gwaa object.
-The trait of interest is given in \code{trait.name} either as single trait (e.g. "affection")
-or as formula (e.g. "affection01 ~ Age + sex") if association shall be adjusted for covariates.
-All traitnames in \code{trait.name} must exist within the phenotype data of the gwaa object. 
-Use phdata() for checking which trait names ara avalable. If \code{times} is set to more than 1,
-empirical p-values are calculated using \code{times} permutations.
+GenABEL package is used for association analysis of a \code{gwaa} object.
+The trait of interest is given in \code{trait.name} either as single trait (e.g. \code{affection})
+or as formula (e.g. \code{affection01 ~ Age + sex}) if association shall be adjusted for covariates.
+All traitnames in \code{trait.name} must exist within the phenotype data of the \code{gwaa} object. 
+Use \code{phdata(gwaa)} for checking which trait names are avalable. 
+Either logistic regression or fast score test can be used for association as given in \code{fun.assoc}. 
+In case of logistic regression, the mode of inheritance is given in \code{gtmode}. 
+If the fast score test from GenABELs \code{qtscore}-function is used without covariates, the function is equivalent
+to Armitage TREND Test. If covariates are used, the trait is analysed using \code{GLM}. 
+Set \code{times} to more than 1, to calculate empirical p-values for the score test using \code{times} permutations.
 A table and a Manhattan plot with association results are stored in \code{projectfolder}.
 }
 \author{
