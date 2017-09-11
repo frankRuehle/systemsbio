@@ -5,33 +5,51 @@
 #' 
 #' Up to 5 dataframes can be commited in \code{data} and are plotted in one diagram. 
 #' If functional information for variants is available, respective variants which fulfill the 
-#' regular expressionn in \code{EFFECT2highlight} are highligted in red. Additionally, variants 
+#' regular expressionn in \code{EFFECT2highlight} are highligted by color. Additionally, variants 
 #' given in \code{variant2highlight} are highligthed by filled symbols (e.g. the leading SNP of interest).
 #' If given, recombination rates for that region are added to the plot with a separate y-axis.
 #' Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
-#' beneath the diagram. 
+#' beneath the diagram. A single gene can be selected to include protein domain data for plotting. 
 #' Modified graphical parameters are resetted at the end of the function. Nevertheless, 
 #' this function is not compatible with using \code{par(mfrow())} for multiple plots.
 #' 
 #' @param region Character with region of interest of form "chr1:20000-30000" or "chr1:20000".
-#' @param window numeric with window size in bp to plot. Only applied when a single basepair position 
-#' is given in \code{region}. The window is centered around this position.
+#' @param region_ext numeric with region size extension in bp to plot. Half of the extension is added 
+#' to both sides of the given \code{region}.
 #' @param title character with title to be used in plot.
 #' @param data named list of dataframes containing p-vales to be plotted. Required columns of each data frame are "CHR", "POS" and "P".
 #' An additionally column "EFFECT" with functional characterisation of the locus may be given optionally. 
-#' @param variant2highlight character vector with variant to be highligthed as filled symbols. For this, an additionally
-#' column \code{ID} is required within \code{data}. Omitted if NULL, If "centered", the centered SNP is highlighted if available
-#' (applicable e.g. if \code{region} is of form "chr1:20000"). Vertical lines are added for highligted SNPs or to the center
-#' of the plot, respectively.
-#' @param EFFECT2highlight character vector with regular expressions (case insensitive). If an \code{EFFECT} column with 
-#' functional annotation is given within a dataset, variants containing any of these expressions are highlighted in red.
+#' @param lines_pvalue_threshold named character with p-values to be plotted as threshold lines. 
+#' Line color is given by vecotr names (e.g. \code{lines_pvalue_threshold = c(blue=0.05, red=0.01)}).
+#' @param variant2highlight character vector with variants to be highligthed as filled symbols. For this, an additionally
+#' column \code{ID} is required within \code{data}. If the vector contains color names, all variants with corresponding 
+#' functional annotation as color coded in \code{EFFECT2highlight} are also highlighted.
+#' If "centered", the centered SNP is highlighted if available (applicable if \code{region} is of form \code{"chr1:20000"}). 
+#' Vertical lines are added for the highligted SNPs. Omitted if NULL.
+#' @param EFFECT2highlight named character vector with regular expressions (name = color, value = regexp) 
+#' in order of priority low to high. Regular expressions is case insensitive.
+#' If an \code{EFFECT} column with functional annotation is given within a dataset, variants containing 
+#' these expressions are highlighted by colors given as vector names.
 #' @param recombination.rate character with path to file or to folder containing recombination rates to be plotted. 
 #' Alternatively, a dataframe object can be supplied. Omitted if NULL.
 #' @param biomaRt biomaRt object to be used for gene annotation. If NULL, biomaRt annotation is skipped. 
-#' @param hgnc.symbols.only logical. If TRUE, only genes plotted with annotated HGNC Symbol. If FALSE, non-annotated
+#' @param hgnc.symbols.only logical. If TRUE, only Ensemble genes plotted with annotated HGNC Symbol. If FALSE, non-annotated
 #' genes in the plot are labeled with Ensembl gene id if available.
-#' @param LNCipedia character with path to LNCipedia bed file. If given lncRNA genes are added to the plot. Omitted if NULL
-#' @param numberOfRowsForGenePlotting numeric number of rows used for plotting genes
+#' @param LNCipedia character with path to LNCipedia bed file to plot lncRNA genes. Omitted if NULL.
+#' @param gene.color.coding named character vector with regular expressions for gene biotype color coding
+#' (name = color, value = regexp) in order of priority low to high, i.e. if multiple biotypes available per gene, 
+#' first biotype in vector is used. Regular expressions is case insensitive. 
+#' \code{gray = "other"} is appended to the vector later for all remaining biotypes not found by the reg exp.
+#' @param numberOfRowsForGenePlotting numeric number of rows used for plotting genes. If \code{"auto"}, function determines
+#' appropriate number of rows itself.
+#' @param plot.protein.domains named character vector with file path to protein data for a selected gene. 
+#' Vector name is given as gene name of the selected gene (e.g. \code{GeneXY = "filepath_to_protein_data_of_GeneXY"}).
+#' The respective txt-file may be generated by the function \code{makeDomainsFromExons}.
+#' Given domains are plotted as adjacent symbols (even if overlapping) in order of domain start position.
+#' Arrows indicate the respective genomic start and stop positions for each domain.
+#' Omitted if NULL.
+#' @param cex.plot numeric character extension plot axes.
+#' @param cex.legend numeric character extension plot legends.
 #' 
 #' @return no value returned. Figure is plotted in current graphics device.
 #' 
@@ -44,28 +62,32 @@
 
 
 plot.region <- function (region, 
-                         window=50000, 
+                         region_ext=50000, 
                          title = NULL,
                          data = list(),
+                         lines_pvalue_threshold = NULL,
                          variant2highlight = "centered",
-                         EFFECT2highlight = c("miss", "frame", "splice", "start", "stop"),
+                         EFFECT2highlight = c(green="splice", red="miss", red="frame", red="start|stop"),
                          recombination.rate = "V:/proj/public_data/genetic_map_human/NCBI_genetic_map_GRCh37",
                          biomaRt,
                          hgnc.symbols.only = TRUE,
                          LNCipedia = NULL,
-                         numberOfRowsForGenePlotting = 3
+                         gene.color.coding = c(lightgreen ="pseudogene", brown ="snRNA", forestgreen ="lincRNA|antisense",
+                                                orange = "miRNA", darkblue ="protein_coding"),
+                         numberOfRowsForGenePlotting = "auto",
+                         plot.protein.domains = NULL,
+                         cex.plot = 1.1,
+                         cex.legend = 1,
+                         gene.scale.factor = 2
                           ) {
 
  
   
   # load required packages. 
+  pkg.cran <- c("TeachingDemos")
   pkg.bioc <- c("GenomicRanges")
-  pks2detach <- attach_package(pkg.bioc = pkg.bioc)
+  pks2detach <- attach_package(pkg.cran = pkg.cran, pkg.bioc = pkg.bioc)
   
-  
-
-  cex.plot <- 1.5
-  cex.legend <- 1.3
   
   # define plot characters for different data sets
   if(length(data)>5) stop("Maximum of 5 datasets allowed.")
@@ -74,47 +96,41 @@ plot.region <- function (region,
   dottypeHighlighted <- c(21,8,24,22,23)
   names(dottypeHighlighted)[1:length(data)] <- names(data)
   
-  # Named character vector with regular expressions for gene biotype color coding 
-  # (name = color, value = regexp) in order of priority high to low,
-  # i.e. if multiple biotypes available per gene, first biotype in vector is used.
-  # gray = "other" is appended to the vector for all remaining biotypes not found by the reg exp.
-  gene.color.coding <- c(black ="protein_coding", orange = "miRNA", forestgreen ="lincRNA|antisense", 
-                         brown ="snRNA", blue ="pseudogene")
-  
+
   
   ## extract genomic coordinates from region
   chr <- gsub(":.*$", "", region) # extract chromosome 
-  chr <- gsub("chr", "", chr)
+  chr <- gsub("chr", "", chr, ignore.case = T)
   
-  range <- gsub("^.*:", "", region) # extract chromosomal range from region
-  rangeStartPos <- as.numeric(gsub("-.*$", "", range))
+  region <- gsub("^.*:", "", region) # extract chromosomal range from region
+  regionStartPos <- as.numeric(gsub("-.*$", "", region)) # either start pos or center of region
   
   
   if(grepl("-", region)) { # define start and stop positions
-    start <- rangeStartPos
-    end <- as.numeric(gsub("^.*-", "", range))
+    start <- regionStartPos - 0.5* region_ext
+    end <- as.numeric(gsub("^.*-", "", region)) + 0.5* region_ext
   } else {
-    start <- rangeStartPos - 0.5* window
-    end <- rangeStartPos + 0.5* window
+    start <- regionStartPos - 0.5* region_ext
+    end <- regionStartPos + 0.5* region_ext
   }
   
   
-  range.gr <- GRanges(seqnames = chr, # selected region as genomic range
+  region.gr <- GRanges(seqnames = chr, # selected region as genomic range
                       ranges = IRanges(start = start, end = end, names = "selected_range"),
                       strand = "*")
   
   
   #### Get recombination rate
   if (!is.null(recombination.rate)) {
-   cat("Get recombination rate\n") 
       if(!is.data.frame(recombination.rate)) {
         
-        if(file.info(recombination.rate)$isdir) { # find file for respective chromosome
+        if(file.info(recombination.rate)$isdir) { # if directory, find file for respective chromosome
           recombination.rate <- file.path(recombination.rate, grep(paste0("chr", chr, "\\D"), list.files(recombination.rate), ignore.case = T, value = T)[1])
         } 
         
         rate <- read.table(recombination.rate, header=T, sep="\t",stringsAsFactors = F)
-      } else {rate <- recombination.rate}  
+        cat(paste("Load recombination rate from", recombination.rate), "\n")
+        } else {rate <- recombination.rate}  
       
       column.chr <- grep("chr", names(rate), value=T, ignore.case = T)
       column.pos <- grep("pos", names(rate), value=T, ignore.case = T)
@@ -126,122 +142,153 @@ plot.region <- function (region,
     rate.legend <- "Rec."; rate.lty <- 1; rate.pch <- NA ; rate.col <- "blue"; rate.lwd=2
   
   } else {
-    rate.legend <- NULL; rate.lty <- NULL; rate.pch <- NULL; rate.col <- NULL; rate.lwd=NULL 
+    rate.legend <- NULL; rate.lty <- NULL; rate.pch <- NULL; rate.col <- NULL; rate.lwd = NULL 
   }
   
-  #### get genes to plot
+  
+  
+  #### get Ensembl genes to plot
     if (!is.null(biomaRt)) {
     cat("Download gene coordinates from biomart\n")
     
       attrGenes = list(id = "entrezgene", ensemblID = "ensembl_gene_id", name = "hgnc_symbol", chr = "chromosome_name", 
                      startbp = "start_position", endbp = "end_position", strand = "strand", type='transcript_biotype')
       
-      genes <- getBM(attributes = attrGenes, filters = c("chromosome_name", "start", "end"),
-                           values = list(chr, start, end), mart = biomaRt)
+      genes <- getBM(attributes = attrGenes, 
+                     filters = c("chromosome_name", "start", "end"),
+                     values = list(chr, start, end), mart = biomaRt)
+
+      attrExons <- c("ensembl_exon_id", "chromosome_name", "exon_chrom_start", "exon_chrom_end", # exon coordinates
+                    "ensembl_gene_id", "start_position", "end_position")  # corresponding gene coordinates for merging
       
+      # get all exons from all transcripts
+      exons <- getBM(attributes = attrExons, 
+                     filters = c("chromosome_name", "start", "end"),
+                     values = list(chr, start, end), mart = biomaRt)
       
+            names(exons)[names(exons)=="start_position"] <- "start" # gene start coordinate
+            names(exons)[names(exons)=="end_position"] <- "end" # gene end coordinate
+            names(exons)[names(exons)=="chromosome_name"] <- "chrom" # gene start coordinate
+  
+
+  
       if(hgnc.symbols.only) { # plot only genes with annotated hgnc symbol
+        cat("Ensemble genes removed without hgnc symbol:\n")    
+        print(genes[is.na(genes$hgnc_symbol) | genes$hgnc_symbol!="",])
+        
         genes <- genes[!is.na(genes$hgnc_symbol) & genes$hgnc_symbol!="",]
-      } else { # use ensembl gene id as gene label if no symbol available
-        genes$hgnc_symbol <- ifelse(is.na(genes$hgnc_symbol), genes$ensembl_gene_id, genes$hgnc_symbol)
-      }
-      
+        
+            } else { # use ensembl gene id as gene label if no symbol available
+            genes$hgnc_symbol <- ifelse(is.na(genes$hgnc_symbol) | genes$hgnc_symbol=="", genes$ensembl_gene_id, genes$hgnc_symbol)
+        }
+                 
       # apply color code to gene biotypes. Gray is default for all other types
       genes$col <- rep("gray", nrow(genes))   
       if(nrow(genes) >0) {
-        for (g in rev(gene.color.coding)) {
+        for (g in gene.color.coding) {
           genes[grepl(g, genes$transcript_biotype, ignore.case = T), "col"] <- names(gene.color.coding)[gene.color.coding == g]
           }
       }
-      # define biotype priority 
-      # e.g.c("protein_coding", "processed_pseudogene", "lincRNA", "miRNA", "snRNA", "retained_intron", "nonsense_mediated_decay")
-      gene.color.coding <- c(gene.color.coding, gray= "other") # append color entry for all remaining biotypes 
-      
-      genes$col <- ordered(genes$col, levels = names(gene.color.coding))
-      # order gene biotypes by priority and remove gene duplicates with lower biotype priority.
-      genes <- genes[order(genes$col),]
-      genes <- genes[is.na(genes$hgnc_symbol) | !duplicated(genes$hgnc_symbol),]
+   
+      # append "gray" to gene.color.coding for all other biotypes
+      gene.color.coding <- c(gray= "other", gene.color.coding) # append color entry for all remaining biotypes 
       
       # Prepare genes dataframe for gene plotting with regionalplot.genelabels(). 
       genes <- data.frame(start=genes$start_position, end=genes$end_position, 
                           mean=genes$start_position+(genes$end_position-genes$start_position)/2,
                           name=genes$hgnc_symbol, strand=genes$strand, chrom=genes$chromosome_name,
-                          col=genes$col)
-  
-  }  ### end genes biomaRt
+                          col=genes$col, biotype=genes$transcript_biotype, stringsAsFactors = F)
+      
+        }  ### end genes biomaRt
   
   
   ### get LNCipedia coordinates
   if (!is.null(LNCipedia)) {
-    cat("Get lncRNA coordinates from LNCipedia\n") 
-    if (is.character(LNCipedia)) {
-      LNCipedia <- read.table(LNCipedia, header=F, stringsAsFactors = F)
-    }
-    
-    colnames(LNCipedia) <- c("chrom", "start", "end", "name", "score", "strand", "thickStart", 
-                           "thickEnd", "itemRgb", "blockCount",  "blockSizes", "blockStarts")
-    LNCipedia$chrom <- gsub("chr", "", LNCipedia$chrom, ignore.case=T)
-    #LNCipedia <- LNCipedia[LNCipedia$chrom == chr, ]
-    
-    LNCipedia.ranges <- makeGRangesFromDataFrame(LNCipedia, keep.extra.columns = TRUE)
-    names(LNCipedia.ranges) <- factor(gsub(":.*$", "", elementMetadata(LNCipedia.ranges)$name)) # gene names without transcript suffix
-  
-    LNCipedia.ranges <- subsetByOverlaps(LNCipedia.ranges, range.gr)
+    cat("Get lncRNA data from LNCipedia\n") 
+
+    # load LNCipedia bed file
+    LNCipedia.ranges <- processLNCipedia(LNCipedia, collapseTranscripts2Genes=F, makeExonRanges=F) 
+ 
+    LNCipedia.ranges <- subsetByOverlaps(LNCipedia.ranges, region.gr)
     
     if(length(LNCipedia.ranges) >0) { # check if LNCipedia entries existing in desired region
-      
-        ## prune Lncipedia transcripts to genes (by ":Number"-suffix)
-        LncipediaCollapseTranscripts <- TRUE
-        if(LncipediaCollapseTranscripts == T) {
-          
-          LNCipedia.ranges.genes <- LNCipedia.ranges[0] # initialise new GRange object
-          for(i in unique(names(LNCipedia.ranges))) {
-             # tempgr <- reduce(LNCipedia.ranges[names(LNCipedia.ranges) == i], drop.empty.ranges=FALSE, min.gapwidth=1L) # collapse overlapping transcripts
-             tempgr <- range(LNCipedia.ranges[names(LNCipedia.ranges) == i]) # collapse all transcripts per gene
-             mcols(tempgr)$name <- i
-             LNCipedia.ranges.genes <- c(LNCipedia.ranges.genes, tempgr)
-           }
-  
-          LNCipedia.ranges <- LNCipedia.ranges.genes
-          names(LNCipedia.ranges) <- 1:length(LNCipedia.ranges)
-        } # end prune transcripts
-  
+
+      LNCipedia.ranges <- processLNCipedia(LNCipedia.ranges, collapseTranscripts2Genes=T, makeExonRanges=F) 
       start(LNCipedia.ranges) <- start(LNCipedia.ranges) +1 # conformity with ensembl annotation
-          
-      LNCipedia <- as.data.frame(LNCipedia.ranges)  
-      names(LNCipedia)[names(LNCipedia)=="seqnames"] <- "chrom"
-      LNCipedia$strand <-  sapply(as.character(LNCipedia$strand), function(x) {switch(x, "+" = 1, "-" = -1)}) # recode +/- to 1/-1
-      LNCipedia$col <- "forestgreen"
-      LNCipedia$mean <- LNCipedia$start+(LNCipedia$end-LNCipedia$start)/2
+
+      LNCipedia.genes <- granges2df(LNCipedia.ranges)  
+      LNCipedia.genes$name <- as.character(LNCipedia.genes$names) # use previous GRanges rownames for plotting (either transcript or gene name)
       
-      if (!is.null(biomaRt)) {
-        genes <- merge(genes, LNCipedia, by=c("chrom", "start", "end",  "name", "strand", "col", "mean"), all=T)
-        genes <- genes[order(genes$width), ] # by this, LNCipedia entries are prefered against ensembl annotation in later duplicate removal
+      names(LNCipedia.genes)[names(LNCipedia.genes)=="seqnames"] <- "chrom"
+      LNCipedia.genes$strand <-  sapply(as.character(LNCipedia.genes$strand), function(x) {switch(x, "+" = 1, "-" = -1)}) # recode +/- to 1/-1
+      LNCipedia.genes$col <- "forestgreen"
+      LNCipedia.genes$biotype <- "LNCipedia"
+      LNCipedia.genes$mean <- LNCipedia.genes$start+(LNCipedia.genes$end-LNCipedia.genes$start)/2
+    
+      LNCipedia.exon.ranges <- processLNCipedia(LNCipedia.ranges, collapseTranscripts2Genes=F, makeExonRanges=T) 
+      start(LNCipedia.exon.ranges) <- start(LNCipedia.exon.ranges) +1 # conformity with ensembl annotation
+      
+      LNCipedia.exons <- granges2df(LNCipedia.exon.ranges)  
+      names(LNCipedia.exons)[names(LNCipedia.exons)=="seqnames"] <- "chrom"
+      names(LNCipedia.exons)[names(LNCipedia.exons)=="start"] <- "exon_chrom_start"
+      names(LNCipedia.exons)[names(LNCipedia.exons)=="end"] <- "exon_chrom_end"
+      names(LNCipedia.exons)[names(LNCipedia.exons)=="startGene"] <- "start"
+      names(LNCipedia.exons)[names(LNCipedia.exons)=="endGene"] <- "end"
+       
+
+    if (!is.null(biomaRt)) {
+      genes <- merge(genes, LNCipedia.genes, by=c("chrom", "start", "end",  "name", "strand", "col", "biotype", "mean"), all=T)
+      #genes <- genes[order(genes$width), ] # by this, LNCipedia entries are prefered against ensembl annotation in later duplicate removal
+
+        exons <- merge(exons, LNCipedia.exons, all=T)
+
         } else {
-          genes <- LNCipedia}
+          genes <- LNCipedia.genes
+          exons <- LNCipedia.exons
+          }
       
     } else {LNCipedia <- NULL} # end if length(LNCipedia.ranges) >0. Skip LNCipedia otherwise
   } ## end LNCipedia
   
+  
+  
+  
   if (!is.null(biomaRt) || !is.null(LNCipedia)) { # purify gene table if applicable
-    genes <- genes[!duplicated(genes$name), ]
+ 
+    # order gene biotypes by priority and remove gene duplicates with lower biotype priority.
+    genes <- genes[order(ordered(genes$col, levels = names(gene.color.coding)), decreasing = T),]
+    
+    genes.removed <- genes[!(is.na(genes$name) | genes$name=="" | !duplicated(genes$name)),]
+    genes <- genes[is.na(genes$name) | genes$name=="" | !duplicated(genes$name),] # duplicate names removed but NAs kept
+    
+    genes.removed <- rbind(genes.removed, genes[duplicated(genes[ ,c("chrom", "start", "end", "strand")]), ])
+    genes.removed <- genes.removed[order(genes.removed$start), ]
+    
     genes <- genes[!duplicated(genes[ ,c("chrom", "start", "end", "strand")]), ]
-    genes <- genes[order(genes$start), ]
-    print(genes[,c("chrom", "start", "end", "name", "strand", "col")]) # print genes included in plot
-  }
+    #genes <- genes[order(genes$start), ]
+    
+    cat("\nDuplicate gene entries removed:\n")
+    print(genes.removed[,c("chrom", "start", "end", "name", "strand", "biotype", "col")]) # print genes included in plot
 
+    cat("\nGenes included in plot:\n")
+    print(genes[,c("chrom", "start", "end", "name", "strand", "biotype", "col")]) # print genes included in plot
+    }
+
+  
+  
   # purify supplied datasets and define plot y-Dimensions as max of p-vales from all plotted datasets 
   stopy <- 1 # initialise stop coordinate of y-axis (used if no datasets available but recombination rate has to be plotted).
   for (d in names(data)) { 
     data[[d]]$CHR <- as.character(data[[d]]$CHR)
-    data[[d]] <- data[[d]][!is.na(data[[d]]$CHR), ]
-    data[[d]] <- data[[d]][!is.na(data[[d]]$POS), ]
-    data[[d]] <- data[[d]][!is.na(data[[d]]$P), ]
-    data[[d]] <- data[[d]][data[[d]]$CHR == chr, ]
-    data[[d]] <- data[[d]][data[[d]]$POS > start & data[[d]]$POS < end, ]
+    data[[d]]$CHR <- sub("chr", "", data[[d]]$CHR, ignore.case = T)
+    data[[d]] <- data[[d]][!is.na(data[[d]]$CHR), , drop=F]
+    data[[d]] <- data[[d]][!is.na(data[[d]]$POS), , drop=F]
+    data[[d]] <- data[[d]][!is.na(data[[d]]$P), , drop=F]  # or set missing p-values to 1.  data[[d]][is.na(data[[d]]$P), "P"] <- 1
+    data[[d]] <- data[[d]][data[[d]]$CHR == chr, , drop=F]
+    data[[d]] <- data[[d]][data[[d]]$POS > start & data[[d]]$POS < end, , drop=F]
     if (length(na.omit(data[[d]]$P)) > 0) {stopy.temp <- ceiling(max(-log10(data[[d]]$P), na.rm = T))} else {stopy.temp <- 0}
-   stopy <- max(stopy, stopy.temp, na.rm = T)
-  }
+    stopy <- max(stopy, stopy.temp, na.rm = T)
+    }
   
   
   
@@ -263,49 +310,97 @@ plot.region <- function (region,
        main = title, cex= cex.plot,  cex.axis= cex.plot, cex.lab = cex.plot, cex.main= cex.plot, lwd=2)   
   
   
-
-  
-  # initialise for legend if needed
-  if(!is.null(EFFECT2highlight)) { # initialise for legend if needed
-    func.legend <- "Func. var."; func.lty <- F; func.pch <- dottype[1]; func.col= "red"; func.lwd=2
-      } else {func.legend <- NULL; func.lty <- NULL; func.pch <- NULL; func.col= NULL; func.lwd= NULL}
-  
-  
-  for (d in names(data)) { # plot each dataset
+  ## plot horizontal threshold lines if selected (color given as names in vector)
+  if(!is.null(lines_pvalue_threshold)) {
+     abline(h = -log10(lines_pvalue_threshold), lty=2, col= names(lines_pvalue_threshold))
+   }
     
-    ### plot p values from data as circles. Functional variants in red.
+  ### plot each dataset
+  colors.applied <- character()
+  for (d in names(data)) { 
+    
+    ### plot p values from data. Functional variants in color.
     data.plot <- data[[d]]
     
-    data.plot$dot.col <- rep("black", nrow(data.plot))
-    #dot.col <- "black"
+    data.plot$dot.col <- rep("black", nrow(data.plot)) # initialise black
     if(!is.null(EFFECT2highlight)) {
       if("EFFECT" %in% names(data.plot)) {
-        data.plot$dot.col <- ifelse(grepl(paste(EFFECT2highlight,collapse="|"), data.plot$EFFECT, ignore.case = T),
-                          func.col, "black")
+            for(i in uniqueEffectcol) {
+            data.plot$dot.col <- ifelse(grepl(EFFECT2highlight[i], data.plot$EFFECT, ignore.case = T),
+                              i, data.plot$dot.col)
+            }
         } else {warning(paste("no EFFECT column found in", d))}
     }
+    
+    colors.applied <- c(colors.applied, unique(data.plot$dot.col)) # list colors needed for legend
+    
+    data.plot <- data.plot[order(ordered(data.plot$dot.col, levels = c("black", names(EFFECT2highlight))), decreasing = F),] # plot colored dots at last
     
     points(data.plot$POS, -log10(data.plot$P), cex=1, lwd= 2, pch=dottype[d] , col= data.plot$dot.col)
     
     # plot again SNPs to highlight
     if(!is.null(variant2highlight)) {
       
-      if (variant2highlight =="centered") {
-        data.highlight <- data.plot[data.plot$POS == rangeStartPos, , drop=F]
-        abline(v=rangeStartPos, lty=2, col="darkgrey") # prints line even if there is no centered SNP in the dataset
+      if (variant2highlight[1] == "centered") {
+        data.highlight <- data.plot[data.plot$POS == round(start+(end-start)/2, 0), , drop=F]
+        # abline(v=round(start+(end-start)/2, 0), lty=2, col="darkgrey") # prints line even if there is no centered SNP in the dataset
         }
-        else {data.highlight <- data.plot[data.plot$ID %in% variant2highlight, , drop=F]}
+        else {data.highlight <- rbind(data.plot[data.plot$ID %in% variant2highlight, , drop=F],
+                                      data.plot[data.plot$dot.col %in% variant2highlight, , drop=F],
+                                      data.plot[data.plot$POS %in% variant2highlight, , drop=F])
+        
+             }
       
       if(nrow(data.highlight)>0) {
+        # text(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend,  
+        #        col= data.highlight$dot.col, pos = 4, offset= 0.4) # plot ID of highligted variant without background shadow      
+        abline(v = data.highlight$POS, lty=2, col="darkgrey") # print lines through SNP(s)
         points(data.highlight$POS, -log10(data.highlight$P), cex=1, lwd= 2, pch=dottypeHighlighted[d], 
                col= data.highlight$dot.col, bg= data.highlight$dot.col) # plot highligted variant
-        abline(v=data.highlight$POS, lty=2, col="darkgrey") # print lines through SNP(s)
-        }
+        shadowtext(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend, pos = 4, offset= 0.4,
+                   col = data.highlight$dot.col, bg = "white", r = 0.2) # plot ID of highligted variant using background shadow      
+      }
     }
     
   }
+
   
-  # plot legend for upper panel
+  
+  #### plot legend for upper panel
+    if(!is.null(EFFECT2highlight)) { # initialise for legend if needed
+      
+    ## prune EFFECT2highlight for identical colors given in function call
+    uniqueEffectcol <- unique(names(EFFECT2highlight))
+    uniqueEffectcount <- length(uniqueEffectcol)
+    
+    EFFECT2highlight.h <- character()
+    for (i in uniqueEffectcol) {
+      EFFECT2highlight.h[i] <- paste(EFFECT2highlight[names(EFFECT2highlight)==i], collapse="|")
+    }
+    EFFECT2highlight <- EFFECT2highlight.h
+    
+    
+            ## initialise for legend if needed
+              EFFECT2highlight <- EFFECT2highlight[names(EFFECT2highlight) %in% colors.applied]
+           if(length(EFFECT2highlight) > 0) { 
+              func.legend <- EFFECT2highlight 
+              func.lty <- rep(F, times=uniqueEffectcount) 
+              func.pch <- rep(dottype[1], times=uniqueEffectcount) 
+              func.col <- names(EFFECT2highlight)
+              func.lwd <- rep(2, times=uniqueEffectcount)
+           } else {func.legend <- NULL 
+           func.lty <- NULL 
+           func.pch <- NULL 
+           func.col <- NULL 
+           func.lwd <- NULL}
+    
+      } else {func.legend <- NULL 
+    func.lty <- NULL 
+    func.pch <- NULL 
+    func.col <- NULL 
+    func.lwd <- NULL}
+  
+
   # legend for functional annotation and recombination rate is added if needed only
   legend("topleft", bty= "n", cex = cex.legend,    # ncol = 2, 
          title= "",
@@ -320,11 +415,13 @@ plot.region <- function (region,
   legend("topleft", legend="", title= paste0("chr", chr, ":", start, "-", end), bty= "n", cex = cex.legend)
 
 
-  ##### Include racombination rate as Lineplot
+  ##### Include recombination rate as lineplot
   if(!is.null(recombination.rate)) {
     
-    rate.max <- max(rate[,column.rate])
- 
+    # rate.max <- max(rate[,column.rate]) # scale recombination rate to maximum
+    rate.max <- 100 # as in LocusZoom
+    
+    
     # cat("\n max rate: ", max(rate[,column.rate]))
      par(new = T)
      plot(c(start, end), c(0, rate.max),  type = "n", xlab = "", ylab = "", axes=F)   
@@ -333,29 +430,161 @@ plot.region <- function (region,
 
 
      points(rate[,column.pos], rate[,column.rate], type = "l", lwd=1.5, col= rate.col)
-    
   } 
 
 
-  # plot genes 
+  ### plot genes 
   if (!is.null(biomaRt) || !is.null(LNCipedia)) {
     
     par(fig=c(0,1,0,0.4), new=TRUE)
     par(mar=c(1,5,1,5)) # number of margin lines: bottom, left, top, right   
-    ymax <- (numberOfRowsForGenePlotting / 2) 
-    plot(c(start, end), c(0, ymax), type = "n",  xlab = "", ylab = "", axes=F)   
+    ystart =0 # start position for first gene layer
+    ygenesize= 0.5 # height of each gene layer
+ 
+    # make GRanges object from genes (required for determining non-overlapping gene layers)
+    genes$strand <-  ifelse(grepl("-", genes$strand), "-", "+")
+    genes <- makeGRangesFromDataFrame(genes, keep.extra.columns = TRUE)
     
+    
+     # process domain of selected gene if required 
+    if(!is.null(plot.protein.domains)) {
+      if(!any(names(plot.protein.domains) %in% genes$name)) {stop("Genes in plot.protein.domains not fond in region!\n")}
+      genes$prot_dom <- genes$name %in% names(plot.protein.domains) 
+      
+
+      domains_list <- list() # initial list object for domain objects
+    
+    for (pd in names(plot.protein.domains)) {
+        domains <- read.table(plot.protein.domains[pd], sep="\t", header=T, stringsAsFactors = F) # read domain data
+
+      # check column names
+      columns.requested <- c("domain_name_plot", "BP_start", "BP_end", "symbol_plot", "domain_width_extension", "domain_height_extension", "domain_color")
+      if(!all(columns.requested %in% names(domains))) {
+        stop(paste("columns missing in", plot.protein.domains[i], ": "), columns.requested[!columns.requested %in% names(domains)])}
+      
+      domain.min <- min(c(domains$BP_start, domains$BP_end)) 
+      domain.max <- max(c(domains$BP_start, domains$BP_end)) 
+      domain.count <- nrow(domains)
+      domain.totalLength        <- domain.max - domain.min
+
+      # order domains for start position
+      domains <- domains[order(domains$BP_start, decreasing = F),]
+      
+      # determine domain borders: #domains+1
+         domainBorders <- c(domain.min, domain.min + cumsum((domains$domain_width_extension * domain.totalLength) / sum(domains$domain_width_extension))) 
+       
+         # determine start and end positions for each protein domain depending on strand of the gene
+           if (as.logical(strand(genes[genes$name== pd]) == "-")) { 
+             domains$domstart <- domainBorders[-1]
+        domains$domend <- domainBorders[-length(domainBorders)]
+
+      } else {
+        domains$domstart <- domainBorders[-length(domainBorders)]
+        domains$domend <- domainBorders[-1]
+        }
+
+       domains$xsymbol <- domains$domstart + 0.5*(domains$domend - domains$domstart) # x-mean for function symbols()
+       domains$rectwidth <- abs(domains$domend - domains$domstart)   # for function symbols()
+       domains$radius <- 0.5 * abs(domains$domend - domains$domstart) # for function symbols()
+       domains$rectheight <- ygenesize * domains$domain_height_extension / max(domains$domain_height_extension)  # consider different rectangle heigths 
+
+
+     domains_list[[pd]] <- domains
+        } # end pd loop
+     } # end plot.protein.domains
+    
+       
+    if(numberOfRowsForGenePlotting=="auto") {
+      genes <- determineNonOverlapGenelayers(genes, ystart=ystart, ysize= ygenesize, minDistance=0.05,
+                                             gene_name_column = "name", 
+                                             prot_domain_column = if(!is.null(plot.protein.domains)) {"prot_dom"} else {NULL},
+                                             scale.factor = gene.scale.factor, units="user", 
+                                             sortGeneStart = F) # sort needs fixing
+          levels <- NULL # will use newly created column 'ypos' as levels
+          ymax <- max(genes$ypos)
+          
+        if(!is.null(plot.protein.domains)) {
+          if(any(mcols(genes)[mcols(genes)$ypos == min(mcols(genes)$ypos), "prot_dom"] == TRUE)) {ystart <- ystart - ygenesize}
+        }
+          
+      } else {ymax <- (numberOfRowsForGenePlotting / ygenesize) 
+            levels=  numberOfRowsForGenePlotting  
+            }
+   
+    
+
+ # convert GRanges object to dataframe
+   genes <- as.data.frame(genes)
+    
+
+   ######## start plot gene panel
+      plot(c(start, end), c(ystart-0.5*ygenesize, ymax), type = "n",  xlab = "", ylab = "", axes=F)   # axes
+ 
+    ##### plot protein domains and arrows if requested 
+    if (!is.null(plot.protein.domains)) {     
+       
+       for (pd in names(plot.protein.domains)) {  
+              
+            ystart_domain <- genes[genes$name == pd, "ypos"]
+            domains <- domains_list[[pd]]
+              
+            domainrect <- domains[grepl("rect", domains$symbol_plot, ignore.case = T), ,drop=F]     
+            if(nrow(domainrect) >=1) {
+            symbols(x= domainrect$xsymbol,
+                    y= rep(ystart_domain - ygenesize, times=nrow(domainrect)),
+                    rectangles= as.matrix(cbind(domainrect$rectwidth, domainrect$rectheight)),
+                    fg=domainrect$domain_color,
+                    inches=FALSE,
+                    add=TRUE    )
+            }
+              
+            domaincirc <- domains[grepl("circ", domains$symbol_plot, ignore.case = T), ,drop=F]     
+            if(nrow(domaincirc) >=1) {
+              symbols(x= domaincirc$xsymbol,
+                    y= rep(ystart_domain - ygenesize, times=nrow(domaincirc)),
+                    circles=domaincirc$radius,
+                    fg=domaincirc$domain_color,
+                    inches=FALSE,
+                    add=TRUE)
+            }
+            
+            text(domains$xsymbol, ystart_domain - ygenesize, labels= as.character(domains$domain_name_plot), cex = 0.8, adj=0.5, col="black")
+            
+            ## plot arrows between gene and protein domain
+            # Every domain is represented by 2 arrows indicating the corresponding genomic start and stop position.
+            # Ideally, if genomic start and end positions of two neighboring domains are located closely
+            # within a single exon, the two arrows belonging to this domain boundary are overlapping
+            # and appear as single arrow for this boundary in the plot.
+            arrowstartx <- rbind(domains$BP_start, domains$BP_end) # n domains need 2*n arrows
+            arrowstartx <- apply(arrowstartx, 2, sort) # sort start and stop coordinate per domain (necessary if minus strand)
+            arrowstartx <- as.vector(arrowstartx)
+            
+            domainBorders.within <- domainBorders[-c(1,length(domainBorders))] # start, middle domain borders twice (start,stop), end
+            arrowtipsx <- c(domainBorders[1], as.vector(rbind(domainBorders.within, domainBorders.within)), domainBorders[length(domainBorders)])
+            
+            arrowtipsy <- rbind(domains$rectheight[-length(domains$rectheight)], domains$rectheight[-1])
+            arrowtipsy <- apply(arrowtipsy, 2, max) # height for arrow tip is maximum of two adjacent domain heights
+            arrowtipsy <- c(domains$rectheight[1], as.vector(rbind(arrowtipsy, arrowtipsy)), domains$rectheight[length(domains$rectheight)])
+            arrowtipsy <- ystart_domain - ygenesize + 0.5*as.vector(arrowtipsy)
+            
+            arrows(arrowstartx, ystart_domain, # arrow start: gene
+                   arrowtipsx, arrowtipsy, # arrow tip: protein domain
+                   lty=5, lwd=1.2, length=0.08)
+            }
+      
+   } # end pd loop  
+
     
     # call plot function
     regionalplot.genelabels(
-      genes=genes,
-      levels=numberOfRowsForGenePlotting,
-      exons = NULL,
-      xstart=start,
-      xstop=end,
-      ystart=ymax -0.1,
-      ygenesize= 0.5,
-      scale.factor=2,
+      genes = genes,
+      levels = levels,
+      exons = exons,
+      xstart = start,
+      xstop = end,
+      ystart = 0,
+      ygenesize= ygenesize,
+      scale.factor = gene.scale.factor,
       truncate = F,
       genecol = as.character(genes$col),
       genenamecol = as.character(genes$col)
@@ -375,8 +604,10 @@ plot.region <- function (region,
            pch= "-", lwd= 3,
            col= names(gene.color.coding.applied)
          )
-    
-  }
+  
+ 
+      
+  } # end if(is.null(biomaRt|LNCipedia))
   
   # re-set graphical parameter
   par(fig = par.old.fig)

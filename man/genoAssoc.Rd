@@ -21,15 +21,15 @@ genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
 (latter option guesses trait type).}
 
 \item{fun.assoc}{character with association function from GenABEL package to be used. 
-Either \code{mlreg} for logistic regression or \code{qtscore} for fast score test.}
+Either \code{mlreg} for linear or logistic regression or \code{qtscore} for fast score test.}
 
-\item{gtmode}{character with mode of inheritence if logistic regression is used. 
+\item{gtmode}{character with mode of inheritence if regression is used. 
 Either \code{additive}, \code{dominant}, \code{recessive} or \code{overdominant}.}
 
 \item{times}{If more than one, the number of permutations to be used for calculationg empirical p-values.
 Relevant for score test only.}
 
-\item{quiet}{boolean. Do not print warning messages.}
+\item{quiet}{logical Do not print warning messages.}
 
 \item{TopHitsReported}{numeric with number of top hits to report. Use nsnps(gwaa.object) for
 all SNPs.}
@@ -47,8 +47,8 @@ The trait of interest is given in \code{trait.name} either as single trait (e.g.
 or as formula (e.g. \code{affection01 ~ Age + sex}) if association shall be adjusted for covariates.
 All traitnames in \code{trait.name} must exist within the phenotype data of the \code{gwaa} object. 
 Use \code{phdata(gwaa)} for checking which trait names are avalable. 
-Either logistic regression or fast score test can be used for association as given in \code{fun.assoc}. 
-In case of logistic regression, the mode of inheritance is given in \code{gtmode}. 
+Either linear or logistic regression or fast score test can be used for association as given in \code{fun.assoc}. 
+In case of regression, the mode of inheritance is given in \code{gtmode}. 
 If the fast score test from GenABELs \code{qtscore}-function is used without covariates, the function is equivalent
 to Armitage TREND Test. If covariates are used, the trait is analysed using \code{GLM}. 
 Set \code{times} to more than 1, to calculate empirical p-values for the score test using \code{times} permutations.

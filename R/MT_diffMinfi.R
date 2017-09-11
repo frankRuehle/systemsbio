@@ -198,33 +198,6 @@ return(results)
 
 
 
-#### subsetByOverlaps function which keeps meta data from both objects
-subsetByOverlaps.keepAllMeta <- function(dmr.ranges, cpg.ranges) {
-  
-  ranges <- subsetByOverlaps(dmr.ranges, cpg.ranges) # query, subject
-  
-  hits <- findOverlaps(ranges, cpg.ranges) 
-  idx <- unique(subjectHits(hits)) 
-  
-  names <- CharacterList(split(names(cpg.ranges)[subjectHits(hits)], queryHits(hits))) # row names of cpg.ranges object added to meta data
-  names <- sapply(names, function(x) {paste(unique(x), collapse="; ") })
-  mcols(ranges) <- DataFrame(mcols(ranges), names)
-  
-  for(m in names(mcols(cpg.ranges))) { # meta columns of cpg.ranges summerized and added to meta data of dmr.ranges
-    meta <- mcols(cpg.ranges)[subjectHits(hits),m]
-    if (is.factor(meta)) {meta <- as.character(meta)}
-    meta <- CharacterList(split(meta, queryHits(hits)))
-    mcols(ranges) <- DataFrame(mcols(ranges), metaname=meta)
-    names(mcols(ranges))[names(mcols(ranges))=="metaname"] <- m
-    if(class(mcols(ranges)[,m])=="CompressedCharacterList") {
-      mcols(ranges)[,m] <-  sapply(mcols(ranges)[,m], function(x) {paste(unique(x), collapse="; ") })
-    } else {
-      mcols(ranges)[,m] <-  mcols(ranges)[,m]
-    }
-  }
-  
-  return(ranges)
-} # end of function
 
 
 

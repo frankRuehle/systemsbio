@@ -16,7 +16,7 @@ basic_SNP_annotation(data, max.SNPs.per.biomaRt.call = 10000,
 \arguments{
 \item{data}{dataframe containing SNP IDs.}
 
-\item{max.SNPs.per.biomaRt.call}{numeric. Number of SNP IDs to be querierd in biomaRt at once.}
+\item{max.SNPs.per.biomaRt.call}{numeric. Number of SNP IDs to be queried in biomaRt at once.}
 
 \item{data.SNP.columnName}{character with column name of SNP IDs in \code{data} or "row.names".}
 
@@ -55,18 +55,18 @@ input dataframe annotated with biomaRt and/or manufacturer data in additional co
 remains unchanged.
 }
 \description{
-\code{basic_SNP_annotation} adds annotation data to  SNP IDs using biomaRt and/or a 
+\code{basic_SNP_annotation} adds annotation data to SNP IDs using biomaRt and/or a 
 manufacturer's annotation file while keeping the order of input SNPs.
 }
 \details{
 This function uses the SNP ID column from a given dataframe as input for adding annotation data.
-All annotation data is added in addiotional columns and does not change the order of input
-SNP IDs. Since biomaRt queries of large datasets (e.g. from SNP arrays) are prone to servive
-malfunction, \code{basic_SNP_annotation} devides the data in chunks of feasable size given in
+All annotation data is added in additional columns and does not change the order of input
+SNP IDs. Since biomaRt queries of large datasets (e.g. from SNP arrays) are prone to service
+malfunction, \code{basic_SNP_annotation} divides the data in chunks of feasible size given in
 \code{max.SNPs.per.biomaRt.call}.
 
 Before biomaRt data are merged to input data, data columns containing multiple entries per entries
-(given in \code{biomaRt.attributes.summarized}) are collapsed seperated by a semicolon. Data columns 
+(given in \code{biomaRt.attributes.summarized}) are collapsed separated by a semicolon. Data columns 
 given in \code{biomaRt.attributes.groupColumns} are considered as grouping variables.
 
 If a \code{annotationFile} is specified, all included data is merged to the input dataframe.

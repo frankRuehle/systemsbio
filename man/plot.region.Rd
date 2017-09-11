@@ -4,43 +4,71 @@
 \alias{plot.region}
 \title{Plot p-values in genomic context}
 \usage{
-\method{plot}{region}(region, window = 50000, title = NULL, data = list(),
-  variant2highlight = "centered", EFFECT2highlight = c("miss", "frame",
-  "splice", "start", "stop"),
+\method{plot}{region}(region, region_ext = 50000, title = NULL,
+  data = list(), lines_pvalue_threshold = NULL,
+  variant2highlight = "centered", EFFECT2highlight = c(green = "splice", red
+  = "miss", red = "frame", red = "start|stop"),
   recombination.rate = "V:/proj/public_data/genetic_map_human/NCBI_genetic_map_GRCh37",
   biomaRt, hgnc.symbols.only = TRUE, LNCipedia = NULL,
-  numberOfRowsForGenePlotting = 3)
+  gene.color.coding = c(lightgreen = "pseudogene", brown = "snRNA",
+  forestgreen = "lincRNA|antisense", orange = "miRNA", darkblue =
+  "protein_coding"), numberOfRowsForGenePlotting = "auto",
+  plot.protein.domains = NULL, cex.plot = 1.1, cex.legend = 1,
+  gene.scale.factor = 2)
 }
 \arguments{
 \item{region}{Character with region of interest of form "chr1:20000-30000" or "chr1:20000".}
 
-\item{window}{numeric with window size in bp to plot. Only applied when a single basepair position 
-is given in \code{region}. The window is centered around this position.}
+\item{region_ext}{numeric with region size extension in bp to plot. Half of the extension is added 
+to both sides of the given \code{region}.}
 
 \item{title}{character with title to be used in plot.}
 
 \item{data}{named list of dataframes containing p-vales to be plotted. Required columns of each data frame are "CHR", "POS" and "P".
 An additionally column "EFFECT" with functional characterisation of the locus may be given optionally.}
 
-\item{variant2highlight}{character vector with variant to be highligthed as filled symbols. For this, an additionally
-column \code{ID} is required within \code{data}. Omitted if NULL, If "centered", the centered SNP is highlighted if available
-(applicable e.g. if \code{region} is of form "chr1:20000"). Vertical lines are added for highligted SNPs or to the center
-of the plot, respectively.}
+\item{lines_pvalue_threshold}{named character with p-values to be plotted as threshold lines. 
+Line color is given by vecotr names (e.g. \code{lines_pvalue_threshold = c(blue=0.05, red=0.01)}).}
 
-\item{EFFECT2highlight}{character vector with regular expressions (case insensitive). If an \code{EFFECT} column with 
-functional annotation is given within a dataset, variants containing any of these expressions are highlighted in red.}
+\item{variant2highlight}{character vector with variants to be highligthed as filled symbols. For this, an additionally
+column \code{ID} is required within \code{data}. If the vector contains color names, all variants with corresponding 
+functional annotation as color coded in \code{EFFECT2highlight} are also highlighted.
+If "centered", the centered SNP is highlighted if available (applicable if \code{region} is of form \code{"chr1:20000"}). 
+Vertical lines are added for the highligted SNPs. Omitted if NULL.}
+
+\item{EFFECT2highlight}{named character vector with regular expressions (name = color, value = regexp) 
+in order of priority low to high. Regular expressions is case insensitive.
+If an \code{EFFECT} column with functional annotation is given within a dataset, variants containing 
+these expressions are highlighted by colors given as vector names.}
 
 \item{recombination.rate}{character with path to file or to folder containing recombination rates to be plotted. 
 Alternatively, a dataframe object can be supplied. Omitted if NULL.}
 
 \item{biomaRt}{biomaRt object to be used for gene annotation. If NULL, biomaRt annotation is skipped.}
 
-\item{hgnc.symbols.only}{logical. If TRUE, only genes plotted with annotated HGNC Symbol. If FALSE, non-annotated
+\item{hgnc.symbols.only}{logical. If TRUE, only Ensemble genes plotted with annotated HGNC Symbol. If FALSE, non-annotated
 genes in the plot are labeled with Ensembl gene id if available.}
 
-\item{LNCipedia}{character with path to LNCipedia bed file. If given lncRNA genes are added to the plot. Omitted if NULL}
+\item{LNCipedia}{character with path to LNCipedia bed file to plot lncRNA genes. Omitted if NULL.}
 
-\item{numberOfRowsForGenePlotting}{numeric number of rows used for plotting genes}
+\item{gene.color.coding}{named character vector with regular expressions for gene biotype color coding
+(name = color, value = regexp) in order of priority low to high, i.e. if multiple biotypes available per gene, 
+first biotype in vector is used. Regular expressions is case insensitive. 
+\code{gray = "other"} is appended to the vector later for all remaining biotypes not found by the reg exp.}
+
+\item{numberOfRowsForGenePlotting}{numeric number of rows used for plotting genes. If \code{"auto"}, function determines
+appropriate number of rows itself.}
+
+\item{plot.protein.domains}{named character vector with file path to protein data for a selected gene. 
+Vector name is given as gene name of the selected gene (e.g. \code{GeneXY = "filepath_to_protein_data_of_GeneXY"}).
+The respective txt-file may be generated by the function \code{makeDomainsFromExons}.
+Given domains are plotted as adjacent symbols (even if overlapping) in order of domain start position.
+Arrows indicate the respective genomic start and stop positions for each domain.
+Omitted if NULL.}
+
+\item{cex.plot}{numeric character extension plot axes.}
+
+\item{cex.legend}{numeric character extension plot legends.}
 }
 \value{
 no value returned. Figure is plotted in current graphics device.
@@ -51,11 +79,11 @@ no value returned. Figure is plotted in current graphics device.
 \details{
 Up to 5 dataframes can be commited in \code{data} and are plotted in one diagram. 
 If functional information for variants is available, respective variants which fulfill the 
-regular expressionn in \code{EFFECT2highlight} are highligted in red. Additionally, variants 
+regular expressionn in \code{EFFECT2highlight} are highligted by color. Additionally, variants 
 given in \code{variant2highlight} are highligthed by filled symbols (e.g. the leading SNP of interest).
 If given, recombination rates for that region are added to the plot with a separate y-axis.
 Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
-beneath the diagram. 
+beneath the diagram. A single gene can be selected to include protein domain data for plotting. 
 Modified graphical parameters are resetted at the end of the function. Nevertheless, 
 this function is not compatible with using \code{par(mfrow())} for multiple plots.
 }

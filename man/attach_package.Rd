@@ -26,7 +26,7 @@ character vector with package names which have not yet been attached to workspac
 Attach required packages which may be detached after function run.
 }
 \details{
-Help functions to organise packege loading. Some functions require huge annotation packages which shall 
+Help functions to organise package loading. Some functions require huge annotation packages which shall 
 not be loaded for the full session. These packages are attached for an individual function and detached 
 after function run.
 }

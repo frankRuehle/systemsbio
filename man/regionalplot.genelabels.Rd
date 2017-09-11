@@ -9,22 +9,25 @@ regionalplot.genelabels(genes, levels, exons, xstart, xstop, ystart, ygenesize,
   genecol = "forestgreen", genenamecol = "black")
 }
 \arguments{
-\item{genes}{a dataframe of genes to plot, with columns "start", "end", "mean", "name", "strand".
-\code{strand = -1} means reverse strand, everything else forward.}
+\item{genes}{a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.
+\code{strand = -1 or -} means reverse strand, everything else forward.}
 
-\item{levels}{integer giving desired number of layers to plot multiple genes.}
+\item{levels}{integer giving desired number of layers to plot multiple genes. Genes are assigned to layers via gene start position.
+If NULL, an additional column \code{ypos} is expected in \code{genes} giving the y-coordinates for the genes to plot.}
 
-\item{exons}{a data frame containing columns "exon_chrom_start" and "exon_chrom_end" with start and end positions of exons.}
+\item{exons}{a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with start and end positions of exons.
+Additionally, columns \code{start} and \code{end} with respective gene coordinates needed as in \code{genes}. 
+Exon plotting omitted if NULL.}
 
-\item{xstart}{an integer number defining the smallest base position of the plot packet (~xlim).}
+\item{xstart}{an integer number defining the smallest base position of the plot packet.}
 
-\item{xstop}{an integer number defining the largest base position of the plot packet (~xlim).}
+\item{xstop}{an integer number defining the largest base position of the plot packet.}
 
 \item{ystart}{numeric y position of the line marking the gene.}
 
 \item{ygenesize}{numeric y extentsion.}
 
-\item{scale.factor}{character expansion value as in e.g 'xyplot'. Is also used for other scaling calculations (e.g. exon size, lwd) here.}
+\item{scale.factor}{character expansion value as in e.g \code{xyplot}. Is also used for other scaling calculations (e.g. exon size, lwd) here.}
 
 \item{arrow.scale.factor}{character expansion value for arrows.}
 
@@ -34,6 +37,9 @@ or exon_chrom_end < xstart are dicarded (that are those that lie completely beyo
 \item{genecol}{character giving gene color.}
 
 \item{genenamecol}{character giving color of gene names.}
+}
+\value{
+no value returned. Genes are plotted in active graphics device.
 }
 \description{
 Plotting of genes and exones incl. gene labels
