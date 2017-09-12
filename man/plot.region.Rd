@@ -83,7 +83,7 @@ regular expressionn in \code{EFFECT2highlight} are highligted by color. Addition
 given in \code{variant2highlight} are highligthed by filled symbols (e.g. the leading SNP of interest).
 If given, recombination rates for that region are added to the plot with a separate y-axis.
 Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
-beneath the diagram. A single gene can be selected to include protein domain data for plotting. 
+beneath the diagram. Genes can be selected to include protein domain data for plotting. 
 Modified graphical parameters are resetted at the end of the function. Nevertheless, 
 this function is not compatible with using \code{par(mfrow())} for multiple plots.
 }

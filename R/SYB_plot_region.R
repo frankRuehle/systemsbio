@@ -9,7 +9,7 @@
 #' given in \code{variant2highlight} are highligthed by filled symbols (e.g. the leading SNP of interest).
 #' If given, recombination rates for that region are added to the plot with a separate y-axis.
 #' Gene information for the specified region is downloaded from biomaRt and/or LNCipedia and is plotted 
-#' beneath the diagram. A single gene can be selected to include protein domain data for plotting. 
+#' beneath the diagram. Genes can be selected to include protein domain data for plotting. 
 #' Modified graphical parameters are resetted at the end of the function. Nevertheless, 
 #' this function is not compatible with using \code{par(mfrow())} for multiple plots.
 #' 
@@ -324,6 +324,19 @@ plot.region <- function (region,
     
     data.plot$dot.col <- rep("black", nrow(data.plot)) # initialise black
     if(!is.null(EFFECT2highlight)) {
+      
+      ## prune EFFECT2highlight for identical colors given in function call
+      uniqueEffectcol <- unique(names(EFFECT2highlight))
+      uniqueEffectcount <- length(uniqueEffectcol)
+      
+      EFFECT2highlight.h <- character()
+      
+      
+      for (i in uniqueEffectcol) {
+        EFFECT2highlight.h[i] <- paste(EFFECT2highlight[names(EFFECT2highlight)==i], collapse="|")
+      }
+      EFFECT2highlight <- EFFECT2highlight.h
+      
       if("EFFECT" %in% names(data.plot)) {
             for(i in uniqueEffectcol) {
             data.plot$dot.col <- ifelse(grepl(EFFECT2highlight[i], data.plot$EFFECT, ignore.case = T),
@@ -357,8 +370,8 @@ plot.region <- function (region,
         abline(v = data.highlight$POS, lty=2, col="darkgrey") # print lines through SNP(s)
         points(data.highlight$POS, -log10(data.highlight$P), cex=1, lwd= 2, pch=dottypeHighlighted[d], 
                col= data.highlight$dot.col, bg= data.highlight$dot.col) # plot highligted variant
-        shadowtext(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend, pos = 4, offset= 0.4,
-                   col = data.highlight$dot.col, bg = "white", r = 0.2) # plot ID of highligted variant using background shadow      
+        # shadowtext(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend, pos = 4, offset= 0.4,
+        #            col = data.highlight$dot.col, bg = "white", r = 0.2) # plot ID of highligted variant using background shadow      
       }
     }
     
@@ -369,15 +382,6 @@ plot.region <- function (region,
   #### plot legend for upper panel
     if(!is.null(EFFECT2highlight)) { # initialise for legend if needed
       
-    ## prune EFFECT2highlight for identical colors given in function call
-    uniqueEffectcol <- unique(names(EFFECT2highlight))
-    uniqueEffectcount <- length(uniqueEffectcol)
-    
-    EFFECT2highlight.h <- character()
-    for (i in uniqueEffectcol) {
-      EFFECT2highlight.h[i] <- paste(EFFECT2highlight[names(EFFECT2highlight)==i], collapse="|")
-    }
-    EFFECT2highlight <- EFFECT2highlight.h
     
     
             ## initialise for legend if needed
@@ -499,7 +503,7 @@ plot.region <- function (region,
                                              gene_name_column = "name", 
                                              prot_domain_column = if(!is.null(plot.protein.domains)) {"prot_dom"} else {NULL},
                                              scale.factor = gene.scale.factor, units="user", 
-                                             sortGeneStart = F) # sort needs fixing
+                                             sortGeneStart = is.null(plot.protein.domains)) # sort needs fixing
           levels <- NULL # will use newly created column 'ypos' as levels
           ymax <- max(genes$ypos)
           
