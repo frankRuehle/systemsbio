@@ -370,8 +370,8 @@ plot.region <- function (region,
         abline(v = data.highlight$POS, lty=2, col="darkgrey") # print lines through SNP(s)
         points(data.highlight$POS, -log10(data.highlight$P), cex=1, lwd= 2, pch=dottypeHighlighted[d], 
                col= data.highlight$dot.col, bg= data.highlight$dot.col) # plot highligted variant
-        # shadowtext(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend, pos = 4, offset= 0.4,
-        #            col = data.highlight$dot.col, bg = "white", r = 0.2) # plot ID of highligted variant using background shadow      
+         shadowtext(data.highlight$POS, -log10(data.highlight$P), labels= data.highlight$ID, cex=cex.legend, pos = 4, offset= 0.4,
+                    col = data.highlight$dot.col, bg = "white", r = 0.2) # plot ID of highligted variant using background shadow      
       }
     }
     

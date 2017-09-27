@@ -133,7 +133,7 @@ regionalplot.genelabels <- function(
 #' determines separate layers necessary to plot the genes without overlapping. 
 #' 
 #' @param gr GRanges object containing gene coordinates.
-#' @ystart numeric start y-coordinate for first layer. 
+#' @param ystart numeric start y-coordinate for first layer. 
 #' @param ysize numeric added to each new layer.
 #' @param minDistance numeric minimum distance for two genes to be considered as non-overlapping.
 #' If \code{minDistance} < 1, it is interpreted as ratio of the width of the full \code{gr} object.

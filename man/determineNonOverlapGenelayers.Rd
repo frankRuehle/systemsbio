@@ -11,6 +11,8 @@ determineNonOverlapGenelayers(gr, ystart = 0, ysize = 1,
 \arguments{
 \item{gr}{GRanges object containing gene coordinates.}
 
+\item{ystart}{numeric start y-coordinate for first layer.}
+
 \item{ysize}{numeric added to each new layer.}
 
 \item{minDistance}{numeric minimum distance for two genes to be considered as non-overlapping.

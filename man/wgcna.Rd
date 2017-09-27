@@ -17,7 +17,7 @@ wgcna(GEXMTSet, projectfolder = "GEX/WGCNA", softThresholdPower = "auto",
 previously stored network object to be loaded from this path. If \code{GEXMTSet} is "load_default", network 
 object is loaded from default directory \code{"file.path(projectfolder, "TOM", "networkConstruction-auto.RData")"}.}
 
-\item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
+\item{projectfolder}{character with directory for output files (will be generated if not existing).}
 
 \item{softThresholdPower}{soft-thresholding power for network construction. If "auto", function selects 
 soft-thresholding power automatically. If Null, network construction is omitted.}
@@ -85,11 +85,11 @@ could be chosen automatically, value is a list with the following components:
   \item MEs: a data frame containing module eigengenes of the found modules (given by colors).
   \item goodSamples: numeric vector giving indices of good samples, that is samples that do not have too many missing entries.
   \item goodGenes: numeric vector giving indices of good genes, that is genes that do not have too many missing entries.
-  \item dendrograms: a list whose components conatain hierarchical clustering dendrograms of genes in each block.
+  \item dendrograms: a list whose components contain hierarchical clustering dendrograms of genes in each block.
   \item TOMFiles: character vector (one string per block), giving the file names in which blockwise topological overlaps were saved.
   \item blockGenes: a list whose components give the indices of genes in each block.
   \item blocks: a vector of length equal number of genes giving the block label for each gene. 
-         Note that block labels are not necessarilly sorted in the order in which the blocks were processed 
+         Note that block labels are not necessarily sorted in the order in which the blocks were processed 
   \item MEsOK: logical indicating whether the module eigengenes were calculated without errors. 
   } 
 
@@ -120,7 +120,7 @@ If \code{softThresholdPower} is set to 'auto' and the function determines an app
 Network construction is performed in block-wise manner with respect to \code{maxBlockSize}. Genes are clustered 
 using average linkage hierarchical clustering and coexpressed gene modules are identified in the resulting dendrogram by the 
 Dynamic Hybrid tree cut. Modules whose module eigengenes (MEs) are highly correlated are merged. 
-The function calclulates the following parameter:
+The function calculates the following parameter:
 \itemize{
   \item kME: INTRAmodular connectivity for finding intramodular hubs. Also known as module membership measure (MM). 
        Correlation of the gene with the corresponding module eigengene. kME close to 1 means that the gene is a hub gene.
@@ -131,7 +131,7 @@ Phenotypes are taken from phenotype data of \code{GEXMTSet} as specified in \cod
 which are defined in \code{groupsets} are also used as phenotypes (e.g. two groups from a differential gene expression experiment). 
 When correlation with group membership is calculated, only those samples are included which belong to the denoted groupset 
 (mind that gene modules were calculated using expression data from all samples).
-All correlation coefficients are calculated using pearson correlation for numeric phenotypes and intraclass correlation (ICC)
+All correlation coefficients are calculated using Pearson correlation for numeric phenotypes and intraclass correlation (ICC)
 for categorical phenotypes (e.g. groupsets with more than two groups). Categorical variables with only two levels are 
 coded numerically.
 }
