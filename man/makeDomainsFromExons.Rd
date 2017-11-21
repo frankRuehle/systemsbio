@@ -2,13 +2,13 @@
 % Please edit documentation in R/HLP_makeDomainsFromExons.R
 \name{makeDomainsFromExons}
 \alias{makeDomainsFromExons}
-\title{Genomic coordinates of protein domains}
+\title{Calculate genomic coordinates for amino acid positions of protein domains}
 \usage{
 makeDomainsFromExons(ID, biomaRt, uniprot_domains.gff,
   suffix.outputFilname = ".txt")
 }
 \arguments{
-\item{ID}{cahracter with either Ensembl transcript ID, Ensembl gene ID or gene symbol.}
+\item{ID}{character with either Ensembl transcript ID, Ensembl gene ID or gene symbol.}
 
 \item{biomaRt}{biomaRt object to obtain exon ccordinates.}
 
@@ -16,7 +16,7 @@ makeDomainsFromExons(ID, biomaRt, uniprot_domains.gff,
 In Uniprot, select desired features e.g. \code{PTM/Processing} and \code{Family & Domains} 
 and export the basket to gff-file format.}
 
-\item{suffix.outputFilname}{character to be added at output filename.}
+\item{suffix.outputFilname}{character to be added at output filename additionally to the used transcript name.}
 }
 \value{
 dataframe with exon data downloaded from \code{biomaRt}. 
@@ -27,10 +27,14 @@ Use genomic exon coordinates and Uniprot protein domain data to determine genomi
 coordinates of protein domains for plotting in genomic context.
 }
 \details{
-Genomic exon coordinates for the desired transcript are doenloaded from biomaRt. If a gene is selected,
+Genomic exon coordinates for the desired transcript are downloaded from biomaRt. If a gene is selected,
 the canonical transcript is determined as transcript with longest coding sequence.
-Protein data from Uniprot is expected in gff format. Any kind of domains or features may be selected.
-The strored result table may be edited later to modify suggested plotting parameter.
+Protein data is expected in \code{gff}-format from Uniprot giving the amino acid positions for each domain. 
+The total protein length is read from the 2nd comment line of the \code{gff}-file.
+The exon bp coordinates from the selected transcript are used to calculate the cooresponding bp coordinates
+for each protein domain based on their amino acid positions.
+The strored result table may be edited later to modify suggested plotting parameter. The name of the 
+used gene transcript is added to the output filename.
 }
 \author{
 Frank Ruehle

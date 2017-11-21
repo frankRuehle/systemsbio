@@ -6,11 +6,11 @@
 #' Can also mark exons with a thickening of the gene line.
 #'
 #' @param genes a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.
-#'               \code{strand = -1 or -} means reverse strand, everything else forward.
+#'               \code{strand = -1 or -} means minus strand, everything else plus strand.
 #' @param levels integer giving desired number of layers to plot multiple genes. Genes are assigned to layers via gene start position.
 #' If NULL, an additional column \code{ypos} is expected in \code{genes} giving the y-coordinates for the genes to plot.
 #' @param exons a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with start and end positions of exons.
-#' Additionally, columns \code{start} and \code{end} with respective gene coordinates needed as in \code{genes}. 
+#' Additionally, columns \code{start} and \code{end} with respective gene coordinates are needed as in \code{genes}. 
 #' Exon plotting omitted if NULL.
 #' @param xstart an integer number defining the smallest base position of the plot packet.
 #' @param xstop an integer number defining the largest base position of the plot packet.
@@ -52,7 +52,7 @@ regionalplot.genelabels <- function(
      genes$strand <-  sapply(as.character(genes$strand), function(x) {switch(x, "+" = 1, "-" = -1)}) # recode +/- to 1/-1 if necessary
      }
      
-     # calculate mean value of gene poistion if not supplied
+     # calculate mean value of gene position if not supplied
      if(!"mean" %in% names(genes)) {
        genes$mean <- genes$start+(genes$end-genes$start)/2 
      }

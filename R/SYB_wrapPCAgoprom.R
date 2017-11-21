@@ -11,12 +11,14 @@
 #' All output data is stored in supplied \code{projectfolder}.
 #' 
 #' 
-#' @param expca ExpressionSet object or a table with expression data with variables (probes) in rows and 
-#'              observations in columns (samples).
-#' @param groupsoi character vector with sample groups of interest to be included in PCA. 
+#' @param expca \code{ExpressionSet} object or a table with expression data with variables (probes) in rows and 
+#'              observations in columns (samples). In latter case, rows of data matrix must be named after probe 
+#'              identifiers selected in \code{inputType}.
+#' @param groupsoi character vector with sample groups of interest to be included in PCA (if \code{expca} is an \code{ExpressionSet}). 
 #'           Respective samples are taken from \code{phenoData} of \code{expca}.
 #'           groupnames must match entries in column given in \code{groupby}. 
-#' @param groupby Column name of phenoData of \code{expca} used for group names.
+#' @param groupby character with column name of phenoData of \code{expca} used for group names if \code{expca} is 
+#' an \code{ExpressionSet}. Otherwise, \code{groupby} must be vector of group assignments in the same order as samples in the data matrix.
 #' @param sample.name.column Column name of phenoData of \code{expca} used for sample names
 #' @param samples2exclude Character vector for optionally exclusion of individual samples. Used as 
 #'                  regular expression for lookup of samples. \code{Null} if no sample to exlude.
@@ -25,7 +27,7 @@
 #' @param inputType a character vector description of the input type. Must be Affymetrix chip type, 
 #'            "geneSymbol" or "entrezID".
 #' @param print.sample.names boolean indicating whether sample names shall be plotted in PCA plots 
-#'                     (for pcainfoplot they are plotted anyway).  
+#'            (for pcainfoplot they are plotted anyway).  
 #' @param org a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) or "Rn" (rattus norwegicus).
 #' @param PCs4table numeric or numeric vector. Indicates number of PCs (numeric) or distinct PCs (numeric vector) 
 #'            for which result tables of enriched transcription factor binding sites and GO-terms are calculated.
@@ -56,7 +58,7 @@ wrapPCAgoprom <- function(expca,
                           groupby ="Sample_Group", 
                           sample.name.column = "Sample_Name",
                           samples2exclude = NULL,
-                          projectfolder= file.path("GEX", "pcaGoPromoter"), 
+                          projectfolder= file.path("pcaGoPromoter"), 
                           projectname=NULL, 
                           inputType="geneSymbol", 
                           print.sample.names = TRUE, 
@@ -68,7 +70,7 @@ wrapPCAgoprom <- function(expca,
   
 
   # load required libraries
-  pkg.bioc <- c("pcaGoPromoter", "pcaGoPromoter.Hs.hg19")
+  pkg.bioc <- c("pcaGoPromoter", "GO.db", "pcaGoPromoter.Hs.hg19", "org.Hs.eg.db")
   pkg.cran <- c("rgl")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
@@ -79,79 +81,115 @@ wrapPCAgoprom <- function(expca,
   if (!file.exists(file.path(projectfolder, "Transcription_factors"))) {dir.create(file.path(projectfolder, "Transcription_factors")) }
   if (!file.exists(file.path(projectfolder, "PC_loadings"))) {dir.create(file.path(projectfolder, "PC_loadings")) }
   
+  if(!is.null(projectname)) {projectname <- paste0(projectname, "_")}
+  
+  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
+      
+        ### Select Samples from groups of interest
+        if(!is.null(groupsoi)) {
+          
+          groups.found <- groupsoi %in%  pData(expca)[,groupby]
+          groups.included <- groupsoi[groups.found]
+          
+          cat("\n\nGroups included: ", paste(groups.included, collapse=", "))
+          if(!all(groups.found)) {cat("\nGroup(s)", groupsoi[!groups.found], "not found in pheno data of expression set!")}
+          
+          groups.included.samples <- pData(expca)[,groupby] %in% groups.included # boolean. Samples of included groups
+          expca <- expca[, groups.included.samples] # subset expression set for samples of included groups
+             
+        } else { # include all groups
+          groups.included <- as.character(unique(pData(expca)[,groupby]))
+          cat("\n\nAll groups are included:", paste(groups.included, collapse=", "))
+        } # end of group selection
+  
+      
+    groupvector <- factor(pData(expca)[,groupby]) 
+    samplevector <- pData(expca)[,sample.name.column]
+    expressionMatrix <- exprs(expca)
+
+  } else {
+    cat("\nRows of data matrix must be named after probe identifiers selected in inputType 
+            (Affymetrix probe set ID, geneSymbol or entrezID)\n")
+    cat("groupby must be vector of group assignments in the same order as samples in data matrix")
+    groupvector <- factor(groupby)
+    samplevector <- colnames(expca)
+    expressionMatrix <- expca
+  }
   
   
-  ### Select Samples from groups of interest
-  if(!is.null(groupsoi)) {
-    
-    groups.found <- groupsoi %in%  pData(expca)[,groupby]
-    groups.included <- groupsoi[groups.found]
-    
-    cat("\n\nGroups included: ", paste(groups.included, collapse=", "))
-    if(!all(groups.found)) {cat("\nGroup(s)", groupsoi[!groups.found], "not found in pheno data of expression set!")}
-    
-    groups.included.samples <- pData(expca)[,groupby] %in% groups.included # boolean. Samples of included groups
-    expca <- expca[, groups.included.samples] # subset expression set for samples of included groups
-       
-  } else { # include all groups
-    groups.included <- as.character(unique(pData(expca)[,groupby]))
-    cat("\n\nAll groups are included:", paste(groups.included, collapse=", "))
-  } # end of group selection
-  
-  
+cat("\ntest1")############
   
   if(!is.null(samples2exclude)) { # exclude samples matching reg expression in samples2exclude
-    samples2exclude.found <- grepl(samples2exclude, pData(expca)[,sample.name.column])
-    cat("\nSamples removed: ", paste(pData(expca)[samples2exclude.found,sample.name.column], collapse=", "))
+    samples2exclude.found <- grepl(samples2exclude, samplevector)
+    cat("\nSamples removed: ", paste(samplevector[samples2exclude.found], collapse=", "))
     expca <- expca[, !samples2exclude.found] # subset expression set for samples2exclude
-  }  
+    
+    groupvector <- groupvector[!samples2exclude.found] # remove excluded samples also from group and sample vector
+    samplevector <- samplevector[!samples2exclude.found]
+    expressionMatrix <- expressionMatrix[, !samples2exclude.found]
+      }  
   
-  cat("\nFinal sample list included: ", paste(pData(expca)[,sample.name.column], collapse=", "))
+  cat("\nFinal sample list included: ", paste(samplevector, collapse=", "))
   # end of sample selection
   
+  cat("\ntest2")############
   
   
   ### Row names should be probe identifiers given in inputType (Affymetrix probe set ID, "geneSymbol" or "entrezID")
-  if (inputType=="geneSymbol") {
-    if("SYMBOLREANNOTATED" %in% names(fData(expca))) {
-      probe.identifier <- "SYMBOLREANNOTATED"
-    } else { # grep first column containing 'symbol'
-      probe.identifier <- grep("symbol", names(fData(expca)), value=T, ignore.case = TRUE)[1]
-    }
-    if(is.na(probe.identifier)) {stop("no gene symbols found in feature data!")}
-    rownames(exprs(expca)) <- fData(expca)[,probe.identifier]
+  # for ExpressionSet objects, the annotation can be obtained from the feature data table
+  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
+    
+        if (inputType=="geneSymbol") {
+        if("SYMBOLREANNOTATED" %in% names(fData(expca))) {
+          probe.identifier <- "SYMBOLREANNOTATED"
+        } else { # grep first column containing 'symbol'
+          probe.identifier <- grep("symbol", names(fData(expca)), value=T, ignore.case = TRUE)[1]
+        }
+        if(is.na(probe.identifier)) {stop("no gene symbols found in feature data!")}
+        rownames(expressionMatrix) <- fData(expca)[,probe.identifier]
+      }
+      
+      if (inputType=="entrezID") {
+        if("ENTREZREANNOTATED" %in% names(fData(expca))) {
+          probe.identifier <- "ENTREZREANNOTATED"
+        } else { # grep first column containing 'entrez'
+          probe.identifier <- grep("entrez", names(fData(expca)), value=T, ignore.case = TRUE)[1]
+        }
+        if(is.na(probe.identifier)) {stop("no entrez IDs found in feature data!")}
+        rownames(expressionMatrix) <- fData(expca)[,probe.identifier]
+      }
   }
   
-  if (inputType=="entrezID") {
-    if("ENTREZREANNOTATED" %in% names(fData(expca))) {
-      probe.identifier <- "ENTREZREANNOTATED"
-    } else { # grep first column containing 'entrez'
-      probe.identifier <- grep("entrez", names(fData(expca)), value=T, ignore.case = TRUE)[1]
-    }
-    if(is.na(probe.identifier)) {stop("no entrez IDs found in feature data!")}
-    rownames(exprs(expca)) <- fData(expca)[,probe.identifier]
-  }
-  
-  
+  cat("\ntest3")############
   
   ### Number of PC-associated probes to look for TFBS. Either fraction of total probe count or total number otherwise.
-  noProbes <- if(probes2enrich <= 1) {round(probes2enrich*nrow(fData(expca)))} else {round(probes2enrich)}
+  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
+    probesInDataset <- nrow(fData(expca))
+      } else {
+        probesInDataset <- nrow(expca)
+   }
+  noProbes <- if(probes2enrich <= 1) {round(probes2enrich*probesInDataset)} else {round(probes2enrich)}
   cat("\n", noProbes, "probes used for enrichment analysis.\n")  
   
+  cat("\ntest4")############
+  
   ### principal component analysis (pca)
-  pcaOutput <- pcaGoPromoter::pca(exprs(expca))
+  pcaOutput <- pcaGoPromoter::pca(expressionMatrix)
+  
+  cat("\ntest5")############
   
   
   ### Make PCA informative plot. Restricted to PC1 and PC2 only!
-  filename.pcaInfoPlot <- file.path(projectfolder, paste(projectname, "pcainfoplot_PC1_2.tiff", sep="_"))
+  filename.pcaInfoPlot <- file.path(projectfolder, paste0(projectname, "pcainfoplot_PC1_2.tiff"))
   cat("\n\nSave pcaInfoPlot for PC1 and PC2 to", filename.pcaInfoPlot, "\n")
   tiff(filename= filename.pcaInfoPlot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
-  pcaInfoPlot(exprs(expca),inputType=inputType, org = org, 
+  pcaInfoPlot(expressionMatrix,inputType=inputType, org = org, 
               printNames = TRUE,
-              groups=factor(pData(expca)[,groupby]), 
+              groups= groupvector, 
               noProbes = noProbes, GOtermsAnnotation = TRUE, primoAnnotation = TRUE)
   dev.off()
   
+  cat("\ntest6")############
   
   
   ### PCA plot not restricted to PC1 and PC2 (but still 2D)
@@ -167,13 +205,15 @@ wrapPCAgoprom <- function(expca,
   for (i in 1:ncol(PC.combinations)) {  
     PCs <- PC.combinations[,i]
     
-    filename.pcaplot <- file.path(projectfolder, paste0(projectname, "_pcaplot_PC", PCs[1], "_", PCs[2], ".tiff"))
+    filename.pcaplot <- file.path(projectfolder, paste0(projectname, "pcaplot_PC", PCs[1], "_", PCs[2], ".tiff"))
     cat("\nSave pcaplot to", filename.pcaplot, "\n")
     tiff(filename=filename.pcaplot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
-    plot.pca(pcaOutput, groups=factor(pData(expca)[,groupby]), PCs = PCs, 
+    plot.pca(pcaOutput, groups= groupvector, PCs = PCs, 
              printNames = print.sample.names, symbolColors = TRUE, plotCI = TRUE)
     dev.off()
   }   
+  
+  cat("\ntest7")############
   
   
   # 3D scatter plot with rgl package
@@ -181,20 +221,21 @@ wrapPCAgoprom <- function(expca,
     PCs3Dplot <- PCs2plot[1:3]
     # resize window
     par3d(windowRect = c(100, 100, 1000, 1000))
-    filename.3dplot <- file.path(projectfolder, paste0(projectname, "_pcaplot3d_PC", paste(PCs3Dplot, collapse="_"), ".png"))
+    filename.3dplot <- file.path(projectfolder, paste0(projectname, "pcaplot3d_PC", paste(PCs3Dplot, collapse="_"), ".png"))
     cat("\n3D-plot generated for PCs", paste(PCs3Dplot, collapse="_"), "and stored at", filename.3dplot, ".\n")
     # plot groups
-    plot3d(pcaOutput$scores[,PCs3Dplot], size=2, type = "s", col=as.numeric(factor(pData(expca)[,groupby])))
+    plot3d(pcaOutput$scores[,PCs3Dplot], size=2, type = "s", col=as.numeric(groupvector))
     grid3d("x")
     grid3d("y")
     grid3d("z")
-    legend3d("topleft", legend=unique(as.character(factor(pData(expca)[,groupby]))), pch=16, cex=1.5, inset=c(0.02),
-             col=unique(as.numeric(factor(pData(expca)[,groupby]))))
+    legend3d("topleft", legend=unique(as.character(groupvector)), pch=16, cex=1.5, inset=c(0.02),
+             col=unique(as.numeric(groupvector)))
     # capture snapshot
     snapshot3d(filename = filename.3dplot, fmt = 'png')
   }
   
   
+  cat("\ntest8")############
   
   
   
@@ -221,7 +262,7 @@ wrapPCAgoprom <- function(expca,
       
       # save loadings
       write.table(loadsperPC[[paste0("PC",p,d)]], row.names=F, quote=F, sep="\t", col.names = F,
-                  file=file.path(projectfolder, "PC_loadings", paste0(projectname, "_Loading_", "PC", p, d, ".txt")))
+                  file=file.path(projectfolder, "PC_loadings", paste0(projectname, "Loading_", "PC", p, d, ".txt")))
       
       
       # Create Gene Ontology tree from loadings
@@ -229,7 +270,7 @@ wrapPCAgoprom <- function(expca,
                                                  inputType = inputType, org=org, 
                                                  statisticalTest = "binom", binomAlpha = NA,
                                                  p.adjust.method = "fdr")
-      filename.GOtreeOutput <- file.path(projectfolder, "Gene_Ontology", paste0(projectname, "_GOtreeOutput_", "PC", p, d))
+      filename.GOtreeOutput <- file.path(projectfolder, "Gene_Ontology", paste0(projectname, "GOtreeOutput_", "PC", p, d))
      
          
 #       # plot GO term trees # currently not working: Error in addNode("n0", g) : argument "to" is missing, with no default  
@@ -252,10 +293,10 @@ wrapPCAgoprom <- function(expca,
                                             PvalueCutOff = 0.05, cutOff = 0.9,
                                             p.adjust.method = "fdr", printIgnored = FALSE , primoData = NULL)
       write.table(TFtables[[paste0("PC",p,d)]][["overRepresented"]], row.names=F, quote=F, sep="\t",
-                  file= file.path(projectfolder, "Transcription_factors", paste0(projectname, "_overrepresentedTFs_", "PC", p, d,".txt")))
+                  file= file.path(projectfolder, "Transcription_factors", paste0(projectname, "overrepresentedTFs_", "PC", p, d,".txt")))
       
       write.table(TFtables[[paste0("PC",p,d)]][["underRepresented"]], row.names=F, quote=F, sep="\t",
-            file= file.path(projectfolder, "Transcription_factors", paste0(projectname, "_underrepresentedTFs_", "PC", p, d,".txt")))
+            file= file.path(projectfolder, "Transcription_factors", paste0(projectname, "underrepresentedTFs_", "PC", p, d,".txt")))
 
 
     } # end of d-loop

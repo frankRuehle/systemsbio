@@ -1,19 +1,23 @@
-#' Genomic coordinates of protein domains
+#' Calculate genomic coordinates for amino acid positions of protein domains 
 #' 
 #' Use genomic exon coordinates and Uniprot protein domain data to determine genomic 
 #' coordinates of protein domains for plotting in genomic context.
 #' 
-#' Genomic exon coordinates for the desired transcript are doenloaded from biomaRt. If a gene is selected,
+#' Genomic exon coordinates for the desired transcript are downloaded from biomaRt. If a gene is selected,
 #' the canonical transcript is determined as transcript with longest coding sequence.
-#' Protein data from Uniprot is expected in gff format. Any kind of domains or features may be selected.
-#' The strored result table may be edited later to modify suggested plotting parameter.
+#' Protein data is expected in \code{gff}-format from Uniprot giving the amino acid positions for each domain. 
+#' The total protein length is read from the 2nd comment line of the \code{gff}-file.
+#' The exon bp coordinates from the selected transcript are used to calculate the cooresponding bp coordinates
+#' for each protein domain based on their amino acid positions.
+#' The strored result table may be edited later to modify suggested plotting parameter. The name of the 
+#' used gene transcript is added to the output filename.
 #' 
-#' @param ID cahracter with either Ensembl transcript ID, Ensembl gene ID or gene symbol.
+#' @param ID character with either Ensembl transcript ID, Ensembl gene ID or gene symbol.
 #' @param biomaRt biomaRt object to obtain exon ccordinates.
 #' @param uniprot_domains.gff character with file path to Uniprot gff export. 
 #' In Uniprot, select desired features e.g. \code{PTM/Processing} and \code{Family & Domains} 
 #' and export the basket to gff-file format.
-#' @param suffix.outputFilname character to be added at output filename.  
+#' @param suffix.outputFilname character to be added at output filename additionally to the used transcript name.  
 #' 
 #' @return dataframe with exon data downloaded from \code{biomaRt}. 
 #' The result domain table is stored as side effect in the filepath given by \code{uniprot_domains.gff}.
@@ -64,7 +68,7 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
   gene_strand <- unique(geneexons$strand)
   cat(paste("Transcript selected:", transcript, ", Strand:", gene_strand, "\n"))
   
-  # invert exon order if minus strand (strategy not used. Better keep real exon order.)
+  # invert exon order if minus strand (not used. Better keep real exon order.)
   #geneexons <- geneexons[order(geneexons$exon_chrom_start, decreasing= grepl("-", gene_strand)), ]
   
   # translate exon BP coordinates to aminoacid (AA) coordinates 
@@ -92,8 +96,12 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
   prot[, 10] <- NULL
   names(prot) <- c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute")
 
-  prot$feature_length <- prot$end - prot$start
+  # read total protein length from second comment line of uniprot_domains.gff
+  prot_length <- read.table(uniprot_domains.gff, header=F,  stringsAsFactors = F, comment.char = "", skip=1, nrows=1)
+  prot$protein_length <- prot_length[, ncol(prot_length)]
   
+  prot$feature_length <- prot$end - prot$start
+
   # find exon interval corresponding with protein domains
   index.interv.start <- findInterval(prot$start, c(geneexons$AA_start, geneexons$AA_end[length(geneexons$AA_end)]) ) 
   index.interv.end   <- findInterval(prot$end,   c(geneexons$AA_start, geneexons$AA_end[length(geneexons$AA_end)]) ) 
@@ -111,16 +119,18 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
       
   # initialise additional columns
   prot$domain_name_plot <- prot$feature
-  prot$symbol_plot <- "rect"
-  prot$domain_width_extension <- prot$feature_length
+  prot$symbol_plot <- "ellipse"
   prot$domain_height_extension <- 1
   prot$domain_color <- "black"
-    
+  prot$label_pos <- 3 # Values of 1, 2, 3 and 4 indicate positions below, left, above and right of the specified coordinates.
+  prot$assignArrows2Gene <- TRUE
+  #prot$domain_width_extension <- prot$feature_length # not used any more
+  
   # write result table
-  output.filename <- paste0(uniprot_domains.gff, suffix.outputFilname)
+  uniprot_domains.gff <- sub(".gff", "", uniprot_domains.gff)
+  output.filename <- paste0(uniprot_domains.gff, "_", transcript, suffix.outputFilname)
   cat(paste("Write result table to", output.filename))
-  cat("\nEdit table (select features, modify width_extension, symbol 'rect' or 'circ', etc.) as 
-      requested before plotting. No overlapping of features allowed.\n")
+  cat("\nEdit table: select features/domains, symbol ('rectangle', 'ellipse'), color, label_pos (3=top, 1=bottom)) as requested for plotting.\n")
   write.table(prot, file=output.filename, sep="\t", quote = F, row.names = F) 
 
   return(geneexons)  

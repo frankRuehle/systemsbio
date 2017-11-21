@@ -34,7 +34,7 @@
 #' @param lines2skip.end Numeric with number of rows to read when loading \code{annotationFile} or 
 #'                        regular expression for character string to identify corresponding row number to be read,
 #'                        e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
-#'                        All rows from that number on (incl. \code{lines2skip.end}) are skipped. Negative and other 
+#'                        All rows starting from that number (incl. \code{lines2skip.end}) are skipped. Negative and other 
 #'                        invalid values are ignored.
 #' @param annofile.SNP.columnName character with column name of SNP IDs in \code{annotationFile}.
 #' @param annofile.columns Optional character vector with column names of \code{annotationFile} to be included.

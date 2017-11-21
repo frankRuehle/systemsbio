@@ -13,7 +13,9 @@
 #' of the corresponding gene. Recommended for plotting to reduce complexity.
 #' @param makeExonRanges logical. If True, an GRanges object for exons is generated using the 
 #' "blockStarts" and "blockSizes" data from LNCipedia. Transcript or gene coordinates are stored in metadata.
-#' @param addBases numeric. Add bases to both sides of the ranges.
+#' @param addBases numeric. Vector with 2 values to be added to each start end position of the ranges.
+#' E.g. enter \code{addBases= c(1,0)} for transforming 0-based 1-based start coordinate or \code{addBases= c(-10,10)}
+#' to extend each range for 10 bases to both sides. Omitted if NULL.
 #' 
 #' @return GRanges object containing LNCipedia transcripts or exons
 #' 
@@ -23,7 +25,7 @@
 
 
 
-processLNCipedia <- function(LNCipedia, collapseTranscripts2Genes=T, makeExonRanges=T, addBases=0) {
+processLNCipedia <- function(LNCipedia, collapseTranscripts2Genes=T, makeExonRanges=T, addBases= c(0,0)) {
   
   
   ## read LNCipedia
@@ -51,19 +53,22 @@ processLNCipedia <- function(LNCipedia, collapseTranscripts2Genes=T, makeExonRan
   if(!("geneName" %in% names(mcols(LNCipedia)))) {mcols(LNCipedia)$geneName <- gsub(":.*$", "", mcols(LNCipedia)$name)} # gene names without transcript suffix
   
   
-  ## prune Lncipedia transcripts to genes (by ":Number"-suffix)
+  ## prune LNCipedia transcripts to genes (by ":Number"-suffix)
     if(collapseTranscripts2Genes) {
+      
       cat("\nCollapsing lncRNA transcripts to genes\n")
-      names(LNCipedia) <- factor(mcols(LNCipedia)$geneName)
+      names(LNCipedia) <- factor(mcols(LNCipedia)$geneName) # rename rows by gene names instead of transcript names
+      mcols(LNCipedia)$name <- mcols(LNCipedia)$geneName  # rename 'name'-column by gene names instead of transcript names
+      
       for(i in unique(names(LNCipedia))) {
         tempgr <- range(LNCipedia[names(LNCipedia) == i]) # collapse all transcripts per gene
         start(LNCipedia[names(LNCipedia) == i]) <- start(tempgr) # all transcripts assigned with gene coordinates
         end(LNCipedia[names(LNCipedia) == i]) <- end(tempgr)
       }
+  
+  
   } # end prune transcripts
   
-  
- 
   
   ##makeLNCipediaExons
   if(makeExonRanges) {
@@ -88,12 +93,14 @@ processLNCipedia <- function(LNCipedia, collapseTranscripts2Genes=T, makeExonRan
   } # end makeExonRanges 
   
  
-  ## append 10 Bases to each side of the exons
-    if(addBases>0) {
-      cat("\n", addBases, "Bases added to each side of the ranges")
-      start(LNCipedia) <- start(LNCipedia) - addBases
-      end(LNCipedia) <- end(LNCipedia) + addBases
-    } # end append bases
+  ## append bases to each side of the exons
+    if(!is.null(addBases)) {
+      if(!all(addBases == 0)) {
+        if(length(addBases)==1) {addBases[2] <- addBases[1]}
+        cat("\nadded", addBases[1], "bases to start and", addBases[2], "bases to end coordiates of all ranges.")
+      start(LNCipedia) <- start(LNCipedia) + addBases[1]
+      end(LNCipedia) <- end(LNCipedia) + addBases[2]
+    }} # end append bases
     
    
  ## reduce ranges, e.g. final regions for sequencing

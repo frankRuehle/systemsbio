@@ -6,19 +6,21 @@
 \usage{
 wrapPCAgoprom(expca, groupsoi = NULL, groupby = "Sample_Group",
   sample.name.column = "Sample_Name", samples2exclude = NULL,
-  projectfolder = file.path("GEX", "pcaGoPromoter"), projectname = NULL,
+  projectfolder = file.path("pcaGoPromoter"), projectname = NULL,
   inputType = "geneSymbol", print.sample.names = TRUE, org = "Hs",
   PCs4table = 2, PCs2plot = c(1, 2, 3), probes2enrich = 0.025)
 }
 \arguments{
-\item{expca}{ExpressionSet object or a table with expression data with variables (probes) in rows and 
-observations in columns (samples).}
+\item{expca}{\code{ExpressionSet} object or a table with expression data with variables (probes) in rows and 
+observations in columns (samples). In latter case, rows of data matrix must be named after probe 
+identifiers selected in \code{inputType}.}
 
-\item{groupsoi}{character vector with sample groups of interest to be included in PCA. 
+\item{groupsoi}{character vector with sample groups of interest to be included in PCA (if \code{expca} is an \code{ExpressionSet}). 
 Respective samples are taken from \code{phenoData} of \code{expca}.
 groupnames must match entries in column given in \code{groupby}.}
 
-\item{groupby}{Column name of phenoData of \code{expca} used for group names.}
+\item{groupby}{character with column name of phenoData of \code{expca} used for group names if \code{expca} is 
+an \code{ExpressionSet}. Otherwise, \code{groupby} must be vector of group assignments in the same order as samples in the data matrix.}
 
 \item{sample.name.column}{Column name of phenoData of \code{expca} used for sample names}
 

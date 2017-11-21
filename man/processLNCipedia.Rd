@@ -5,7 +5,7 @@
 \title{Process LNCipedia bed-file}
 \usage{
 processLNCipedia(LNCipedia, collapseTranscripts2Genes = T,
-  makeExonRanges = T, addBases = 0)
+  makeExonRanges = T, addBases = c(0, 0))
 }
 \arguments{
 \item{LNCipedia}{Either character with filepath to LNCipedia bed-file (no header), dataframe 
@@ -17,7 +17,9 @@ of the corresponding gene. Recommended for plotting to reduce complexity.}
 \item{makeExonRanges}{logical. If True, an GRanges object for exons is generated using the 
 "blockStarts" and "blockSizes" data from LNCipedia. Transcript or gene coordinates are stored in metadata.}
 
-\item{addBases}{numeric. Add bases to both sides of the ranges.}
+\item{addBases}{numeric. Vector with 2 values to be added to each start end position of the ranges.
+E.g. enter \code{addBases= c(1,0)} for transforming 0-based 1-based start coordinate or \code{addBases= c(-10,10)}
+to extend each range for 10 bases to both sides. Omitted if NULL.}
 }
 \value{
 GRanges object containing LNCipedia transcripts or exons

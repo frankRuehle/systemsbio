@@ -41,7 +41,7 @@ subsetByOverlaps.keepAllMeta <- function(gr1, gr2, write.ranges.tofile = NULL, a
   names <- sapply(names, function(x) {paste(unique(x), collapse="; ") })
   mcols(ranges) <- DataFrame(mcols(ranges), names)
   
-  for(m in names(mcols(gr2))) { # meta columns of gr2 summerized and added to meta data of gr1
+  for(m in names(mcols(gr2))) { # meta columns of gr2 summarized and added to meta data of gr1
     meta <- mcols(gr2)[subjectHits(hits),m]
     if (is.factor(meta)) {meta <- as.character(meta)}
     meta <- CharacterList(split(meta, queryHits(hits)))

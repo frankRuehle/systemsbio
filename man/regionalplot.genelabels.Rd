@@ -10,13 +10,13 @@ regionalplot.genelabels(genes, levels, exons, xstart, xstop, ystart, ygenesize,
 }
 \arguments{
 \item{genes}{a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.
-\code{strand = -1 or -} means reverse strand, everything else forward.}
+\code{strand = -1 or -} means minus strand, everything else plus strand.}
 
 \item{levels}{integer giving desired number of layers to plot multiple genes. Genes are assigned to layers via gene start position.
 If NULL, an additional column \code{ypos} is expected in \code{genes} giving the y-coordinates for the genes to plot.}
 
 \item{exons}{a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with start and end positions of exons.
-Additionally, columns \code{start} and \code{end} with respective gene coordinates needed as in \code{genes}. 
+Additionally, columns \code{start} and \code{end} with respective gene coordinates are needed as in \code{genes}. 
 Exon plotting omitted if NULL.}
 
 \item{xstart}{an integer number defining the smallest base position of the plot packet.}
