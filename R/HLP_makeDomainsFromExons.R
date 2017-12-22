@@ -59,9 +59,10 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
   geneexons <- geneexons[!grepl("(chr)|(patch)", geneexons$chromosome_name, ignore.case = T),]
   # remove entries without coding sequence
   geneexons <- geneexons[!is.na(geneexons$cds_start), ]
+  
   # choose canonical transcript (longest coding region)
   transcript <- tapply(geneexons$cds_end, geneexons$ensembl_transcript_id, FUN = max) # named character vector with transcript length
-  transcript <- names(transcript[transcript==max(transcript)]) # name of longest transcript
+  transcript <- names(transcript[transcript==max(transcript)])[1] # name of longest transcript
   
   geneexons <- geneexons[geneexons$ensembl_transcript_id == transcript, ] # select exons from selected transcript
   
@@ -118,6 +119,7 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
       }
       
   # initialise additional columns
+  prot$plotFeature <- TRUE
   prot$domain_name_plot <- prot$feature
   prot$symbol_plot <- "ellipse"
   prot$domain_height_extension <- 1
@@ -130,8 +132,8 @@ makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.output
   uniprot_domains.gff <- sub(".gff", "", uniprot_domains.gff)
   output.filename <- paste0(uniprot_domains.gff, "_", transcript, suffix.outputFilname)
   cat(paste("Write result table to", output.filename))
-  cat("\nEdit table: select features/domains, symbol ('rectangle', 'ellipse'), color, label_pos (3=top, 1=bottom)) as requested for plotting.\n")
   write.table(prot, file=output.filename, sep="\t", quote = F, row.names = F) 
-
+  cat("\nEdit table: select features/domains, symbol ('rectangle', 'ellipse'), color, label_pos (3=top, 1=bottom)) as requested for plotting.\n")
+  
   return(geneexons)  
 }  

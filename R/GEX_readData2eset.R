@@ -76,7 +76,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   exprsData <- as.matrix(exprsData[,exprscolumns]) # make matrix with numeric data
   
   if (is.null(rownames(exprsData))) {rownames(exprsData) <- annodata[,ProbeID]} # add rownames if not existing
-  exprsData <- exprsData[,sort(colnames(exprsData))] # sortieren der Spalten (Samples)
+  exprsData <- exprsData[,sort(colnames(exprsData))] # sort columns (Samples)
   
   if(!is.null(transform)) {exprsData <- transform(exprsData)} # transform expression data
 
@@ -107,9 +107,9 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
       if(grepl("mouse", arrayAnnotation, ignore.case=T)) {organism <- "mouse"}
       if(grepl("human", arrayAnnotation, ignore.case=T)) {organism <- "human"}
         
-    Symbol.column.name <- grep("SYMBOL", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
+    Symbol.column.name <- grep("SYMBOL", colnames(featureData), ignore.case=T, value=T)[1] # guess column names from featureData
       if(is.na(Symbol.column.name)) {Symbol.column.name <- NULL} # Null if no grep result
-    Entrez.column.name <- grep("ENTREZ", colnames(featureData), ignore.case=T, value=T)[1] # guess colum names from featureData
+    Entrez.column.name <- grep("ENTREZ", colnames(featureData), ignore.case=T, value=T)[1] # guess column names from featureData
       if(is.na(Entrez.column.name)) {Entrez.column.name <- NULL} # Null if no grep result
     
     if(!is.null(organism)) {

@@ -12,12 +12,13 @@ regionalplot.genelabels(genes, levels, exons, xstart, xstop, ystart, ygenesize,
 \item{genes}{a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.
 \code{strand = -1 or -} means minus strand, everything else plus strand.}
 
-\item{levels}{integer giving desired number of layers to plot multiple genes. Genes are assigned to layers via gene start position.
-If NULL, an additional column \code{ypos} is expected in \code{genes} giving the y-coordinates for the genes to plot.}
+\item{levels}{integer giving desired number of layers to plot multiple genes. Genes are assigned to 
+layers via gene start position. If NULL, an additional column \code{ypos} is expected in \code{genes} 
+giving the y-coordinates for the genes to plot.}
 
-\item{exons}{a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with start and end positions of exons.
-Additionally, columns \code{start} and \code{end} with respective gene coordinates are needed as in \code{genes}. 
-Exon plotting omitted if NULL.}
+\item{exons}{a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with 
+start and end positions of exons. Additionally, columns \code{start} and \code{end} with respective 
+gene coordinates are needed as in \code{genes}. Exon plotting omitted if NULL.}
 
 \item{xstart}{an integer number defining the smallest base position of the plot packet.}
 
@@ -27,12 +28,14 @@ Exon plotting omitted if NULL.}
 
 \item{ygenesize}{numeric y extentsion.}
 
-\item{scale.factor}{character expansion value as in e.g \code{xyplot}. Is also used for other scaling calculations (e.g. exon size, lwd) here.}
+\item{scale.factor}{character expansion value as in e.g \code{xyplot}. Is also used for other scaling 
+calculations (e.g. exon size, lwd) here.}
 
 \item{arrow.scale.factor}{character expansion value for arrows.}
 
-\item{truncate}{When TRUE, gene start / end positions will be truncated to xstart and xstop. Exons with exon_chrom_start > xstop
-or exon_chrom_end < xstart are dicarded (that are those that lie completely beyond xstart and xstop).}
+\item{truncate}{When TRUE, gene start / end positions will be truncated to xstart and xstop. 
+Exons with exon_chrom_start > xstop or exon_chrom_end < xstart are dicarded (that are those that lie 
+completely beyond xstart and xstop).}
 
 \item{genecol}{character giving gene color.}
 
@@ -48,6 +51,10 @@ Plotting of genes and exones incl. gene labels
 Shows an arrow (orientation = strand) and the according gene symbol in the plot.
 Can also mark exons with a thickening of the gene line.
 }
+\note{
+Arrowheads are omitted (with a warning) on any arrow of length less than 1/1000 inch 
+(see \code{help(arrows)} from graphics package)
+}
 \author{
-Frank Ruehle
+Milan Hiersche and Frank Ruehle
 }

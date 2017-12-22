@@ -78,7 +78,7 @@ genoAssoc <- function(gwaa,
   
     if (fun.assoc == "mlreg") { # REGRESSION
       cat(paste("\nPerforming regression analysis applying", gtmode, "model\n\n"))
-      result.assoc <- mlreg(formula= traits, data= gwaa, quiet= quiet, trait.type= trait.type, gtmode= gtmode)
+      result.assoc <- mlreg(formula= traits, data= gwaa, trait.type= trait.type, gtmode= gtmode)
     }  
       
  detach(phdata(gwaa))

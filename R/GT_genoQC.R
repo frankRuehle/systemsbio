@@ -167,7 +167,7 @@ genoQC <- function(gwaa,
           height = 210, units = "mm", res=600)
         plot(gwaaqc.mds[,1:2], main=paste("PCAplot",i,"center"), xlab="PC1", ylab="PC2", col=km$cluster, 
              pch= if(!is.null(trait.name) && trait.type=="binomial") {phdata(gwaaqc)[,trait.name]} else {1})
-        text(gwaaqc.mds[,1:2], sub("@.*$", "", rownames(gwaaqc.mds)), pos=1, cex=0.4) # remove SNPZone suffix from sample names if necessary
+        text(gwaaqc.mds[,1:2], sub("@.*$", "", rownames(gwaaqc.mds)), pos=1, cex=0.4, col=km$cluster) # remove SNPZone suffix from sample names if necessary
         legend(x="topright", legend=paste("cluster", 1:i), col=1:i, pch="-", cex=1, pt.cex=1)
         
         if(!is.null(trait.name) && trait.type=="binomial") {

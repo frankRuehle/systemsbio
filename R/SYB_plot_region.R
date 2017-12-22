@@ -378,6 +378,7 @@ plot.region <- function (region,
          # find overlaps of SNP positions and exon data (Ensembl and LNCipedia)
          # If overlapping with any exon, merge "exonic" to SNP EFFECT column
          # If overlapping with any exon, merge respective biotype from exon.ranges to SNP EFFECT column
+          data.plot$EFFECT <- as.character(data.plot$EFFECT)
           data.plot.ranges <-  GRanges(seqnames = data.plot$CHR,
                                       ranges = IRanges(data.plot$POS, end = data.plot$POS, names = data.plot$ID), 
                                       strand = "*",
@@ -527,6 +528,7 @@ plot.region <- function (region,
         stop(paste("columns missing in", plot.protein.domains[i], ": "), columns.requested[!columns.requested %in% names(domains)])}
       
       # Initialise additional columns if not given yet
+      if (!("plotFeature" %in% names(domains))) {domains$plotFeature <- T}
       if (!("domain_height_extension" %in% names(domains))) {domains$domain_height_extension <- 1}
       if (!("domain_color" %in% names(domains))) {domains$domain_color <- "black"}
       if (!("symbol_plot" %in% names(domains))) {domains$symbol_plot <- "ellipse"}
@@ -543,7 +545,8 @@ plot.region <- function (region,
       gene.totalLength <- width(gene.ranges[pd])
       AA.totalLength <- max(domains$protein_length)
       
-      # order domains for start position
+      # remove features not to be plotted and order domains for start position
+      domains <- domains[domains$plotFeature == T, ]
       domains <- domains[order(domains$BP_start, decreasing = F),]
 
             # ######### Previous domain plotting design with adjacent, non-overlapping symbols

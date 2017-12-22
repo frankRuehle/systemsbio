@@ -4,7 +4,8 @@
 #' Wrapper function for PCA routines from \code{pcaGoPromoter}-package incl. PCA-plots and 
 #' enrichment analysis of PC loadings.
 #' 
-#' 
+#' The pcaGoPromoter::pca function uses prcomp to do the principal component analysis. 
+#' The input data is scaled and centered, so constant variables (sd = 0) will be removed to avoid divison by zero.
 #' 2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet \code{expca}. 
 #' Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top associated probes 
 #' are generated for any number of principal components in positive and negative orientation.
@@ -19,15 +20,16 @@
 #'           groupnames must match entries in column given in \code{groupby}. 
 #' @param groupby character with column name of phenoData of \code{expca} used for group names if \code{expca} is 
 #' an \code{ExpressionSet}. Otherwise, \code{groupby} must be vector of group assignments in the same order as samples in the data matrix.
-#' @param sample.name.column Column name of phenoData of \code{expca} used for sample names
+#' @param sample.name.column Character with column name of phenoData of \code{expca} used for sample names
 #' @param samples2exclude Character vector for optionally exclusion of individual samples. Used as 
 #'                  regular expression for lookup of samples. \code{Null} if no sample to exlude.
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
-#' @param inputType a character vector description of the input type. Must be Affymetrix chip type, 
+#' @param inputType Character vector with description of the input type. Must be Affymetrix chip type, 
 #'            "geneSymbol" or "entrezID".
 #' @param print.sample.names boolean indicating whether sample names shall be plotted in PCA plots 
 #'            (for pcainfoplot they are plotted anyway).  
+#' @param print.symbol.colors boolean indicating whether the symbols should be plotted with colors.
 #' @param org a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) or "Rn" (rattus norwegicus).
 #' @param PCs4table numeric or numeric vector. Indicates number of PCs (numeric) or distinct PCs (numeric vector) 
 #'            for which result tables of enriched transcription factor binding sites and GO-terms are calculated.
@@ -41,8 +43,9 @@
 #'              
 #'              
 #' @return  Several plots and files are generated as side-effects and stored are in the designated projectfolder.
-#' The returned value is a list of 3 lists.
+#' The returned value is a list of 4 objects.
 #' \itemize{
+#'    \item PCA: Principal component matrix
 #'    \item loadsperPC: Top associated probes for every PC in pos and neg direction
 #'    \item TFtables: dataframes containing enriched TFBS for every PC in pos and neg direction (over- and underrepresented)
 #'    \item GOtreeOutput: dataframes containing enriched GO terms for every PC in pos and neg direction
@@ -61,7 +64,8 @@ wrapPCAgoprom <- function(expca,
                           projectfolder= file.path("pcaGoPromoter"), 
                           projectname=NULL, 
                           inputType="geneSymbol", 
-                          print.sample.names = TRUE, 
+                          print.sample.names = TRUE,
+                          print.symbol.colors = TRUE,
                           org = "Hs", 
                           PCs4table = 2,  
                           PCs2plot = c(1,2,3), 
@@ -209,7 +213,7 @@ cat("\ntest1")############
     cat("\nSave pcaplot to", filename.pcaplot, "\n")
     tiff(filename=filename.pcaplot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
     plot.pca(pcaOutput, groups= groupvector, PCs = PCs, 
-             printNames = print.sample.names, symbolColors = TRUE, plotCI = TRUE)
+             printNames = print.sample.names, symbolColors = print.symbol.colors, plotCI = TRUE)
     dev.off()
   }   
   
@@ -307,7 +311,7 @@ cat("\ntest1")############
    detach_package(c(pkg.cran, pkg.bioc))
   
   
-  return(list(loadsperPC=loadsperPC, TFtables=TFtables, GOtreeOutput=GOtreeOutput))
+  return(list(PCA=pcaOutput, loadsperPC=loadsperPC, TFtables=TFtables, GOtreeOutput=GOtreeOutput))
   
 } # end of function definition
 

@@ -7,28 +7,33 @@
 #'
 #' @param genes a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.
 #'               \code{strand = -1 or -} means minus strand, everything else plus strand.
-#' @param levels integer giving desired number of layers to plot multiple genes. Genes are assigned to layers via gene start position.
-#' If NULL, an additional column \code{ypos} is expected in \code{genes} giving the y-coordinates for the genes to plot.
-#' @param exons a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with start and end positions of exons.
-#' Additionally, columns \code{start} and \code{end} with respective gene coordinates are needed as in \code{genes}. 
-#' Exon plotting omitted if NULL.
+#' @param levels integer giving desired number of layers to plot multiple genes. Genes are assigned to 
+#' layers via gene start position. If NULL, an additional column \code{ypos} is expected in \code{genes} 
+#' giving the y-coordinates for the genes to plot.
+#' @param exons a data frame containing columns \code{exon_chrom_start} and \code{exon_chrom_end} with 
+#' start and end positions of exons. Additionally, columns \code{start} and \code{end} with respective 
+#' gene coordinates are needed as in \code{genes}. Exon plotting omitted if NULL.
 #' @param xstart an integer number defining the smallest base position of the plot packet.
 #' @param xstop an integer number defining the largest base position of the plot packet.
 #' @param ystart numeric y position of the line marking the gene.
 #' @param ygenesize numeric y extentsion.
-#' @param scale.factor character expansion value as in e.g \code{xyplot}. Is also used for other scaling calculations (e.g. exon size, lwd) here.
+#' @param scale.factor character expansion value as in e.g \code{xyplot}. Is also used for other scaling 
+#' calculations (e.g. exon size, lwd) here.
 #' @param arrow.scale.factor character expansion value for arrows.
-#' @param truncate When TRUE, gene start / end positions will be truncated to xstart and xstop. Exons with exon_chrom_start > xstop
-#'         or exon_chrom_end < xstart are dicarded (that are those that lie completely beyond xstart and xstop).
+#' @param truncate When TRUE, gene start / end positions will be truncated to xstart and xstop. 
+#' Exons with exon_chrom_start > xstop or exon_chrom_end < xstart are dicarded (that are those that lie 
+#' completely beyond xstart and xstop).
 #' @param genecol character giving gene color.
 #' @param genenamecol character giving color of gene names.
 #' 
 #' @return no value returned. Genes are plotted in active graphics device.
 #' 
-#' @author Frank Ruehle
+#' @author Milan Hiersche and Frank Ruehle
 #' 
 #' @export 
-
+#' 
+#' @note Arrowheads are omitted (with a warning) on any arrow of length less than 1/1000 inch 
+#' (see \code{help(arrows)} from graphics package)
 
 regionalplot.genelabels <- function(
   genes,
@@ -82,6 +87,7 @@ regionalplot.genelabels <- function(
       # genes[genes$mean < xstart | genes$mean > xstop, "name"] <- ""
     }
     
+
 
   # plot gene arrows - forward and reverse
   if(nrow(genes) > 0)

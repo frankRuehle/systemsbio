@@ -7,8 +7,9 @@
 wrapPCAgoprom(expca, groupsoi = NULL, groupby = "Sample_Group",
   sample.name.column = "Sample_Name", samples2exclude = NULL,
   projectfolder = file.path("pcaGoPromoter"), projectname = NULL,
-  inputType = "geneSymbol", print.sample.names = TRUE, org = "Hs",
-  PCs4table = 2, PCs2plot = c(1, 2, 3), probes2enrich = 0.025)
+  inputType = "geneSymbol", print.sample.names = TRUE,
+  print.symbol.colors = TRUE, org = "Hs", PCs4table = 2, PCs2plot = c(1,
+  2, 3), probes2enrich = 0.025)
 }
 \arguments{
 \item{expca}{\code{ExpressionSet} object or a table with expression data with variables (probes) in rows and 
@@ -22,7 +23,7 @@ groupnames must match entries in column given in \code{groupby}.}
 \item{groupby}{character with column name of phenoData of \code{expca} used for group names if \code{expca} is 
 an \code{ExpressionSet}. Otherwise, \code{groupby} must be vector of group assignments in the same order as samples in the data matrix.}
 
-\item{sample.name.column}{Column name of phenoData of \code{expca} used for sample names}
+\item{sample.name.column}{Character with column name of phenoData of \code{expca} used for sample names}
 
 \item{samples2exclude}{Character vector for optionally exclusion of individual samples. Used as 
 regular expression for lookup of samples. \code{Null} if no sample to exlude.}
@@ -31,11 +32,13 @@ regular expression for lookup of samples. \code{Null} if no sample to exlude.}
 
 \item{projectname}{optional character prefix for output file names.}
 
-\item{inputType}{a character vector description of the input type. Must be Affymetrix chip type, 
+\item{inputType}{Character vector with description of the input type. Must be Affymetrix chip type, 
 "geneSymbol" or "entrezID".}
 
 \item{print.sample.names}{boolean indicating whether sample names shall be plotted in PCA plots 
 (for pcainfoplot they are plotted anyway).}
+
+\item{print.symbol.colors}{boolean indicating whether the symbols should be plotted with colors.}
 
 \item{org}{a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) or "Rn" (rattus norwegicus).}
 
@@ -53,8 +56,9 @@ A value \code{<= 1} is interpreted as fraction of total number of probes.}
 }
 \value{
 Several plots and files are generated as side-effects and stored are in the designated projectfolder.
-The returned value is a list of 3 lists.
+The returned value is a list of 4 objects.
 \itemize{
+   \item PCA: Principal component matrix
    \item loadsperPC: Top associated probes for every PC in pos and neg direction
    \item TFtables: dataframes containing enriched TFBS for every PC in pos and neg direction (over- and underrepresented)
    \item GOtreeOutput: dataframes containing enriched GO terms for every PC in pos and neg direction
@@ -65,6 +69,8 @@ Wrapper function for PCA routines from \code{pcaGoPromoter}-package incl. PCA-pl
 enrichment analysis of PC loadings.
 }
 \details{
+The pcaGoPromoter::pca function uses prcomp to do the principal component analysis. 
+The input data is scaled and centered, so constant variables (sd = 0) will be removed to avoid divison by zero.
 2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet \code{expca}. 
 Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top associated probes 
 are generated for any number of principal components in positive and negative orientation.
