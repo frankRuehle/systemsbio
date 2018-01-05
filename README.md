@@ -3,7 +3,7 @@ Streamlined analysis package for omics-data
 
 This package consists of modularized wrapper functions for multiple genomics analysis packages. It is designed for multi-omics analysis of expression, methylation and/or genotyping data. All modules can also be used individually.
 
-See the package [Vignette](inst/doc/systemsbio-vignette.html) for documentation of the package and example analyses.
+See the package [Vignette](inst/doc/systemsbio.html) for documentation of the package and example analyses.
 
 ## Installation
 
@@ -22,7 +22,7 @@ See the package [Vignette](inst/doc/systemsbio-vignette.html) for documentation 
 
 
 ## First steps
-Start by loading the `systemsbio` package and read the excellent documentation.
+Start by loading the `systemsbio` package and read the package vignette.
 
     library(systemsbio)
     vignette(systemsbio)
