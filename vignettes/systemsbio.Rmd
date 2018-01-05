@@ -1,0 +1,126 @@
+---
+title: "systemsbio"
+author: "Frank Ruehle"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{systemsbio}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+# Streamlined Analysis and Integration of Systems Biology Data
+
+This package consists of modularized wrapper functions for multiple genomics analysis packages. It is designed for multi-omics analysis of expression, methylation and/or genotyping data. All modules can also be used individually. This includes (although possibly not all described in this vignette yet):
+
+* Differential gene expression analysis
+* Differential methylation analysis
+* Genome-wide association analysis
+* Functional enrichment analysis
+* Identification of transcription factor binding sites
+* Coexpression Networks
+* Integration of expression and methylation data
+* eQTL/mQTL analysis
+* Integrated data regional plots
+
+A flow chart of the package is given [here](https://www.draw.io/?lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=Pipeline_Systems_Biology.html#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D12uDryY6msteXpXoty8qFtpvZjfTxz6MR%26export%3Ddownload).
+The ouput of one function serves directly as input for the next function. For parametrization of the individual functions please see the comprehensive description for every function accessible via `help(function_name)`. Required Bioconductor packages will be installed by the respective function if necessary. For needed packages not yet attached when a function is called, the function will attach them for data processing and detach them afterwards. Results are stores as tables or figures within the designated project folder.
+
+## Installation
+
+Install it from github:
+    `dev.tools::install_github("frankRuehle/systemsbio", build_vignettes=TRUE)`
+
+```{r} 
+library("systemsbio")
+```
+
+
+## Expression Data
+
+### Import expression data
+There are two functions to load gene expression data into an ExpressionSet object. If you are analyzing Illumina microarrays, use `read_Illu_expr_array()` for importing the probe sample profile and the control probe profile exported from GenomeStudio. 
+
+```
+gex <- read_Illu_expr_array(
+            dataFile = "SampleProbeProfile.txt", 
+            qcFile = "ControlProbeProfile.txt", 
+            sampleSheet = "sample_sheet.csv",
+            sampleColumn = "Sample_Name", 
+            groupColumn  = "Sample_Group",  
+            exprchip= "HumanHT-12 v4",
+            org= "human",
+            covarfile = "covariates.txt",  # optionally for additional phenotypes
+            method_norm = "none", 
+            transform= "log2"  
+            ) 
+```
+
+For other array formats, use `readData2eset()` to load numeric expression values and phenotype data. As for `read_Illu_expr_array()`, the expression data can directly be log2-transformed.
+
+```
+gex <- readData2eset(exprsData, phenoData, featureData=NULL,
+                          ProbeID = "PROBE_ID",
+                          sampleColumn = "Sample_Name", 
+                          groupColumn  = "Sample_Group",  
+                          experimentData = MIAME(),
+                          arrayAnnotation= "Humanv4",
+                          transform = log2,
+                          organism= "human"
+                          ) 
+```
+
+The example dataset `gex` was imported using `read_Illu_expr_array` and contains 12 samples belonging to 3 experimental groups. The data is log2-transformed but not noemalized yet. This is an artificial dataset for demonstration purposes and does not reflect any biological insights. You can access the expression data, phenotype data and feature data using the accessors `exprs(gex)`, `pData(gex)` and `fData(gex)`, respectively.
+
+## Quality control
+The function `QC_expressionset()` performs quality control of the expression data utilizing Illumina internal control probes (if available) as well as quality control functions of the `arrayqualitymetrics` and `WGCNA` packages. The result files are stored in the directory given in `projectfolder`. Failed samples should be removed from the dataset.
+
+```
+qcMetrics <- QC_expressionset(gex, projectfolder="example_analysis/GEX/QC", 
+                    projectname="example", phDendro=c("Sample_Group", "Sentrix_ID"), 
+                    groupColumn = "Sample_Group")
+```
+
+## Normalize expression set
+Next, the dataset will be normalized using the `norm_exprs()` function
+
+```
+gexn <- norm_exprs(gex, method_norm="quantile", transform="none")
+```
+
+
+## Differential gene expression analysis with Limma
+`DEgenes.unfilt()` uses the `limma` package to determine differentially expressed genes according to the given p-value and fold change thresholds for all group comparisons given in `comparisons`. Tables containing the filteredas well as unfiltered gene lists are stored in the designated `projectfolder`. Heatmaps for each group comparison containg the top differentially expressed genes will be generated automatically. Venn-Diagrams will show the overlap of differentially expressed genes from different group comparisons.
+
+
+```
+DEgenes.unfilt <- diffLimma(BSDlog2norm, 
+                            comparisons= c("case1-control", "case2-control"),
+                            p.value.threshold= 0.05, 
+                            FC.threshold= log2(1.5), 
+                            adjust.method="BH", 
+                            projectfolder = "example_analysis/GEX/Diff_limma", 
+                            projectname = "example",
+                            Symbol.column = "SYMBOL",
+                            geneAnno2keep=c("SYMBOL", "ENTREZID"),
+                            venn_comparisons=list(allcomp= c("case1-control", "case2-control")),
+                              # Heatmap parameter:
+                              maxHM=50, 
+                              HMincludeRelevantSamplesOnly=TRUE
+                            )
+```
+
+
+
+
+
+
+
+
+
+

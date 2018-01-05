@@ -11,7 +11,7 @@
 #' must match with rownames of \code{phenoData}. Characters "/" and "-" in sample names or group names are 
 #' replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
 #' added using the corresponding annotation package (species name is derived from \code{arrayAnnotation}). The optional
-#' Function given in 'transform' is used to transform the expression data.
+#' Function given in \code{transform} is used to transform the expression data.
 #' 
 #' 
 #' @param exprsData dataframe or character with filepath to expression data to be loaded.
@@ -28,7 +28,7 @@
 #' @param transform optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
 #'            if NULL, no data transformation is performed.
 #'            
-#' @return Annotated and transformed ExpressionSet object
+#' @return ExpressionSet object
 #' 
 #' @author Frank Ruehle
 #' 
