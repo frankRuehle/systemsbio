@@ -30,7 +30,7 @@
 #' - goodGenes: boolean vector indicating genes passing QC-criteria as implemented in \code{WGCNA}.
 #' - goodSamples: boolean vector indicating samples passing QC-criteria as implemented in \code{WGCNA}.
 #' - allOK: boolean. If TRUE all samples and all genes pass QC-criteria as implemented in \code{WGCNA}.
-#' Several plots and files are generated as side-effects and stored in the output folder. 
+#' Several plots and files are generated as side-effects and stored in the  project folder. 
 #' 
 #' @author Frank Ruehle
 #' 
@@ -42,7 +42,7 @@
   ## Usage 
   QC_expressionset <- function(eset, 
                      projectfolder= "GEX/QC",
-                     projectname="", 
+                     projectname= NULL, 
                      groupColumn = "Sample_Group",
                      phDendro = "Sample_Group", 
                      flashClustMethod = "average", 
@@ -54,6 +54,8 @@
    
   orig_par <- par(no.readonly=T)      # make a copy of current settings
   
+  projectname <- if (!is.null(projectname) && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
+  
   
   # Creating QC directory if not yet existing
   if (!file.exists(projectfolder)) {dir.create(projectfolder, recursive=T) }
@@ -62,12 +64,12 @@
   
   # load required libraries
   pkg.cran <- c("WGCNA", "flashClust", "gridSVG")
-  pkg.bioc <- c("arrayQualityMetrics", "beadarray", "Biobase", "BiocGenerics")
+  pkg.bioc <- c("arrayQualityMetrics", "beadarray", "Biobase", "BiocGenerics", "GO.db", "impute")
   attach_package(pkg.cran, pkg.bioc)
   
 
 ####### run arrayQualityMetrics.
-cat("\nPrepare arrayQualityMetrics.")  
+cat("\nPrepare arrayQualityMetrics. ")  
 # arrayQualityMetrics works for ExpressionSet, AffyBatch, NChannelSet, ExpressionSetIllumina, RGList, MAList.
 # how to fix error message "Only one 'gridsvg' device may be used at a time"???
 
@@ -75,19 +77,16 @@ cat("\nPrepare arrayQualityMetrics.")
   if(file.exists(aqmdir)) {aqmdir <- paste0(aqmdir, "_new")}
   
 try(
-  aqMetrics <- arrayQualityMetrics(eset, outdir= aqmdir, 
+  aqMetrics <- arrayQualityMetrics::arrayQualityMetrics(eset, outdir= aqmdir, 
                                      force=T, spatial=T, do.logtransform=F, intgroup=groupColumn,
                                      reporttitle = paste("arrayQualityMetrics_report"))
   ,silent=F)
 
 closeAllConnections() # if arrayQualityMetrics produces error and leaves connection open
 
-# #### graph par settings for Boxplots (do not work. Why?)
-# par(cex.lab=cex.dendroLabels)
-# par(cex.axis=cex.dendroLabels)
 
 # Boxplot with regular probes
-cat("\nprepare boxplot of probes in:", file.path(projectfolder, paste0(projectname, "boxplot_probes.pdf")), "\n")  
+cat("\nprepare boxplot of probes in:", file.path(projectfolder, paste0(projectname, "boxplot_probes.tiff")), "\n")  
 if("Status" %in% names(fData(eset))) {
   regularIDs <- featureNames(eset[which(fData(eset)[,"Status"] == "regular"),])
   } else {regularIDs <- 1:nrow(fData(eset))}
@@ -97,7 +96,7 @@ tiff(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.tiff")), w
 dev.off()
 
 # Boxplot with number of observations
-cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.pdf")), "\n")  
+cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), "\n")  
 tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
   BiocGenerics::boxplot(eset, what="nObservations")
 dev.off()
@@ -117,19 +116,20 @@ dev.off()
 
 if(class(eset)=="ExpressionSetIllumina") {
   if("Status" %in% names(fData(eset))) {
-      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.pdf")), "\n")  
+      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), "\n")  
       ERCClevels <- grepl("ERCC", levels(fData(eset)$Status)  )  # fData are character, no factors
       if (any(ERCClevels)) {levels(fData(eset)$Status)[ERCClevels] <- "ERCC"}
       tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
-    print(BiocGenerics::boxplot(eset, probeFactor = "Status", scales=list(cex.lab=cex.dendroLabels, cex.axis=cex.dendroLabels)))
+    BiocGenerics::boxplot(eset, probeFactor = "Status", scales=list(cex.lab=cex.dendroLabels, cex.axis=cex.dendroLabels))
     dev.off()
   }
 }
   
 # MA-Plots for all Samples separately (ERCC-probes are bundled, if present)
-cat("\nprepare MA-plots of all samples in:", file.path(projectfolder, paste0(projectname, "MAplots.pdf")), "\n")  
+cat("\nprepare MA-plots of all samples in:", file.path(projectfolder, paste0(projectname, "MAplots.pdf")), "\n")
 class(eset) <- "ExpressionSet"  # plotMA not working with ExpressionSetIllumina- Object
 pdf(file=file.path(projectfolder, paste0(projectname, "MAplots.pdf")))
+#tiff(file=file.path(projectfolder, paste0(projectname, "MAplots.tiff")), width = 4960 , height = 4960, res=600, compression = "lzw")
 for (i in 1:length(sampleNames(eset))) {
   limma::plotMA(eset, i, status=fData(eset)$Status)
   }
@@ -138,7 +138,7 @@ dev.off()
 
 
 # restore graphical parameter settings
-par(orig_par) # restore settings
+#par(orig_par) # restore settings
 
 
 
@@ -146,13 +146,13 @@ par(orig_par) # restore settings
 
 ################ Clustering with WGCNA
 cat("\n\nClustering with WGCNA\n")  
-enableWGCNAThreads()
+WGCNA::enableWGCNAThreads()
 
 # working object with expression data:
 netdat_noNorm <- as.data.frame(t(exprs(eset)[regularIDs,]))
 
 # Implementing an additional color row within the dendrogram for outlier detection 
-adjMatrix <- adjacency(t(netdat_noNorm), type="distance", distFnc = "dist")   # matrix re-transponed
+adjMatrix <- WGCNA::adjacency(t(netdat_noNorm), type="distance", distFnc = "dist")   # matrix re-transponed
 # Calculation of distance calculated by dist()-function and method 'euclidean' within the adjacency function
 # Distance Matrix = 1-adjMatrix
 # The argument type determines whether a correlation (type one of "unsigned", "signed", "signed hybrid"), 
@@ -181,7 +181,7 @@ outlierColor=ifelse(Z.k<threshold.Z.k,"red","black") # Outlier highlighted in re
 # We use the function flashClust that provides faster hierarchical clustering than the standard function hclust.
 # sampleTree_noNorm = flashClust(dist(netdat_noNorm), method = flashClustMethod) # calculated with dist()
 #  Calculated from Adjacency Matrix (normalised by max(dist)).
-sampleTree_noNorm_adj = flashClust(as.dist(1-adjMatrix), method = "average") 
+sampleTree_noNorm_adj = flashClust::flashClust(as.dist(1-adjMatrix), method = "average") 
 
 
 ### Loading Clinical trait data
@@ -189,7 +189,7 @@ traitData = pData(eset)
 datTraits = as.data.frame(traitData[,phDendro])  # choose phenotypes for Dendrogram.
 names(datTraits) <- phDendro
 
-traitColors = labels2colors(datTraits); 
+traitColors = WGCNA::labels2colors(datTraits); 
 datColors=data.frame(outlier=outlierColor,traitColors)  # add line for Outlier detection
 
 # Plot the sample dendrogram and the colors underneath.
@@ -197,7 +197,7 @@ cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, 
 tiff(file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
 par(cex = 0.6);
 par(mar = c(0,4,2,0))
-plotDendroAndColors(sampleTree_noNorm_adj, colors=datColors, addGuide = T, guideAll=T,
+WGCNA::plotDendroAndColors(sampleTree_noNorm_adj, colors=datColors, addGuide = T, guideAll=T,
                     groupLabels = c("outlier", names(datTraits)), cex.dendroLabels = cex.dendroLabels,
                     main = "Sample dendrogram and trait heatmap - GEX no normalisation")
 dev.off()
@@ -205,21 +205,21 @@ dev.off()
 
 
 cat("\nQuality Control with WGCNA: We check for genes and samples with too many missing values\n")
-gsg = goodSamplesGenes(netdat_noNorm, verbose = 3);
+gsg = WGCNA::goodSamplesGenes(netdat_noNorm, verbose = 3);
 cat(paste("\n\nWGCNA quality control. All ok:",gsg$allOK, "\n\n"))
 
 
   # Optionally, print the gene and sample names that should be removed:
   if (sum(!gsg$goodGenes)>0)
-    printFlush(paste("Remove genes:", paste(names(netdat_noNorm)[!gsg$goodGenes], collapse = ", ")));
+    printFlush::printFlush(paste("Remove genes:", paste(names(netdat_noNorm)[!gsg$goodGenes], collapse = ", ")));
   if (sum(!gsg$goodSamples)>0)
-    printFlush(paste("Remove samples:", paste(rownames(netdat_noNorm)[!gsg$goodSamples], collapse = ", ")));
+    printFlush::printFlush(paste("Remove samples:", paste(rownames(netdat_noNorm)[!gsg$goodSamples], collapse = ", ")));
 
 
-disableWGCNAThreads()
+WGCNA::disableWGCNAThreads()
 
 # restore graphical parameter settings
-par(orig_par) # restore settings
+#par(orig_par) # restore settings
 
 
 # Detaching libraries not needed any more

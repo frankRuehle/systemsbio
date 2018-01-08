@@ -1,17 +1,20 @@
 
 #' Differential expression analysis with limma
 #' 
-#' Differential Gene expression analysis for multiple group comparisons incl. output of Venn diagrams and heatmaps.
+#' Differential Gene expression analysis for multiple group comparisons incl. output of 
+#' Venn diagrams and heatmaps.
 #' 
-#' Function generates design matrix, fit and differential expression results for dedicated group comparisons of the input object.
-#' Analysis is performed either for one group comparison in paired design or for any number of unpaired group comparisons.
-#' The group designations in the \code{groupColumn} must match the contrasts given in \code{comparisons} (\code{"groupA-groupB"}).
+#' Function generates design matrix, fit and differential expression results for dedicated 
+#' group comparisons of the input object. Analysis is performed either for one group comparison 
+#' in paired design or for any number of unpaired group comparisons. The group designations in 
+#' the \code{groupColumn} must match the contrasts given in \code{comparisons} (\code{"groupA-groupB"}).
 #' P-value and foldchange thresholds may be applied to filter result data. 
-#' Heatmaps with sample signal intensities are generated for top differentially expressed genes for each group comparison 
-#' given in \code{comparisons}. Additionally heatmaps indicating foldchanges are generated for each set of group comparisons
-#' given in \code{FC.heatmap.comparisons}. Selection of probes with respect to these group comparisons is characterised in 
-#' \code{FC.heatmap.geneselection}. If the resulting number of probes exceeds \code{maxHM}, probes are prioritized by either 
-#' F-Test p-value or by minimum p-value of selected group comparisons.
+#' Heatmaps with sample signal intensities are generated for top differentially expressed genes for each 
+#' group comparison given in \code{comparisons}. Additionally heatmaps indicating foldchanges are generated 
+#' for each set of group comparisons given in \code{FC.heatmap.comparisons}. Selection of probes with respect 
+#' to these group comparisons is characterised in \code{FC.heatmap.geneselection}. If the resulting number 
+#' of probes exceeds \code{maxHM}, probes are prioritized by either F-Test p-value or by minimum p-value of
+#' selected group comparisons.
 #' 
 #' 
 #' @param GEXMTSet ExpressionSet or MethylSet
