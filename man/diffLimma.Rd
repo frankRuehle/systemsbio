@@ -9,10 +9,10 @@ diffLimma(GEXMTSet, comparisons, p.value.threshold = 0.05,
   projectfolder = file.path("GEX/Diff_limma"), projectname = "",
   matchvar = NULL, Symbol.column = "SYMBOL", sampleColumn = "Sample_Name",
   groupColumn = "Sample_Group", useWeights = TRUE, geneAnno2keep = NULL,
-  venn_comparisons = NULL, maxHM = 50, HMcexRow = 1.1, HMcexCol = 1.1,
-  HMincludeRelevantSamplesOnly = TRUE, color.palette = "heat.colors",
-  FC.heatmap.comparisons = NULL, FC.heatmap.geneselection = c("allprobes",
-  "intersect", "union"))
+  venn_comparisons = NULL, maxHM = 50, scale = c("none", "row", "column"),
+  HMcexRow = 1.1, HMcexCol = 1.1, HMincludeRelevantSamplesOnly = TRUE,
+  color.palette = "heat.colors", FC.heatmap.comparisons = NULL,
+  FC.heatmap.geneselection = c("allprobes", "intersect", "union"))
 }
 \arguments{
 \item{GEXMTSet}{ExpressionSet or MethylSet}
@@ -46,6 +46,9 @@ nested comparisons in format \code{"(groupA-groupB)-(groupC-groupD)"}.}
 in Venn Diagram (max 5 comparisons per Venn diagramm)}
 
 \item{maxHM}{(numeric) max number of top diff. regulated elements printed in Heatmap}
+
+\item{scale}{character indicating if the values should be centered and scaled in either the row direction 
+or the column direction, or none. The default is \code{none}.}
 
 \item{HMcexRow}{labelsize for rownames in Heatmap}
 

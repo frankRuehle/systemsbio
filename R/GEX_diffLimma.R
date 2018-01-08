@@ -34,6 +34,8 @@
 #'                   in Venn Diagram (max 5 comparisons per Venn diagramm)
 #'
 #' @param maxHM (numeric) max number of top diff. regulated elements printed in Heatmap
+#' @param scale character indicating if the values should be centered and scaled in either the row direction 
+#' or the column direction, or none. The default is \code{none}.
 #' @param HMcexRow labelsize for rownames in Heatmap
 #' @param HMcexCol labelsize for colnames in Heatmap
 #' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
@@ -81,6 +83,7 @@ diffLimma <- function(GEXMTSet,
 
                       # Heatmap parameter:
                       maxHM=50, 
+                      scale = c("none","row", "column"),
                       HMcexRow=1.1, 
                       HMcexCol=1.1, 
                       HMincludeRelevantSamplesOnly=TRUE,
@@ -249,7 +252,8 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
       
       pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), width = 10, height = 14) 
       heatmap.2(plotmatrix, main=paste0(projectname, " all_Samples_Ftest"),  
-                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
+                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", 
+                scale = scale, 
                 cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
                 key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()
@@ -278,7 +282,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
       pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), width = 10, height = 14) 
       heatmap.2(plotmatrix.aov, main=paste0(projectname, " all_Samples_ANOVA"),  
                 margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", labRow=F, 
-                cexCol=HMcexCol, trace="none", density.info="histogram",  
+                cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
                 key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()  
       
@@ -374,7 +378,7 @@ for (i in 1:length(comparisons)) {
         
         pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_", comparisons[i], ".pdf", sep="" )), width = 10, height = 14) 
         heatmap.2(plotmatrix, main=comparisons[i], margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
-                  cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
+                  cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
                   key.xlab=plot.label, key.ylab="", key.title="Color Key", col=color.palette)  
         
         # Settings for plotting color key instead of dendrogram on top of heatmap:  
@@ -429,7 +433,7 @@ for (i in 1:length(comparisons)) {
               pdf(filename.FCHM, width = 10, height = 14) 
               heatmap.2(plotmatrix, main=paste0("Heatmap Foldchanges ", projectname, names(FC.heatmap.comparisons)[fc], " ", g, "\nprobes prioritised by ", f), 
                         margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
-                        cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
+                        cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
                         key.xlab="log2(FC)", key.ylab="", key.title="Color Key", col=color.palette)  
               # Settings for plotting color key instead of dendrogram on top of heatmap:  
               # lmat=rbind(c(0,3),c(0,4), c(2,1)), lhei = c(0.3,0.5,3.8), lwid = c(0.5,4), key.par=list(mar=c(4,2,2,13)), Rowv=TRUE, Colv=FALSE, dendrogram="row", keysize=0.8 
