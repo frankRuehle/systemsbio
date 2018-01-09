@@ -5,7 +5,7 @@ This package consists of modularized wrapper functions for multiple genomics ana
 It is designed for multi-omics analysis of expression, methylation and/or genotyping data. 
 All modules can be used individually.
 
-See the package [Vignette](./inst/doc/systemsbio.html) for documentation of the package and example analyses.
+See the package [Vignette](./vignettes/systemsbio.Rmd) for documentation of the package and example analyses.
 
 ## Installation
 
