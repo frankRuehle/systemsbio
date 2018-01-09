@@ -4,7 +4,7 @@
 \alias{QC_expressionset}
 \title{Quality Control procedures for expression data}
 \usage{
-QC_expressionset(eset, projectfolder = "GEX/QC", projectname = "",
+QC_expressionset(eset, projectfolder = "GEX/QC", projectname = NULL,
   groupColumn = "Sample_Group", phDendro = "Sample_Group",
   flashClustMethod = "average", cex.dendroLabels = 0.6,
   threshold.Z.k = -5)
@@ -33,7 +33,7 @@ The returned value is a list of 3
 - goodGenes: boolean vector indicating genes passing QC-criteria as implemented in \code{WGCNA}.
 - goodSamples: boolean vector indicating samples passing QC-criteria as implemented in \code{WGCNA}.
 - allOK: boolean. If TRUE all samples and all genes pass QC-criteria as implemented in \code{WGCNA}.
-Several plots and files are generated as side-effects and stored in the output folder.
+Several plots and files are generated as side-effects and stored in the  project folder.
 }
 \description{
 Application of diverse quality control metrix for gene expression data.

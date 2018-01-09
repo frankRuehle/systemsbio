@@ -33,7 +33,7 @@ identifiers used to uniquely identify each probe.}
 if NULL, no data transformation is performed.}
 }
 \value{
-Annotated and transformed ExpressionSet object
+ExpressionSet object
 }
 \description{
 ExpressionSet object assembled from expression, feature and phenotype data.
@@ -47,7 +47,7 @@ Rownames of \code{exprsData} must match with rownames of \code{featureData} (if 
 must match with rownames of \code{phenoData}. Characters "/" and "-" in sample names or group names are 
 replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
 added using the corresponding annotation package (species name is derived from \code{arrayAnnotation}). The optional
-Function given in 'transform' is used to transform the expression data.
+Function given in \code{transform} is used to transform the expression data.
 }
 \author{
 Frank Ruehle

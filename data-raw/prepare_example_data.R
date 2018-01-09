@@ -68,6 +68,10 @@ use_data(gex, overwrite = TRUE, compress = "bzip2")
 # devtools::use_vignette("systemsbio")
 devtools::build()
 devtools::build_vignettes()
+devtools::clean_vignettes # to remove build tex/pdf files.
+
+# output: rmarkdown::html_vignette
+# output: pdf_document
 
 ## package dependencies
 devtools::use_package("hexbin")

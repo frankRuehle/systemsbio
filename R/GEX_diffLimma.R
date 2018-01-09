@@ -9,8 +9,10 @@
 #' in paired design or for any number of unpaired group comparisons. The group designations in 
 #' the \code{groupColumn} must match the contrasts given in \code{comparisons} (\code{"groupA-groupB"}).
 #' P-value and foldchange thresholds may be applied to filter result data. 
+#' Volcano plots are generated for each group comparison given in \code{comparisons} with highligted 
+#' significance thresholds.
 #' Heatmaps with sample signal intensities are generated for top differentially expressed genes for each 
-#' group comparison given in \code{comparisons}. Additionally heatmaps indicating foldchanges are generated 
+#' group comparison. Additionally heatmaps indicating foldchanges are generated 
 #' for each set of group comparisons given in \code{FC.heatmap.comparisons}. Selection of probes with respect 
 #' to these group comparisons is characterised in \code{FC.heatmap.geneselection}. If the resulting number 
 #' of probes exceeds \code{maxHM}, probes are prioritized by either F-Test p-value or by minimum p-value of
@@ -22,7 +24,7 @@
 #'              nested comparisons in format \code{"(groupA-groupB)-(groupC-groupD)"}.
 #' @param p.value.threshold numeric p-value threshold 
 #' @param adjust.method adjustment method for multiple testing (\code{"none", "BH", "BY" and "holm"})
-#' @param FC.threshold numeric foldchange threshold. If data is log2-transformed, mind to transform threshold too!
+#' @param FC.threshold numeric foldchange threshold. If data is log2-transformed, mind to transform threshold, too.
 #' 
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
@@ -38,7 +40,7 @@
 #'
 #' @param maxHM (numeric) max number of top diff. regulated elements printed in Heatmap
 #' @param scale character indicating if the values should be centered and scaled in either the row direction 
-#' or the column direction, or none. The default is \code{none}.
+#' or the column direction, or none (default). Either \code{"none"}, \code{"row"} or \code{"column"}.
 #' @param HMcexRow labelsize for rownames in Heatmap
 #' @param HMcexCol labelsize for colnames in Heatmap
 #' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
@@ -56,9 +58,13 @@
 #'                           Obsolete if 'FC.heatmap.comparisons' is NULL.
 #'                           
 #'
-#' @return List of dataframes with unfiltered differential expression data for each comparison (sorted by p-value).
-#' List elements are named by the respective group comparison. 
-#' An F-Test and a Venn Diagramm of all comparisons as well as filtered and unfiltered result tables and heatmaps 
+#' @return List of 2 elements 
+#' \itemize{
+#'   \item DEgenes list of dataframes with differential expressed genes according to significance 
+#'   thresholds for each comparison (sorted by p-value). List elements are named by the respective group comparison. 
+#' \item DEgenes.unfilt list of dataframes with unfiltered differential expression data for each comparison (sorted by p-value).
+#' }
+#' An F-Test and a Venn Diagramm of all comparisons as well as filtered and unfiltered result tables, heatmaps and volcano plots
 #' for each group comparison are stored as side-effects in the project folder.
 #' 
 #' @author Frank Ruehle
@@ -86,7 +92,7 @@ diffLimma <- function(GEXMTSet,
 
                       # Heatmap parameter:
                       maxHM=50, 
-                      scale = c("none","row", "column"),
+                      scale = c("none"),
                       HMcexRow=1.1, 
                       HMcexCol=1.1, 
                       HMincludeRelevantSamplesOnly=TRUE,
@@ -106,11 +112,14 @@ diffLimma <- function(GEXMTSet,
   pkg.bioc <- c("limma", "Biobase")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
+  projectname <- if (!is.null(projectname) && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
+  
   
   # Create output directories if not yet existing 
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
   if (!file.exists(file.path(projectfolder, "Diff_limma_unfiltered"))) {dir.create(file.path(projectfolder, "Diff_limma_unfiltered")) }
   if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
+  if (!file.exists(file.path(projectfolder, "Volcano_plots"))) {dir.create(file.path(projectfolder, "Volcano_plots")) }
   
   
   
@@ -124,7 +133,7 @@ diffLimma <- function(GEXMTSet,
         } else {ids_regular <- 1:nrow(exprs(GEXMTSet))}
     featureGEXMTSet <- fData(GEXMTSet)[ids_regular,] # remove control probes from expression set
     dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
-    plot.label="log2(expression)" # for heatmap
+    heatmap_legend_xaxis="log2(expression)" # for heatmap
     # pvalue <- "P.Value" # character with column name of p values
       }  else {  
       
@@ -132,12 +141,15 @@ diffLimma <- function(GEXMTSet,
         Exp <- "MT"
         featureGEXMTSet <- mcols(GEXMTSet, use.names=T)
         dataGEXMTSet <- getBeta(GEXMTSet)
-        plot.label="beta values" # for heatmap
+        heatmap_legend_xaxis="beta values" # for heatmap
         # pvalue <- "P.Value" # character with column name of p values
       } else {return("wrong object class!")}
     }
   
-   
+  # modify plot labels
+  if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score"}
+  if (grepl("col", scale)) {heatmap_legend_xaxis <- "column z-score"}
+  
   
   
   # if no thresholds given for p-value and foldchange, values are applied to omit filtering
@@ -258,7 +270,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
                 margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", 
                 scale = scale, 
                 cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
-                key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
+                key.xlab= heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()
       }
 
@@ -278,7 +290,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
       
       ### Heatmap with all samples. Genes selected by ANOVA
       cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), "\n")  
-      maxgenesANOVA <- 1000
+      maxgenesANOVA <- maxHM # 1000
       if (length(aov.result.sign) > maxgenesANOVA) {aov.result.sign <- aov.result.sign[1:maxgenesANOVA]} 
       plotmatrix.aov <- dataGEXMTSet[rownames(dataGEXMTSet) %in% names(aov.result.sign), ,drop=F]
 
@@ -286,7 +298,7 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
       heatmap.2(plotmatrix.aov, main=paste0(projectname, " all_Samples_ANOVA"),  
                 margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", labRow=F, 
                 cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
-                key.xlab="log2(expression)", key.ylab="", key.title="Color Key", col=color.palette)  
+                key.xlab= heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()  
       
       
@@ -342,7 +354,28 @@ for (i in 1:length(comparisons)) {
             "and", file.path(projectfolder, paste0(projectname, comparisons[i], ".txt"))))
   
   
-  # add adjusted p-value to 'DiffAllGroups_Ftest' for later foldchange heatmaps
+ 
+  ######## Volcano plots per group comparison 
+  
+  volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, "_", comparisons[i], ".png", sep="" ))
+  
+  cat("\nWrite Volcano plot to", volcanoplot_filename, "\n")  
+  
+  png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=600) 
+  plot(DEgenes.unfilt[[i]]$logFC, -log10(DEgenes.unfilt[[i]]$adj.P.Val), main=comparisons[i],
+       col="gray", pch=16, cex=0.5, xlab="fold change", ylab="-log10 p-value") 
+  if(!is.null(p.value.threshold)) {abline(h=-log10(p.value.threshold),lty=c(1))}
+  if(!is.null(FC.threshold)) {abline(v=c(FC.threshold, -FC.threshold),lty=2)}
+  
+  if(nrow(DEgenes[[i]]) >=1) {  # no highlighting if no diff expressed genes
+    points(DEgenes[[i]]$logFC, -log10(DEgenes[[i]]$adj.P.Val),pch=16, col="black", cex=0.8) 
+  } 
+  dev.off()
+  
+  
+  
+  
+   # add adjusted p-value to 'DiffAllGroups_Ftest' for later foldchange heatmaps
   DiffAllGroups_Ftest[,paste0("p_", comparisons[i])] <- helptable.unfilt[match(rownames(DiffAllGroups_Ftest), rownames(helptable.unfilt)),"adj.P.Val"]
   
   
@@ -382,13 +415,15 @@ for (i in 1:length(comparisons)) {
         pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_", comparisons[i], ".pdf", sep="" )), width = 10, height = 14) 
         heatmap.2(plotmatrix, main=comparisons[i], margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
                   cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
-                  key.xlab=plot.label, key.ylab="", key.title="Color Key", col=color.palette)  
+                  key.xlab=heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
         
         # Settings for plotting color key instead of dendrogram on top of heatmap:  
         # lmat=rbind(c(0,3),c(0,4), c(2,1)), lhei = c(0.3,0.5,3.8), lwid = c(0.5,4), key.par=list(mar=c(4,2,2,13)), Rowv=TRUE, Colv=FALSE, dendrogram="row", keysize=0.8 
         dev.off()
       } # end if nrow(DEgenes[[i]]) >1
    
+
+  
 } # end i-loop for group comparisons
      
 
@@ -398,6 +433,12 @@ for (i in 1:length(comparisons)) {
   # DiffAllGroups_Ftest contains all probes with at least one absolute log-fold-changes greater than lfc. 
   if(!is.null(FC.heatmap.comparisons)) {
 
+    # modify plot labels
+    heatmap_legend_xaxis <- "log2(FC)"
+    if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score (FC)"}
+    if (grepl("col", scale)) {heatmap_legend_xaxis <- "column z-score (FC)"}
+    
+    
     if(!is.list(FC.heatmap.comparisons)) {FC.heatmap.comparisons <- list(FC.heatmap.comparisons)}
     
     for(fc in 1:length(FC.heatmap.comparisons)) {
@@ -437,7 +478,7 @@ for (i in 1:length(comparisons)) {
               heatmap.2(plotmatrix, main=paste0("Heatmap Foldchanges ", projectname, names(FC.heatmap.comparisons)[fc], " ", g, "\nprobes prioritised by ", f), 
                         margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
                         cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
-                        key.xlab="log2(FC)", key.ylab="", key.title="Color Key", col=color.palette)  
+                        key.xlab= heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
               # Settings for plotting color key instead of dendrogram on top of heatmap:  
               # lmat=rbind(c(0,3),c(0,4), c(2,1)), lhei = c(0.3,0.5,3.8), lwid = c(0.5,4), key.par=list(mar=c(4,2,2,13)), Rowv=TRUE, Colv=FALSE, dendrogram="row", keysize=0.8 
               dev.off()
@@ -452,7 +493,7 @@ for (i in 1:length(comparisons)) {
  
 
 # return unfiltered genes as list of dataframes for each comparison (sorted by p-value)
-return(DEgenes.unfilt)
+return(list(DEgenes=DEgenes, DEgenes.unfilt=DEgenes.unfilt))
 
 
 }

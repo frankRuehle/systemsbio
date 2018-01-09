@@ -1,5 +1,4 @@
 
-
 #' Wrapper for gene enrichment analysis using clusterProfiler
 #' 
 #' Applying overrepresentation analysis and gene set enrichment analysis to supplied gene list
