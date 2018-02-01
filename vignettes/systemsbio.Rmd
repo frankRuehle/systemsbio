@@ -17,7 +17,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8)
 
 # Streamlined Analysis and Integration of Systems Biology Data
 
-This package consists of modularized wrapper functions for multiple genomics analysis packages. It is designed for multi-omics analysis of expression, methylation and/or genotyping data. All modules can also be used individually. This includes (although possibly not all described in this vignette yet):
+This package consists of modularized wrapper functions for multiple genomics analysis packages. It is designed for multi-omics analysis of expression, methylation and/or genotyping data. All modules can also be used individually. This includes (although not all described in this vignette yet):
 
 * Differential gene expression analysis
 * Differential methylation analysis
@@ -241,7 +241,8 @@ clusterp.deg <- clusterprof(deg[["DEgenes.unfilt"]],
                       enrich.p.valueCutoff = 0.05, 
                       enrich.q.valueCutoff = 0.05) 
 
-# access results e.g. for GO term (Biological Process) overrepresentation analysis of the first entry of deg[["DEgenes.unfilt"]], i.e. comparison case1-control
+# access results e.g. for GO term (Biological Process) overrepresentation analysis of the 
+# first entry of deg[["DEgenes.unfilt"]], i.e. comparison case1-control
 head(as.data.frame(clusterp.gexn[["case1-control"]]["Overrep_BP"]))
 ```
 
