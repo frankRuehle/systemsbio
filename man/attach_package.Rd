@@ -15,8 +15,6 @@ attach_package(pkg.cran = NULL, pkg.bioc = NULL,
 \item{source.bioc}{character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})}
 
 \item{pkg}{Character vector with names of packages to be detached}
-
-\item{character.only}{a logical indicating whether name can be assumed to be a character string.}
 }
 \value{
 character vector with package names which have not yet been attached to workspace before call of
@@ -28,7 +26,7 @@ Attach required packages which may be detached after function run.
 \details{
 Help functions to organise package loading. Some functions require huge annotation packages which shall 
 not be loaded for the full session. These packages are attached for an individual function and detached 
-after function run.
+after function run. Packages are installed if necessary.
 }
 \author{
 Frank Ruehle

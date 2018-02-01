@@ -7,7 +7,7 @@
 #' The pcaGoPromoter::pca function uses prcomp to do the principal component analysis. 
 #' The input data is scaled and centered, so constant variables (sd = 0) will be removed to avoid divison by zero.
 #' 2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet \code{expca}. 
-#' Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top associated probes 
+#' Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top correlated probes 
 #' are generated for any number of principal components in positive and negative orientation.
 #' All output data is stored in supplied \code{projectfolder}.
 #' 
@@ -25,6 +25,7 @@
 #'                  regular expression for lookup of samples. \code{Null} if no sample to exlude.
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
+#' @param figure.res numeric resolution for png.
 #' @param inputType Character vector with description of the input type. Must be Affymetrix chip type, 
 #'            "geneSymbol" or "entrezID".
 #' @param print.sample.names boolean indicating whether sample names shall be plotted in PCA plots 
@@ -63,13 +64,14 @@ wrapPCAgoprom <- function(expca,
                           samples2exclude = NULL,
                           projectfolder= file.path("pcaGoPromoter"), 
                           projectname=NULL, 
+                          figure.res = 300,
                           inputType="geneSymbol", 
                           print.sample.names = TRUE,
                           print.symbol.colors = TRUE,
                           org = "Hs", 
                           PCs4table = 2,  
                           PCs2plot = c(1,2,3), 
-                          probes2enrich = 0.025 
+                          probes2enrich = 0.025
 ) {
   
 
@@ -121,7 +123,6 @@ wrapPCAgoprom <- function(expca,
   }
   
   
-cat("\ntest1")############
   
   if(!is.null(samples2exclude)) { # exclude samples matching reg expression in samples2exclude
     samples2exclude.found <- grepl(samples2exclude, samplevector)
@@ -136,7 +137,6 @@ cat("\ntest1")############
   cat("\nFinal sample list included: ", paste(samplevector, collapse=", "))
   # end of sample selection
   
-  cat("\ntest2")############
   
   
   ### Row names should be probe identifiers given in inputType (Affymetrix probe set ID, "geneSymbol" or "entrezID")
@@ -164,7 +164,6 @@ cat("\ntest1")############
       }
   }
   
-  cat("\ntest3")############
   
   ### Number of PC-associated probes to look for TFBS. Either fraction of total probe count or total number otherwise.
   if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
@@ -175,25 +174,23 @@ cat("\ntest1")############
   noProbes <- if(probes2enrich <= 1) {round(probes2enrich*probesInDataset)} else {round(probes2enrich)}
   cat("\n", noProbes, "probes used for enrichment analysis.\n")  
   
-  cat("\ntest4")############
   
   ### principal component analysis (pca)
   pcaOutput <- pcaGoPromoter::pca(expressionMatrix)
   
-  cat("\ntest5")############
   
   
   ### Make PCA informative plot. Restricted to PC1 and PC2 only!
-  filename.pcaInfoPlot <- file.path(projectfolder, paste0(projectname, "pcainfoplot_PC1_2.tiff"))
+  filename.pcaInfoPlot <- file.path(projectfolder, paste0(projectname, "pcainfoplot_PC1_2.png"))
   cat("\n\nSave pcaInfoPlot for PC1 and PC2 to", filename.pcaInfoPlot, "\n")
-  tiff(filename= filename.pcaInfoPlot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
-  pcaInfoPlot(expressionMatrix,inputType=inputType, org = org, 
+  png(filename= filename.pcaInfoPlot, width = 150, height = 150, units = "mm", res=figure.res) 
+  #tiff(filename= filename.pcaInfoPlot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
+  pcaGoPromoter::pcaInfoPlot(expressionMatrix,inputType=inputType, org = org, 
               printNames = TRUE,
               groups= groupvector, 
               noProbes = noProbes, GOtermsAnnotation = TRUE, primoAnnotation = TRUE)
   dev.off()
   
-  cat("\ntest6")############
   
   
   ### PCA plot not restricted to PC1 and PC2 (but still 2D)
@@ -209,15 +206,15 @@ cat("\ntest1")############
   for (i in 1:ncol(PC.combinations)) {  
     PCs <- PC.combinations[,i]
     
-    filename.pcaplot <- file.path(projectfolder, paste0(projectname, "pcaplot_PC", PCs[1], "_", PCs[2], ".tiff"))
+    filename.pcaplot <- file.path(projectfolder, paste0(projectname, "pcaplot_PC", PCs[1], "_", PCs[2], ".png"))
     cat("\nSave pcaplot to", filename.pcaplot, "\n")
-    tiff(filename=filename.pcaplot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
-    plot.pca(pcaOutput, groups= groupvector, PCs = PCs, 
+    png(filename= filename.pcaplot, width = 150, height = 150, units = "mm", res=figure.res) 
+    #tiff(filename=filename.pcaplot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
+    pcaGoPromoter::plot.pca(pcaOutput, groups= groupvector, PCs = PCs, 
              printNames = print.sample.names, symbolColors = print.symbol.colors, plotCI = TRUE)
     dev.off()
   }   
   
-  cat("\ntest7")############
   
   
   # 3D scatter plot with rgl package
@@ -228,22 +225,21 @@ cat("\ntest1")############
     filename.3dplot <- file.path(projectfolder, paste0(projectname, "pcaplot3d_PC", paste(PCs3Dplot, collapse="_"), ".png"))
     cat("\n3D-plot generated for PCs", paste(PCs3Dplot, collapse="_"), "and stored at", filename.3dplot, ".\n")
     # plot groups
-    plot3d(pcaOutput$scores[,PCs3Dplot], size=2, type = "s", col=as.numeric(groupvector))
+    rgl::plot3d(pcaOutput$scores[,PCs3Dplot], size=2, type = "s", col=as.numeric(groupvector))
     grid3d("x")
     grid3d("y")
     grid3d("z")
-    legend3d("topleft", legend=unique(as.character(groupvector)), pch=16, cex=1.5, inset=c(0.02),
+    rgl::legend3d("topleft", legend=unique(as.character(groupvector)), pch=16, cex=1.5, inset=c(0.02),
              col=unique(as.numeric(groupvector)))
     # capture snapshot
-    snapshot3d(filename = filename.3dplot, fmt = 'png')
+    rgl::snapshot3d(filename = filename.3dplot, fmt = 'png')
   }
   
   
-  cat("\ntest8")############
   
   
   
-  ### Calculate singnificant TFBS and GO-Terms
+  ### Calculate significant TFBS and GO-Terms
   cat("\nCalculate enriched transcription factor binding sites and GO-Terms for first", noProbes, "probes of each PC.")
   cat("\nSave GOtreeOutput plots and tables to", file.path(projectfolder, "Gene_Ontology"), ".")
   cat("\nSave over-representated TF tables to", file.path(projectfolder, "Transcription_factors"), ".")

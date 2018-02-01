@@ -6,14 +6,12 @@
 #' 
 #' Help functions to organise package loading. Some functions require huge annotation packages which shall 
 #' not be loaded for the full session. These packages are attached for an individual function and detached 
-#' after function run.
-#' 
+#' after function run. Packages are installed if necessary.
 #' 
 #' @param pkg.cran Character vector with names of CRAN packages to attach
 #' @param pkg.bioc Character vector with names of Bioconductor packages to attach
 #' @param source.bioc character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})
 #' @param pkg Character vector with names of packages to be detached
-#' @param character.only a logical indicating whether name can be assumed to be a character string.
 #' 
 #' @return character vector with package names which have not yet been attached to workspace before call of
 #'         \code{attach_package}. This vector may be used to detach packages not needed any more with \code{detach_package}. 
@@ -64,19 +62,17 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bio
 # It is possible to have multiple versions of a package loaded at once (for example, if you have a development 
 # version and a stable version in different libraries). To detach guarantee that all copies are 
 # detached, use this function.
-detach_package <- function(pkg, character.only = FALSE)
+detach_package <- function(pkg)
 {
   for(p in pkg) {
-    if(!character.only)
-    {
-      p <- deparse(substitute(p))
-    }
+   
     search_item <- paste("package", p, sep = ":")
     while(search_item %in% search())
     {
-      detach(search_item, unload = TRUE, character.only = TRUE)
+      detach(search_item, unload = TRUE, character.only = TRUE, force = TRUE)
     }
   } # end for-loop
+  R.utils::gcDLLs() # Identifies and removes DLLs of packages already unloaded
 } # end function definition
 
 

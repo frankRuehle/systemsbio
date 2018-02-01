@@ -22,6 +22,7 @@
 #' @param flashClustMethod character vector with the agglomeration method to be used in \code{WGCNA} package. 
 #'                   Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".      
 #' @param cex.dendroLabels numeric. Controls size of labels sample in dendrogram.
+#' @param figure.res numeric resolution for png.
 #' @param threshold.Z.k numeric. Threshold for outlier prediction \code{WGCNA} package (outlier samples are highlighted 
 #'               in red in sample dendrogram).
 #'               
@@ -47,6 +48,7 @@
                      phDendro = "Sample_Group", 
                      flashClustMethod = "average", 
                      cex.dendroLabels = 0.6,
+                     figure.res = 300,
                      threshold.Z.k=-5
                      ) {
 
@@ -65,7 +67,7 @@
   # load required libraries
   pkg.cran <- c("WGCNA", "flashClust", "gridSVG")
   pkg.bioc <- c("arrayQualityMetrics", "beadarray", "Biobase", "BiocGenerics", "GO.db", "impute")
-  attach_package(pkg.cran, pkg.bioc)
+  pks2detach <- attach_package(pkg.cran, pkg.bioc)
   
 
 ####### run arrayQualityMetrics.
@@ -86,19 +88,21 @@ closeAllConnections() # if arrayQualityMetrics produces error and leaves connect
 
 
 # Boxplot with regular probes
-cat("\nprepare boxplot of probes in:", file.path(projectfolder, paste0(projectname, "boxplot_probes.tiff")), "\n")  
+cat("\nprepare boxplot of probes in:", file.path(projectfolder, paste0(projectname, "boxplot_probes.png")), "\n")  
 if("Status" %in% names(fData(eset))) {
   regularIDs <- featureNames(eset[which(fData(eset)[,"Status"] == "regular"),])
   } else {regularIDs <- 1:nrow(fData(eset))}
 
-tiff(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-  BiocGenerics::boxplot(eset[regularIDs,])
+png(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.png")), width = 150, height = 150, units = "mm", res=figure.res) 
+# tiff(file=file.path(projectfolder, paste0(projectname,"boxplot_probes.tiff")), width = 7016 , height = 4960, res=figure.res, compression = "lzw")
+  print(BiocGenerics::boxplot(eset[regularIDs,]))
 dev.off()
 
 # Boxplot with number of observations
-cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), "\n")  
-tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-  BiocGenerics::boxplot(eset, what="nObservations")
+cat("\nprepare boxplot of number of observations in:", file.path(projectfolder, paste0(projectname, "boxplot_nObservations.png")), "\n")  
+png(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.png")), width = 150, height = 150, units = "mm", res=figure.res) 
+#tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_nObservations.tiff")), width = 7016 , height = 4960, res=figure.res, compression = "lzw")
+  print(BiocGenerics::boxplot(eset, what="nObservations"))
 dev.off()
 
 
@@ -116,20 +120,25 @@ dev.off()
 
 if(class(eset)=="ExpressionSetIllumina") {
   if("Status" %in% names(fData(eset))) {
-      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), "\n")  
-      ERCClevels <- grepl("ERCC", levels(fData(eset)$Status)  )  # fData are character, no factors
-      if (any(ERCClevels)) {levels(fData(eset)$Status)[ERCClevels] <- "ERCC"}
-      tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), width = 4960 , height = 7016, res=600, compression = "lzw")
-    BiocGenerics::boxplot(eset, probeFactor = "Status", scales=list(cex.lab=cex.dendroLabels, cex.axis=cex.dendroLabels))
-    dev.off()
+      cat("\nprepare boxplot of Illumina control probes in:", file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.png")), "\n")  
+      
+    ERCClevels <- grepl("ERCC", levels(fData(eset)$Status) )  # fData are character, no factors
+      if (any(ERCClevels)) {
+        levels(fData(eset)$Status)[ERCClevels] <- "ERCC"}
+   
+    png(file=file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.png")), width = 210, height = 297, units = "mm", res=figure.res) 
+    # tiff(file=file.path(projectfolder, paste0(projectname, "boxplot_controlprofile.tiff")), width = 4960 , height = 7016, res=figure.res, compression = "lzw")
+        print(BiocGenerics::boxplot(eset, probeFactor = "Status", scales=list(cex.lab=cex.dendroLabels, cex.axis=cex.dendroLabels)))
+        dev.off()
   }
+
 }
   
 # MA-Plots for all Samples separately (ERCC-probes are bundled, if present)
 cat("\nprepare MA-plots of all samples in:", file.path(projectfolder, paste0(projectname, "MAplots.pdf")), "\n")
 class(eset) <- "ExpressionSet"  # plotMA not working with ExpressionSetIllumina- Object
 pdf(file=file.path(projectfolder, paste0(projectname, "MAplots.pdf")))
-#tiff(file=file.path(projectfolder, paste0(projectname, "MAplots.tiff")), width = 4960 , height = 4960, res=600, compression = "lzw")
+#tiff(file=file.path(projectfolder, paste0(projectname, "MAplots.tiff")), width = 4960 , height = 4960, res=figure.res, compression = "lzw")
 for (i in 1:length(sampleNames(eset))) {
   limma::plotMA(eset, i, status=fData(eset)$Status)
   }
@@ -193,13 +202,16 @@ traitColors = WGCNA::labels2colors(datTraits);
 datColors=data.frame(outlier=outlierColor,traitColors)  # add line for Outlier detection
 
 # Plot the sample dendrogram and the colors underneath.
-cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.pdf")), "\n")  
-tiff(file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-par(cex = 0.6);
+cat("\nprepare sample dendrogram with phenotypes in:", file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.png")), "\n")  
+png(file=file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.png")), width = 297, height = 210, units = "mm", res=figure.res) 
+#tiff(file.path(projectfolder, paste0(projectname, "SampleDendrogram_noNorm_adjacency.tiff")), width = 7016 , height = 4960, res=figure.res, compression = "lzw")
+#par(cex = 0.6);
 par(mar = c(0,4,2,0))
+#par(oma = c(0,2,0,0))
+
 WGCNA::plotDendroAndColors(sampleTree_noNorm_adj, colors=datColors, addGuide = T, guideAll=T,
                     groupLabels = c("outlier", names(datTraits)), cex.dendroLabels = cex.dendroLabels,
-                    main = "Sample dendrogram and trait heatmap - GEX no normalisation")
+                    main = "Sample dendrogram and trait heatmap (no normalisation)")
 dev.off()
 
 
@@ -219,11 +231,11 @@ cat(paste("\n\nWGCNA quality control. All ok:",gsg$allOK, "\n\n"))
 WGCNA::disableWGCNAThreads()
 
 # restore graphical parameter settings
-#par(orig_par) # restore settings
+par(orig_par) # restore settings
 
 
 # Detaching libraries not needed any more
-# detach_package(c(pkg.cran, pkg.bioc))
+# detach_package(unique(pks2detach))
 
 
 return(gsg)

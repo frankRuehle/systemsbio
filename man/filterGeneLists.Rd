@@ -39,8 +39,8 @@ dataframe filtered for desired criteria and sorted for \code{filtercat1} (if not
 Gene list are filtered for selected columns considering desired direction and/or transformation.
 }
 \details{
-Function filters dataframe or character directing to dataframe for up to two categories (e.g. p-value and foldchange).
-Columns for filter criteria must be included in dataframe \code{genes}.
+The function filters a dataframe or a character directing to dataframe for up to two categories (e.g. p-value and foldchange).
+Columns for filter criteria must be included in the input dataframe \code{genes}.
 Values in filter criteria may be transformed e.g. to absolute values by \code{filtercat.function = abs}, 
 which is needed for log foldchanges. No tranformation if \code{filtercat.function = identity}.
 }

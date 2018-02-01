@@ -6,7 +6,7 @@
 \usage{
 QC_expressionset(eset, projectfolder = "GEX/QC", projectname = NULL,
   groupColumn = "Sample_Group", phDendro = "Sample_Group",
-  flashClustMethod = "average", cex.dendroLabels = 0.6,
+  flashClustMethod = "average", cex.dendroLabels = 0.6, figure.res = 300,
   threshold.Z.k = -5)
 }
 \arguments{
@@ -24,6 +24,8 @@ QC_expressionset(eset, projectfolder = "GEX/QC", projectname = NULL,
 Can be one of "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".}
 
 \item{cex.dendroLabels}{numeric. Controls size of labels sample in dendrogram.}
+
+\item{figure.res}{numeric resolution for png.}
 
 \item{threshold.Z.k}{numeric. Threshold for outlier prediction \code{WGCNA} package (outlier samples are highlighted 
 in red in sample dendrogram).}

@@ -6,28 +6,31 @@
 \usage{
 TFsearch(sequences, newheader = NULL, annoColumn = NULL,
   name.organism = "hsapiens", projectfolder = "GEX/TFBS",
-  projectname = "", applyFilter = FALSE, filtercat1 = "adj.P.Val",
-  filtercat1.decreasing = FALSE, filtercat1.function = abs,
-  filtercat1.threshold = 0.05, filtercat2 = "logFC",
-  filtercat2.decreasing = TRUE, filtercat2.function = abs,
-  filtercat2.threshold = log2(1.5), PromLookup = TRUE,
-  Entrez.col = "ENTREZID", PromSeqUpstreamTSS = 2000,
-  PromSeqDownstreamTSS = 200, SearchSelMotifs = NULL,
-  motif.min.score = 0.9)
+  projectname = "", figure.res = 300, applyFilter = FALSE,
+  filtercat1 = "adj.P.Val", filtercat1.decreasing = FALSE,
+  filtercat1.function = abs, filtercat1.threshold = 0.05,
+  filtercat2 = "logFC", filtercat2.decreasing = TRUE,
+  filtercat2.function = abs, filtercat2.threshold = log2(1.5),
+  PromLookup = TRUE, id.type = "ENTREZID", id.column = "ENTREZID",
+  PromSeqUpstreamTSS = 2000, PromSeqDownstreamTSS = 200,
+  SearchSelMotifs = NULL, motif.min.score = 0.9)
 }
 \arguments{
-\item{sequences}{dataframe (or character with file path) with column containing Entrez IDs or sequence coordinates.
-Required columns as defined in \code{PromLookup} (see below).}
+\item{sequences}{dataframe or character with file path to dataframe or named list containing dataframes. The dataframe must either contain
+a column with Entrez IDs or sequence coordinates if \code{PromLookup == FALSE}. Required columns for latter case are defined 
+in \code{PromLookup} below.}
 
 \item{newheader}{NULL if \code{sequences} already supplied with header. Character vector with new header otherwise.}
 
-\item{annoColumn}{(character or vector of characters) column name(s) of \code{sequences}-object with sequence annotation to maintain.}
+\item{annoColumn}{character or vector of characters. Column name(s) of \code{sequences}-object with sequence annotation to maintain.}
 
 \item{name.organism}{currently human data only (hg19).}
 
 \item{projectfolder}{output directory.}
 
 \item{projectname}{character prefix for output name.}
+
+\item{figure.res}{numeric resolution for png.}
 
 \item{applyFilter}{(boolean) If TRUE, sequences are filtered for applied categories and thresholds. Filter Values converted to ABSOLUTE values.
 Optional Filtering criteria (Ignored if \code{applyFilter=FALSE}):}
@@ -48,12 +51,15 @@ Optional Filtering criteria (Ignored if \code{applyFilter=FALSE}):}
 
 \item{filtercat2.threshold}{Threshold for \code{filtercat2} or 'top123' for top Hits}
 
-\item{PromLookup}{(boolean) if TRUE, all promotor sequences corresponding to genes in \code{sequences} are downloaded. Therefore a
-  column with EntrezIDs is requried (column name given in \code{Entrez.col})!
-if FALSE, Sequences are downloaded according to given coordinates in \code{sequences}. Therefore columns 
-  for chromosome, start, stop and strand information required! Additional meta columns allowed.}
+\item{PromLookup}{(boolean) if TRUE, all promotor sequences corresponding to genes in \code{sequences} are downloaded. 
+Therefore a column with EntrezIDs is requried (column name given in \code{Entrez.col}). if FALSE, Sequences are 
+downloaded according to given coordinates in \code{sequences}. Therefore columns for \code{chromosome}, \code{start}, 
+\code{stop} and \code{strand} information are required! Additional meta columns allowed.}
 
-\item{Entrez.col}{name of column containing Entrez IDs}
+\item{id.type}{character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
+Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
+
+\item{id.column}{character with column name for identifier variable in \code{sequences}.}
 
 \item{PromSeqUpstreamTSS}{definition of promotor regions to download upstream to TSS.}
 
@@ -61,19 +67,21 @@ if FALSE, Sequences are downloaded according to given coordinates in \code{seque
 
 \item{PromSeqDownstreamTSS:}{definition of promotor regions to download downstream to TSS.}
 
-\item{SearchSelMotivs}{Character Vector of selected motives to search in \code{sequences} seperately to enrichment or NULL.}
+\item{SearchSelMotivs}{Character Vector of selected motives to search in \code{sequences}. Omitted if NULL.}
 }
 \value{
 groupReport of motifEnrichment results.
 }
 \description{
-Function uses \code{PWMEnrich}-package for TFBS enrichment.
+This function uses the \code{PWMEnrich}-package for TFBS enrichment.
 }
 \details{
-Function takes input genes, optionally looks up all promotor sequences by (unique) entrezID, 
-or looks up sequences defined by coordinates, optionally filters \code{sequences} for given categories 
-and calls \code{motifEnrichment} from \code{PWMEnrich}-package to identify enriched Transcription factor binding motivs. 
-Optionally, tables are generated for in 'SearchSelMotifs' preselected Motivs looked up in 'sequences'.
+The function takes input genes in \code{sequences} and looks up all promotor sequences by (unique) entrezIDs refering to human genome build hg19.
+If \code{PromLookup == FALSE}, look up of promotor sequences is omitted and sequences of interest must be given in \code{sequences}
+as coordinates instead. The dataset may be filtered for designated filter criteria if desired. 
+These sequences are transferred to \code{motifEnrichment} from \code{PWMEnrich}-package to identify enriched Transcription factor 
+binding motivs for the input sequences. Optionally, preselected motivs given in \code{SearchSelMotifs} are looked up in \code{sequences}. 
+All result tables and plots are stored in the project folder.
 }
 \seealso{
 MotifDb, PWMEnrich, PWMEnrich.Hsapiens.background

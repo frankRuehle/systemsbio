@@ -29,7 +29,7 @@ Create an RGChannelSet object from Illumina IDAT files and add phenotype data.
 This functions uses the \code{minfi} package to load methylation data from Illumnia 
 Human Methylation 450k microarrays. 
 If the \code{SampleSheetRegExp} argument is NULL, the function finds all two-color IDAT files in the 
-directory given by \code{baseDir} including all subdirectories. A two-color IDAT files are pair of 
+directory given by \code{baseDir} including all subdirectories. Two-color IDAT files consist of pairs of 
 files with names ending in \code{_Red.idat} or \code{_Grn.idat}. If \code{SampleSheetRegExp} is not NULL,
 the corresponding sample sheet is identified via regular expression (file must be located in base) 
 and all listed arrays are loaded. 

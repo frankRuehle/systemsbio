@@ -10,9 +10,10 @@ diffLimma(GEXMTSet, comparisons, p.value.threshold = 0.05,
   matchvar = NULL, Symbol.column = "SYMBOL", sampleColumn = "Sample_Name",
   groupColumn = "Sample_Group", useWeights = TRUE, geneAnno2keep = NULL,
   venn_comparisons = NULL, maxHM = 50, scale = c("none"),
-  HMcexRow = 1.1, HMcexCol = 1.1, HMincludeRelevantSamplesOnly = TRUE,
-  color.palette = "heat.colors", FC.heatmap.comparisons = NULL,
-  FC.heatmap.geneselection = c("allprobes", "intersect", "union"))
+  HMcexRow = 1.1, HMcexCol = 1.1, figure.res = 300,
+  HMincludeRelevantSamplesOnly = TRUE, color.palette = "heat.colors",
+  FC.heatmap.comparisons = NULL, FC.heatmap.geneselection = c("allprobes",
+  "intersect", "union"))
 }
 \arguments{
 \item{GEXMTSet}{ExpressionSet or MethylSet}
@@ -43,7 +44,7 @@ nested comparisons in format \code{"(groupA-groupB)-(groupC-groupD)"}.}
 \item{geneAnno2keep}{(character vector) annotation columns in feature data to keep in output}
 
 \item{venn_comparisons}{character vector or (named) list of character vectors with group comparisons to be included 
-in Venn Diagram (max 5 comparisons per Venn diagramm)}
+in Venn Diagram (max 5 comparisons per Venn diagramm). Must be subset of \code{comparisons} or NULL.}
 
 \item{maxHM}{(numeric) max number of top diff. regulated elements printed in Heatmap}
 
@@ -53,6 +54,8 @@ or the column direction, or none (default). Either \code{"none"}, \code{"row"} o
 \item{HMcexRow}{labelsize for rownames in Heatmap}
 
 \item{HMcexCol}{labelsize for colnames in Heatmap}
+
+\item{figure.res}{numeric resolution for png.}
 
 \item{HMincludeRelevantSamplesOnly}{(boolean) if TRUE include only Samples in heatmap, 
 which are in groups of the respective group comparison.}

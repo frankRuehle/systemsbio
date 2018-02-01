@@ -22,7 +22,7 @@ See the package [Vignette](./vignettes/systemsbio.Rmd) for documentation of the 
 Start by loading the `systemsbio` package and read the package vignette.
 
     library(systemsbio)
-    vignette(systemsbio)
+    vignette("systemsbio")
 
 
 ## Author

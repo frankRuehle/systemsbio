@@ -13,9 +13,8 @@
 #'   }
 #' Quality control functions are applied to all 3 MethylSet objects. 
 #' The required annotation packages (currently hg19 only) \code{IlluminaHumanMethylation450kmanifest} and 
-#' \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} are installed and/or loaded automatically. Mind that these
-#' annotation packages are pretty large and may slow down your system.
-#' Required packages not already attached when running \code{QC_methylation} are detached afterwards to clean up namespace.
+#' \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} are installed and/or loaded automatically. 
+#' Required packages not already attached when running \code{QC_methylation} are detached afterwards.
 #' The function generates the following plots using quality control functionalities from up to 3 packages:
 #' \itemize{
 #'   \item \code{minfi}

@@ -7,16 +7,17 @@
 clusterprof(genes, newheader = NULL, backgroundlist = NULL,
   newheaderBackground = NULL, projectfolder = "GEX/clusterProfiler",
   projectname = "", enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
-  maxInputGenes = 100, id.type = "SYMBOL", id.column = "SYMBOL",
+  maxInputGenes = 100, id.type = "ENTREZID", id.column = "ENTREZID",
   sortcolumn = "adj.P.Val", sortdecreasing = FALSE,
-  sortcolumn.threshold = 0.05, fun.transf.incr.vales = function(x) {    
+  sortcolumn.threshold = 0.05, fun.transf.incr.values = function(x) {    
   -log10(x) }, FCcolumn = "logFC", threshold_FC = log2(1.5),
   org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
-  enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10)
+  enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
+  figure.res = 300)
 }
 \arguments{
-\item{genes}{vector with gene names to analyse or dataframe or character with path to dataframe. Supplied
-dataframe needs to include a column with identifiers specified in 'id.column'.}
+\item{genes}{vector with gene names to analyse or dataframe or character with path to dataframe or list thereof. 
+Supplied dataframe needs to include a column with identifiers specified in 'id.column'.}
 
 \item{newheader}{optional character vector with new header information for 'genes' dataframe. Only relevant 
 if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
@@ -39,8 +40,8 @@ KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).}
 
 \item{maxInputGenes}{(numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).}
 
-\item{id.type}{character with identifier type from annotation package (e.g. "ENTREZID", "SYMBOL", "UNIGENE")
-IDs Will be converted to EntrezIDs prior to enrichment analysis.}
+\item{id.type}{character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
+Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
 
 \item{id.column}{character with column name for identifier variable in 'genes'.}
 
@@ -55,7 +56,7 @@ If FALSE, values in sortcolumn will be transformed prior to GSEA.}
 If sortdecreasing=F, value < sortcolumn.threshold 
 else value > sortcolumn.threshold}
 
-\item{fun.transf.incr.vales}{function definition for transforming values in 'sortcolumn' prior to GSEA.
+\item{fun.transf.incr.values}{function definition for transforming values in 'sortcolumn' prior to GSEA.
 Is applied if sortdecreasing=F.}
 
 \item{FCcolumn}{(character) optional column name of foldchanges in 'genes' if 'sortcolumn' is used elsewhere.
@@ -77,6 +78,8 @@ One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"}
 \item{nPerm}{permutation numbers}
 
 \item{minGSSize}{minimal size of genes annotated by Ontology term for testing.}
+
+\item{figure.res}{numeric resolution for png.}
 }
 \value{
 List of enrichment-objects defined in \code{DOSE}-package (\code{enrichResult}-object for overrepresentation 

@@ -36,13 +36,14 @@
 #' @param useWeights (boolean) if TRUE, arrays are weighted for their quality.
 #' @param geneAnno2keep (character vector) annotation columns in feature data to keep in output
 #' @param venn_comparisons character vector or (named) list of character vectors with group comparisons to be included 
-#'                   in Venn Diagram (max 5 comparisons per Venn diagramm)
+#'                   in Venn Diagram (max 5 comparisons per Venn diagramm). Must be subset of \code{comparisons} or NULL.
 #'
 #' @param maxHM (numeric) max number of top diff. regulated elements printed in Heatmap
 #' @param scale character indicating if the values should be centered and scaled in either the row direction 
 #' or the column direction, or none (default). Either \code{"none"}, \code{"row"} or \code{"column"}.
 #' @param HMcexRow labelsize for rownames in Heatmap
 #' @param HMcexCol labelsize for colnames in Heatmap
+#' @param figure.res numeric resolution for png.
 #' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
 #'                                which are in groups of the respective group comparison.  
 #' @param color.palette select color palette for heatmaps                     
@@ -95,6 +96,7 @@ diffLimma <- function(GEXMTSet,
                       scale = c("none"),
                       HMcexRow=1.1, 
                       HMcexCol=1.1, 
+                      figure.res = 300,
                       HMincludeRelevantSamplesOnly=TRUE,
                       color.palette="heat.colors",
                       FC.heatmap.comparisons=NULL,
@@ -212,12 +214,13 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
     for(v in 1:length(venn_comparisons)) {
       
       if(is.null(names(venn_comparisons)[v])) {names(venn_comparisons)[v] <- paste0("Vennset",v)}
-      filename.Venn <- file.path(projectfolder, paste0("Venn_Diagram_", projectname, names(venn_comparisons)[v], ".pdf"))
+      filename.Venn <- file.path(projectfolder, paste0("Venn_Diagram_", projectname, names(venn_comparisons)[v], ".png"))
       cat("\nWrite Venn diagramm to", filename.Venn, "\n")
   
      resultDiffGenes <- decideTests(fit, p.value=p.value.threshold, lfc=FC.threshold, adjust.method=adjust.method) # default adjust.method="BH"
     if (length(venn_comparisons[[v]]) <= 5) {
-      pdf(filename.Venn, width = 7, height = 7) 
+      png(filename.Venn, width = 300, height = 300, units = "mm", res=figure.res)
+      # pdf(filename.Venn, width = 7, height = 7) 
       vennDiagram(resultDiffGenes[,colnames(resultDiffGenes) %in% venn_comparisons[[v]]], names=NULL)  #optional: select desired group comparisons for Venn diagramm (max: 5)!
       dev.off()
       }
@@ -252,27 +255,32 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
   
       ### Heatmap with all samples. Genes selected by F-Test
       if(!is.null(DiffAllGroups_Ftest.sign)) {
-      cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), "\n")  
-      
-      if (nrow(DiffAllGroups_Ftest.sign) > maxHM) {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign[1:maxHM,]} else {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign}
-      plotmatrix <- dataGEXMTSet[rownames(dataGEXMTSet) %in% rownames(DEgenesHM.Ftest), ,drop=F]
-      
-      # If Symbols are available, rows are annotated with symbols instead of probe IDs   
-      indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
-      
-      if(!is.null(Symbol.column)) {
-        rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
-                                       as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+        if(nrow(DiffAllGroups_Ftest.sign) >=2) {
+          cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.png", sep="" )), "\n")  
+        
+        if (nrow(DiffAllGroups_Ftest.sign) > maxHM) {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign[1:maxHM,]} else {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign}
+        plotmatrix <- dataGEXMTSet[rownames(dataGEXMTSet) %in% rownames(DEgenesHM.Ftest), ,drop=F]
+        
+        # If Symbols are available, rows are annotated with symbols instead of probe IDs   
+        indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
+        
+        if(!is.null(Symbol.column)) {
+          rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
+                                         as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+        }
+        
+        groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
+        
+        png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
+        #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.pdf", sep="" )), width = 10, height = 14) 
+        heatmap.2(plotmatrix, main=paste0(projectname, " all_Samples_Ftest"),  
+                  margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", scale = scale, 
+                  ColSideColors= groupColorCode,
+                  cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
+                  key.xlab= heatmap_legend_xaxis, key.ylab=NA, key.title="Color Key", col=color.palette)  
+        dev.off()
       }
-      
-      pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_Ftest.pdf", sep="" )), width = 10, height = 14) 
-      heatmap.2(plotmatrix, main=paste0(projectname, " all_Samples_Ftest"),  
-                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", 
-                scale = scale, 
-                cexRow=HMcexRow, cexCol=HMcexCol, trace="none", density.info="histogram",  
-                key.xlab= heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
-      dev.off()
-      }
+  }
 
 ## Diff expressed genes caculated by ANOVA for all groups 
       
@@ -289,19 +297,34 @@ if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if pai
       
       
       ### Heatmap with all samples. Genes selected by ANOVA
-      cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), "\n")  
-      maxgenesANOVA <- maxHM # 1000
-      if (length(aov.result.sign) > maxgenesANOVA) {aov.result.sign <- aov.result.sign[1:maxgenesANOVA]} 
-      plotmatrix.aov <- dataGEXMTSet[rownames(dataGEXMTSet) %in% names(aov.result.sign), ,drop=F]
+      if(length(aov.result.sign) >=2) {
+        cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.png", sep="" )), "\n")  
+     
+         maxgenesANOVA <- maxHM # 1000
+      
+         if (length(aov.result.sign) > maxgenesANOVA) {aov.result.sign <- aov.result.sign[1:maxgenesANOVA]} 
+        plotmatrix.aov <- dataGEXMTSet[rownames(dataGEXMTSet) %in% names(aov.result.sign), ,drop=F]
 
-      pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_all_Samples_ANOVA.pdf", sep="" )), width = 10, height = 14) 
+      # If Symbols are available, rows are annotated with symbols instead of probe IDs   
+      indexRownames <- match(rownames(plotmatrix.aov), rownames(featureGEXMTSet))
+      
+      if(!is.null(Symbol.column)) {
+        rownames(plotmatrix.aov) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
+                                       as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix.aov))
+      }
+      
+      groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
+      
+      png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
+      #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.pdf", sep="" )), width = 10, height = 14) 
       heatmap.2(plotmatrix.aov, main=paste0(projectname, " all_Samples_ANOVA"),  
-                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", labRow=F, 
-                cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
+                margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both", # labRow=F, 
+                ColSideColors= groupColorCode,
+                cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
                 key.xlab= heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
       dev.off()  
       
-      
+      }
       
    
       
@@ -357,11 +380,11 @@ for (i in 1:length(comparisons)) {
  
   ######## Volcano plots per group comparison 
   
-  volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, "_", comparisons[i], ".png", sep="" ))
+  volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, comparisons[i], ".png", sep="" ))
   
   cat("\nWrite Volcano plot to", volcanoplot_filename, "\n")  
   
-  png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=600) 
+  png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=figure.res) 
   plot(DEgenes.unfilt[[i]]$logFC, -log10(DEgenes.unfilt[[i]]$adj.P.Val), main=comparisons[i],
        col="gray", pch=16, cex=0.5, xlab="fold change", ylab="-log10 p-value") 
   if(!is.null(p.value.threshold)) {abline(h=-log10(p.value.threshold),lty=c(1))}
@@ -383,7 +406,7 @@ for (i in 1:length(comparisons)) {
   ######## Heatmaps per group comparison with signal intensities
       if(nrow(DEgenes[[i]]) >1) {  # no Heatmap if just one diff expressed gene
         
-        cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_", comparisons[i], ".pdf", sep="" )), "\n")  
+        cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_", comparisons[i], ".png", sep="" )), "\n")  
         
         if (nrow(DEgenes[[i]]) > maxHM) {DEgenesHM <- DEgenes[[i]][1:maxHM,]} else {DEgenesHM <- DEgenes[[i]]}
         
@@ -397,6 +420,7 @@ for (i in 1:length(comparisons)) {
                                          as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
           }
         
+        groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
         
         #  if HMincludeRelevantSamplesOnly=T, only samples considered belonging to the respective group comparison 
         if (HMincludeRelevantSamplesOnly) {
@@ -410,10 +434,14 @@ for (i in 1:length(comparisons)) {
           
           cols2plot <- colnames(plotmatrix) %in% samples2plot
           plotmatrix <- plotmatrix[, cols2plot]
-        }
+       
+          groupColorCode <- groupColorCode[pData(GEXMTSet)[,groupColumn] %in% groups2plot] # adjust ColSideColors in heatmaps to relevant groups
+         }
         
-        pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "_", comparisons[i], ".pdf", sep="" )), width = 10, height = 14) 
+        png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
+        #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".pdf", sep="" )), width = 10, height = 14) 
         heatmap.2(plotmatrix, main=comparisons[i], margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
+                  ColSideColors= groupColorCode, 
                   cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  
                   key.xlab=heatmap_legend_xaxis, key.ylab="", key.title="Color Key", col=color.palette)  
         
@@ -471,10 +499,11 @@ for (i in 1:length(comparisons)) {
             if(nrow(plotmatrix) >1) {  # no Heatmap if just one diff expressed gene
               if (nrow(plotmatrix) > maxHM) {plotmatrix <- plotmatrix[1:maxHM,]} 
               if(is.null(names(FC.heatmap.comparisons)[fc])) {names(FC.heatmap.comparisons)[fc] <- paste0("set",fc)}
-              filename.FCHM <- file.path(projectfolder, "Heatmaps", paste0("Heatmap_Foldchanges_", projectname, names(FC.heatmap.comparisons)[fc], "_", g, "_prior_by_", f, ".pdf"))
+              filename.FCHM <- file.path(projectfolder, "Heatmaps", paste0("Heatmap_Foldchanges_", projectname, names(FC.heatmap.comparisons)[fc], "_", g, "_prior_by_", f, ".png"))
               cat("\nWrite Heatmap to", filename.FCHM, "\n")  
               
-              pdf(filename.FCHM, width = 10, height = 14) 
+              png(filename.FCHM, width = 210, height = 297, units = "mm", res=figure.res) 
+              #pdf(filename.FCHM, width = 10, height = 14) 
               heatmap.2(plotmatrix, main=paste0("Heatmap Foldchanges ", projectname, names(FC.heatmap.comparisons)[fc], " ", g, "\nprobes prioritised by ", f), 
                         margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
                         cexRow=HMcexRow, cexCol=HMcexCol, scale = scale, trace="none", density.info="histogram",  

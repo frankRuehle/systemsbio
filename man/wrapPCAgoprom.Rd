@@ -7,7 +7,7 @@
 wrapPCAgoprom(expca, groupsoi = NULL, groupby = "Sample_Group",
   sample.name.column = "Sample_Name", samples2exclude = NULL,
   projectfolder = file.path("pcaGoPromoter"), projectname = NULL,
-  inputType = "geneSymbol", print.sample.names = TRUE,
+  figure.res = 300, inputType = "geneSymbol", print.sample.names = TRUE,
   print.symbol.colors = TRUE, org = "Hs", PCs4table = 2, PCs2plot = c(1,
   2, 3), probes2enrich = 0.025)
 }
@@ -31,6 +31,8 @@ regular expression for lookup of samples. \code{Null} if no sample to exlude.}
 \item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
 
 \item{projectname}{optional character prefix for output file names.}
+
+\item{figure.res}{numeric resolution for png.}
 
 \item{inputType}{Character vector with description of the input type. Must be Affymetrix chip type, 
 "geneSymbol" or "entrezID".}
@@ -72,7 +74,7 @@ enrichment analysis of PC loadings.
 The pcaGoPromoter::pca function uses prcomp to do the principal component analysis. 
 The input data is scaled and centered, so constant variables (sd = 0) will be removed to avoid divison by zero.
 2-dim and 3-dim PCA plots are generated for desired samples in the given ExpressionSet \code{expca}. 
-Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top associated probes 
+Tables of PC-associated probes and transcription factor binding sites and GO terms enriched in top correlated probes 
 are generated for any number of principal components in positive and negative orientation.
 All output data is stored in supplied \code{projectfolder}.
 }

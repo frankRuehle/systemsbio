@@ -3,8 +3,8 @@
 #' 
 #' Gene list are filtered for selected columns considering desired direction and/or transformation.
 #' 
-#' Function filters dataframe or character directing to dataframe for up to two categories (e.g. p-value and foldchange).
-#' Columns for filter criteria must be included in dataframe \code{genes}.
+#' The function filters a dataframe or a character directing to dataframe for up to two categories (e.g. p-value and foldchange).
+#' Columns for filter criteria must be included in the input dataframe \code{genes}.
 #' Values in filter criteria may be transformed e.g. to absolute values by \code{filtercat.function = abs}, 
 #' which is needed for log foldchanges. No tranformation if \code{filtercat.function = identity}.
 #' 
@@ -62,14 +62,15 @@ filterGeneLists <- function(genes,
         cat("\nTop", topthreshold, "entries selected according to", filtercat2, "(decreasing =",filtercat2.decreasing, ")\n")
         genes <- genes[1:topthreshold,]
       } else {
-        cat("\nFiltering Data for", filtercat2, ", decreasing =",filtercat2.decreasing, ", threshold =", filtercat2.threshold, "\n")
         if(filtercat2.decreasing==FALSE) { # less than threshold
           genes <- genes[!is.na(genes[,filtercat2]) & filtercat2.function(genes[,filtercat2]) < filtercat2.threshold, ]
         } else { # greater than threshold
           genes <- genes[!is.na(genes[,filtercat2]) & filtercat2.function(genes[,filtercat2]) > filtercat2.threshold, ]
         }
+        cat("\nFiltering Data for", filtercat2, ", decreasing =",filtercat2.decreasing, ", threshold =", round(filtercat2.threshold, digits=4), "(", nrow(genes), "remaining).\n")
       } 
-    }}
+    }
+  }
   
   
   # apply filtercat1
@@ -82,15 +83,16 @@ filterGeneLists <- function(genes,
         cat("\nTop", topthreshold, "entries selected according to", filtercat1, "(decreasing =",filtercat1.decreasing, ")\n")
         genes <- genes[1:topthreshold,]
       } else {
-        cat("Filtering Data for", filtercat1, ", decreasing =",filtercat1.decreasing, ", threshold =", filtercat1.threshold, "\n")
         if(filtercat1.decreasing==FALSE) { # less than threshold
           genes <- genes[!is.na(genes[,filtercat1]) & filtercat1.function(genes[,filtercat1]) < filtercat1.threshold, ] 
           
         } else { # greater than threshold
           genes <- genes[!is.na(genes[,filtercat1]) & filtercat1.function(genes[,filtercat1]) > filtercat1.threshold, ]
         }
+        cat("Filtering Data for", filtercat1, ", decreasing =", filtercat1.decreasing, ", threshold =", filtercat1.threshold, "(", nrow(genes), "remaining).\n")
       } 
-    }}
+    }
+  }
   
   
   return(genes)

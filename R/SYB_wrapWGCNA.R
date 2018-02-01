@@ -8,7 +8,7 @@
 #' Before starting network construction, an appropriate \code{softThresholdPower} must be selected for correlation coefficients.  
 #' If no value is given in \code{softThresholdPower}, the function analyses scale free topology for multiple soft 
 #' thresholding powers to help choosing the appropriate value for obtaining an approximately scale free network topology.
-#' For each power the scale free topology fit index is calculated and returned along with other information on connectivity.
+#' For each power, the scale free topology fit index is calculated and returned along with other information on connectivity.
 #' If \code{softThresholdPower} is set to 'auto' and the function determines an appropriate value and directly starts network construction.
 #' Network construction is performed in block-wise manner with respect to \code{maxBlockSize}. Genes are clustered 
 #' using average linkage hierarchical clustering and coexpressed gene modules are identified in the resulting dendrogram by the 
@@ -64,12 +64,14 @@
 #' @param symbolColumn character with name of feature identifier in feature data of \code{GEXMTSet}.
 #' @param flashClustMethod character with agglomeration method used for hierarchical clustering in \code{flashClust}-package. 
 #'                   Either "ward", "single", "complete", "average", "mcquitty", "median" or "centroid". 
+#' @param moduleBoxplotsPerFigure numeric. Number of module boxplots to be included in a single figure.
+#' @param figure.res numeric resolution for png.
 #' @param dendroRowText boolean. If TRUE, phenotype names are plotted beneath the sample dendrogram.
 #' @param autoColorHeight boolean. If TRUE, the height of the color area below the dendrogram is adjusted 
 #'                  automatically for the number of phenotypes.
 #' @param colorHeight numeric specifying the height of the color area under dendrogram as a fraction of the height of the dendrogram area. 
 #'              Only effective when autoColorHeight above is FALSE.
-#' @param cex.dendroLabels numeric with character expansion factor for dendrogram (sample) labels.
+#' @param cex.labels numeric with character expansion factor for dendrogram and heatmap labels.
 #' @param ... further arguments to be passed to the \code{blockwiseModules}-function of the \code{WGCNA}-package.
 #' 
 #' 
@@ -144,7 +146,7 @@
 #'         }
 
 
-wgcna <- function(GEXMTSet, 
+wrapWGCNA <- function(GEXMTSet, 
                   projectfolder= "GEX/WGCNA",
                   softThresholdPower="auto", 
                   corType="bicor", 
@@ -158,8 +160,11 @@ wgcna <- function(GEXMTSet,
                   groupColumn  = "Sample_Group",  
                   groupsets=NULL,  
                   symbolColumn = NULL, 
-                  flashClustMethod = "average", 
-                  dendroRowText=T, autoColorHeight = FALSE, colorHeight=0.1, cex.dendroLabels = 0.6,
+                  flashClustMethod = "average",
+                  moduleBoxplotsPerFigure = 16, 
+                  figure.res = 300,
+                  dendroRowText=T, autoColorHeight = FALSE, 
+                  colorHeight=0.1, cex.labels = 0.6,
                   ...
 ) {
   
@@ -177,7 +182,7 @@ wgcna <- function(GEXMTSet,
   
   # Creating output directories if not yet existing
     if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
-    if (!file.exists(file.path(projectfolder, "TOM"))) {dir.create(file.path(projectfolder, "TOM")) }
+    if (!file.exists(file.path(projectfolder, "networkConstruction"))) {dir.create(file.path(projectfolder, "networkConstruction")) }
     if (!file.exists(file.path(projectfolder, "Intramodular_analysis_Traits"))) {dir.create(file.path(projectfolder, "Intramodular_analysis_Traits")) }
     #if (!file.exists(file.path(projectfolder, "VisANT"))) {dir.create(file.path(projectfolder, "VisANT")) }
     #if (!file.exists(file.path(projectfolder, "Cytoscape"))) {dir.create(file.path(projectfolder, "Cytoscape")) }
@@ -256,13 +261,14 @@ wgcna <- function(GEXMTSet,
     
     # Call the network topology analysis function
     powers <- c(seq(1, 10, by = 1), seq(12, 20, by = 2))
-    sft = pickSoftThreshold(objectdat, dataIsExpr = TRUE, RsquaredCut = RsquaredCut, 
+    sft = WGCNA::pickSoftThreshold(objectdat, dataIsExpr = TRUE, RsquaredCut = RsquaredCut, 
                             powerVector = powers,
                             networkType = networkType, verbose =5)
   
     # Plot the results:
-    cat("\nPlot SoftThreshold results to", file.path(projectfolder, "SoftThreshold.pdf"), "\n")
-    pdf(file.path(projectfolder, "SoftThreshold.pdf"), width = 14, height = 7) 
+    cat("\nPlot SoftThreshold results to", file.path(projectfolder, "SoftThreshold.png"), "\n")
+    png(file.path(projectfolder, "SoftThreshold.png"), width = 296, height = 148, units = "mm", res=figure.res)
+    #pdf(file.path(projectfolder, "SoftThreshold.pdf"), width = 14, height = 7) 
     # sizeGrWindow(9, 5)
     par(mfrow = c(1,2))
     cex1 = 0.9
@@ -312,13 +318,18 @@ wgcna <- function(GEXMTSet,
   if(!is.character(GEXMTSet)) { # check if 'net' has already been loaded from file.
     cat(paste("\nConstructing the gene network and identifying modules; softThresholdPower =", softThresholdPower, "\n"))
   
-    net <- blockwiseModules(objectdat, power = softThresholdPower,
+    net <- WGCNA::blockwiseModules(objectdat, power = softThresholdPower,
                            networkType=networkType, TOMType = TOMType, 
                            corType=corType, 
                            numericLabels = FALSE, # modules labeled by colors (FALSE), or by numbers (TRUE)
                            pamStage = TRUE,  
-                           saveTOMs = TRUE, saveTOMFileBase = file.path(projectfolder, "TOM", "TOM"),
-                           verbose = 1, maxBlockSize = maxBlockSize, ...) 
+                           saveTOMs = FALSE, saveTOMFileBase = file.path(projectfolder, "networkConstruction", "TOM"),
+                           verbose = 1, maxBlockSize = maxBlockSize, ...
+                           # deepSplit = 2, # default value
+                           # detectCutHeight = 0.995, # default value
+                           # minModuleSize = 20 # default: min(20, ncol(datExpr)/2 )
+                           # mergeCutHeight = 0.15) # default value
+                           ) 
   }
   
   # function blockwiseModules implements 3 steps:
@@ -336,7 +347,7 @@ wgcna <- function(GEXMTSet,
   # for type = "signed", adjacency = (0.5 * (1+cor) )^power; 
   # for type = "signed hybrid", adjacency = cor^power if cor>0 and 0 otherwise; 
   
-  # number of blocks genes have been distributed due to maxBlockSize
+  # number of blocks genes have been distributed to due to maxBlockSize
   blockCount <- length(na.omit(unique(net$blocks)))
   
   # Module Definition: branch of a cluster tree (see dendrogram). We use average linkage hierarchical clustering coupled 
@@ -353,15 +364,45 @@ wgcna <- function(GEXMTSet,
   write.table(table(moduleColors), file.path(projectfolder, "Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
 
   # module eigengenes
-  MEs = orderMEs(net$MEs)
+  MEs <- WGCNA::orderMEs(net$MEs)
+  MEcount <- length(colnames(MEs))
   rownames(MEs) <- rownames(traitData)
   write.table(MEs, file.path(projectfolder, "ModuleEigengenes_colorLabel.txt"), row.names=F, quote=F, sep="\t")
   modNames = substring(names(MEs), 3)  # remove "ME" at the beginning of module eigengene names
 
   
+  ## boxplots of modules vs. sample groups (16 module boxplots per figure)
+  # prepare as many figures as necessary with respect to number of modules
+  cat(paste("\nPreparing boxplots for each module with", moduleBoxplotsPerFigure, "plots per figure.\n"))
+  countfigures <- ceiling(MEcount / moduleBoxplotsPerFigure)
+  plotslastfig <- MEcount %% moduleBoxplotsPerFigure
+  
+  for (fig in 1:countfigures) { 
+      
+      png(filename=file.path(projectfolder, paste0("module_boxplot_", fig, "_of_", countfigures, ".png")), width = 210 , height = 210, units = "mm", res=figure.res)
+      
+      MEsfig <- MEs[, ((fig-1)*moduleBoxplotsPerFigure+1) : min(MEcount, (fig*moduleBoxplotsPerFigure))] # subset MEs for each figure
+    
+      layout(matrix(c(1:moduleBoxplotsPerFigure), ncol= floor(sqrt(moduleBoxplotsPerFigure)), byrow=TRUE))  #, heights=rep(3, times=length(colnames(MEs))))
+      for (color in gsub("ME", "", colnames(MEsfig))){
+        MEs_color <- MEsfig[, which(colnames(MEsfig) == paste0("ME", color)), drop = FALSE]
+        traitsinfo <- cbind(MEs_color, factor(traitData[, groupColumn])) # dataframe with 1 ME and group assignments of all samples
+        bp <- graphics::boxplot(traitsinfo[,1] ~ traitsinfo[,2], ylab = "module eigengene values", 
+                                ylim = c(min(MEs_color[, 1]) - 0.2, max(MEs_color[, 1]) + 0.2), 
+                                main = paste0(color, " module"), col = color, xaxt="n")
+        
+        axis(1, at=seq(1, length(bp$names), by=1), labels = FALSE)
+        text(x=seq(1, length(bp$names), by=1), y=par("usr")[3] - 0.2, labels = bp$names, srt = 30, pos=1, xpd = TRUE) 
+      }
+      dev.off()
+  }  
+      
+  
+  
+  
  
   # We now save the module assignment and module eigengene information necessary for subsequent analysis.
-  save(net, objectdat, traitData, MEs, moduleColors, file = file.path(projectfolder, "TOM", "networkConstruction-auto.RData"))
+  save(net, objectdat, traitData, MEs, moduleColors, file = file.path(projectfolder, "networkConstruction", "networkConstruction-auto.RData"))
   
   
   
@@ -375,14 +416,15 @@ wgcna <- function(GEXMTSet,
   if (dendroRowText==F) {rowText=NULL} else {rowText=datTraits.dendro}
   
   ### plot sample dendrogram with phenotypes given in 'phDendro'
-  png(file.path(projectfolder, "Sample_Dendrogram.png"), width = 7016 , height = 4960, res=600)
+  png(file.path(projectfolder, "Sample_Dendrogram.png"), width = 297 , height = 210, units = "mm", res=figure.res)
   # pdf(file.path(projectfolder, "Sample_Dendrogram.pdf"), width = 12, height = 9) 
   par(cex = 0.6);
   par(mar = c(0,4,2,0))
-  plotDendroAndColors(sampleTree, colors=traitColors, 
-                      rowText=rowText, rowTextAlignment="left", cex.rowText=cex.dendroLabels,
+  WGCNA::plotDendroAndColors(sampleTree, colors=traitColors, 
+                      rowText=rowText, rowTextAlignment="left", cex.rowText=cex.labels,
                       autoColorHeight = autoColorHeight, colorHeight=colorHeight, addGuide=T, guideAll=T,
-                      groupLabels = names(datTraits.dendro), cex.dendroLabels = cex.dendroLabels,
+                      groupLabels = names(datTraits.dendro), 
+                      cex.dendroLabels = cex.labels, cex.colorLabels = cex.labels,
                       main = paste("Sample Dendrogram -", plot.label))
   dev.off()
 
@@ -448,14 +490,15 @@ wgcna <- function(GEXMTSet,
   datColors <- data.frame(moduleColors, GS.TraitColor)  
   
   for (b in 1:blockCount) {
-    png(filename=file.path(projectfolder, paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".png")), width = 7016 , height = 4960, res=600)
+    png(filename=file.path(projectfolder, paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".png")), width = 297 , height = 210, units = "mm", res=figure.res)
     # pdf(file.path(projectfolder, paste0("ModuleDendrogram_Block_", b, "_of_", blockCount,".pdf")), width = 14, height = 10) 
     # Plot the dendrogram and the module colors underneath
-    plotDendroAndColors(net$dendrograms[[b]], colors=datColors[net$blockGenes[[b]],],
+    WGCNA::plotDendroAndColors(net$dendrograms[[b]], colors=datColors[net$blockGenes[[b]],],
                       groupLabels=colnames(datColors),
                       main=paste("Cluster Dendrogram - Block",b,"of",blockCount),
                       dendroLabels = FALSE, hang = 0.03,
-                      addGuide = TRUE, guideHang = 0.05)
+                      addGuide = TRUE, guideHang = 0.05,
+                      cex.rowText = cex.labels, cex.dendroLabels = cex.labels, cex.colorLabels = cex.labels)
     dev.off()
     }
 
@@ -506,10 +549,10 @@ wgcna <- function(GEXMTSet,
                      signif(as.matrix(moduleTraitPvalue), 1), sep = "")
   dim(textMatrix) = dim(moduleTraitCor)
   
-  png(file.path(projectfolder, "Heatmap_Module-trait_relationship.png"), width = 4960 , height = 7016, res=600)
+  png(file.path(projectfolder, "Heatmap_Module-trait_relationship.png"), width = 210 , height = 297, units = "mm", res=figure.res)
   par(mar = c(6, 10, 4, 4));
   # Display the correlation values within a heatmap plot
-  labeledHeatmap(Matrix = moduleTraitCor,
+  WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                  xLabels = colnames(moduleTraitCor),
                  yLabels = names(MEs),
                  ySymbols = names(MEs),
@@ -517,8 +560,8 @@ wgcna <- function(GEXMTSet,
                  colors = blueWhiteRed(50),
                  textMatrix = textMatrix,
                  setStdMargins = FALSE,
-                 cex.text = 0.5,
-                 cex.lab = 0.8,
+                 cex.text = 0.7 * cex.labels,
+                 cex.lab = cex.labels,
                  zlim = c(-1,1),
                  main = paste("Module-trait relationships -", plot.label))
   dev.off()
@@ -601,7 +644,7 @@ wgcna <- function(GEXMTSet,
                        signif(moduleGroupsetPvalue, 1), sep = "")
     dim(textMatrix) = dim(moduleGroupsetCor)
     
-    png(file.path(projectfolder, "Heatmap_Module-Groupset_relationship.png"), width = 4960 , height = 7016, res=600)
+    png(file.path(projectfolder, "Heatmap_Module-Groupset_relationship.png"), width = 210 , height = 297, units="mm", res=figure.res)
     par(mar = c(6, 10, 4, 4));
     # Display the correlation values within a heatmap plot
     labeledHeatmap(Matrix = moduleGroupsetCor,
@@ -612,8 +655,8 @@ wgcna <- function(GEXMTSet,
                    colors = blueWhiteRed(50),
                    textMatrix = textMatrix,
                    setStdMargins = FALSE,
-                   cex.text = 0.5,
-                   cex.lab = 0.8,
+                   cex.text = 0.7 * cex.labels,
+                   cex.lab = cex.labels,
                    zlim = c(-1,1),
                    main = paste("Module - Groupset relationships -", plot.label))
     dev.off()
@@ -655,16 +698,17 @@ wgcna <- function(GEXMTSet,
       selectModules <- substring(selectModules,3) # remove substring "ME"
 
       # plot 8 scatter plots for each trait
-      png(file.path(projectfolder, "Intramodular_analysis_Traits", paste0("Intramodular_analysis_", trait, ".png")), width = 4960 , height = 7016, res=600)
+      png(file.path(projectfolder, "Intramodular_analysis_Traits", paste0("Intramodular_analysis_", trait, ".png")), width = 210 , height = 297, units ="mm", res=figure.res)
       par(mfrow=c(length(selectModules)/2,2))
       par(mar=c(6, 8, 4, 4) + 0.1)
         
         for (module in selectModules) {
           column <- match(module,colorOfColumn)
           restModule <- moduleColors==module
-          verboseScatterplot(datKME[restModule,column],GS.datTraits[restModule, grep(trait,names(GS.datTraits), value=T)],
+          WGCNA::verboseScatterplot(datKME[restModule,column],GS.datTraits[restModule, grep(trait,names(GS.datTraits), value=T)],
                        xlab=paste("Module Membership:",module,"module"),ylab=paste("Gene significance:", trait),
                        main=paste(plot.label.pruned, "Module membership vs. gene significance\n"), 
+                       cex = cex.labels, cex.axis = cex.labels, cex.lab = cex.labels, cex.main = 1.3 * cex.labels,
                        pch=21, col="black", bg=module)
         }
       dev.off()
@@ -720,16 +764,17 @@ wgcna <- function(GEXMTSet,
       
     # plot 8 scatter plots for each group Groupset
     png(file.path(projectfolder, "Intramodular_analysis_Groupsets", paste0("Intramodular_analysis_", gset, ".png")), 
-         width = 4960 , height = 7016, res=600)
+         width = 210 , height = 297, units="mm", res=figure.res)
     par(mfrow=c(length(selectModules)/2,2))
     par(mar=c(6, 8, 4, 4) + 0.1)
     
     for (module in selectModules) {
       column <- match(module,colorOfColumn)
       restModule <- moduleColors==module  # logical vector with length of number of genes. TRUE for genes of selected module
-      verboseScatterplot(datKME[restModule,column],geneGroupsetCor[restModule, grep(gset,colnames(geneGroupsetCor), value=T)],
+      WGCNA::verboseScatterplot(datKME[restModule,column],geneGroupsetCor[restModule, grep(gset,colnames(geneGroupsetCor), value=T)],
                          xlab=paste("Module Membership:",module,"module"),ylab=paste("Gene significance:", gset),
                          main=paste(plot.label.pruned, "Module membership vs. gene significance\n"), 
+                         cex = cex.labels, cex.axis = cex.labels, cex.lab = cex.labels, cex.main = 1.3 * cex.labels,
                          pch=21, col="black", bg=module)
     }
     dev.off()
@@ -881,9 +926,9 @@ if(TOMplot) {
     # diag(plotTOM) <- NA; # Error: only matrix diagonals can be replaced
     # Call the plot function: Topological Overlap Matrix
     geneTree <- flashClust(as.dist(dissTOM), method="average")
-    png(file.path(projectfolder, paste("Network_heatmap_plot.png")), width = 4960 , height = 7016, res=600)
+    png(file.path(projectfolder, paste("Network_heatmap_plot.png")), width = 210 , height = 297, units="mm", res=figure.res)
     #pdf(file.path(projectfolder, paste("Network_heatmap_plot.pdf")), width = 10, height = 14) 
-    TOMplot(dissim=plotTOM, dendro=geneTree, Colors=moduleColors, main = "Network heatmap plot, all genes")                 
+    WGCNA::TOMplot(dissim=plotTOM, dendro=geneTree, Colors=moduleColors, main = "Network heatmap plot, all genes")                 
     dev.off()
 }
 
@@ -896,7 +941,7 @@ if(MDSplot) {
   cat("\nGenerating Multidimensional scaling (MDS) Plot\n")
 
   cmd1 <- cmdscale(as.dist(dissTOM), k=2)  # classical MDS plot using 2 scaling dimensions.
-  png(file.path(projectfolder, paste("WGCNA_MDS_plot.png")), width = 4960 , height = 7016, res=600)
+  png(file.path(projectfolder, paste("WGCNA_MDS_plot.png")), width = 210 , height = 297, units="mm", res=figure.res)
   #pdf(file.path(projectfolder, paste("WGCNA_MDS_plot.pdf")), width = 10, height = 14) 
   plot(cmd1, col=moduleColors, main="WGCNA MDS plot", xlab="Scaling Dimension 1", ylab="Scaling Dimension 2")
   dev.off()
@@ -949,7 +994,7 @@ for (trait in phModule) {
 
 
 
-###### Cytoscape  ### oder f?r mehrere Module gleichzeitig?
+###### Cytoscape  
 cat("\nGenerating input files for Cytoscape\n")
 
 for (trait in phModule) {

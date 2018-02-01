@@ -33,9 +33,10 @@ basicAnno <- function(data,
 
   # Load genomic annotation package (includes OrgDb, TxDb and GODb)
   annopkg <- switch(org, human = "Homo.sapiens", 
+                    hsapiens = "Homo.sapiens", 
                     mouse = "Mus.musculus",
                     rat="Rattus.norvegicus")
-  attach_package(pkg.bioc=annopkg, pkg.cran = "plyr")
+  attach_package(pkg.bioc= c(annopkg, "GenomicFeatures", "rtracklayer"), pkg.cran = "plyr")
   
   
   

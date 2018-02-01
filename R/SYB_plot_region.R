@@ -574,7 +574,7 @@ plot.region <- function (region,
            domains$domstart <- gene_start + ((domains$start-1) * gene.totalLength) / AA.totalLength
            domains$domend   <- gene_start + ((domains$end-1) * gene.totalLength) / AA.totalLength
          }
-      ################### ende neues plot design
+      ################### end of new plot design
       
       
       domains$xsymbol <- domains$domstart + 0.5*(domains$domend - domains$domstart) # x-mean for function symbols()
@@ -756,7 +756,7 @@ plot.region <- function (region,
 # Detaching libraries not needed any more
 detach_package(unique(pks2detach))
 
-} # end of function def
+} # end of function definition
 
 
 

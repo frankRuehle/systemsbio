@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Frank Ruehle [aut, cre]
 Maintainer: Frank Ruehle <ruehle@uni-muenster.de>
 Description: This package consists of modularized wrapper functions for multiple genomics 
-    analysis packages. It is designed for multi-omics analysis of expression, methylation 
+    analysis packages. It is designed for analysis of expression, methylation 
     and/or genotyping data. All modules can also be used individually. 
     E.g. for gene expression data, workflow is as follows: Illumina
     microarray data or custom microarray data are loaded into an Expressionet object
@@ -31,7 +31,8 @@ Imports:
     gridSVG,
     Hmisc,
     MASS,
-    limma
+    limma,
+    R.utils
 Suggests:
     knitr,
     rmarkdown  
