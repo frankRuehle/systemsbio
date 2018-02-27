@@ -8,8 +8,9 @@ wrapPCAgoprom(expca, groupsoi = NULL, groupby = "Sample_Group",
   sample.name.column = "Sample_Name", samples2exclude = NULL,
   projectfolder = file.path("pcaGoPromoter"), projectname = NULL,
   figure.res = 300, inputType = "geneSymbol", print.sample.names = TRUE,
-  print.symbol.colors = TRUE, org = "Hs", PCs4table = 2, PCs2plot = c(1,
-  2, 3), probes2enrich = 0.025)
+  print.symbol.colors = TRUE, org = "Hs",
+  annotation.packages = c("pcaGoPromoter.Hs.hg19", "org.Hs.eg.db"),
+  PCs4table = 2, PCs2plot = c(1, 2, 3), probes2enrich = 0.025)
 }
 \arguments{
 \item{expca}{\code{ExpressionSet} object or a table with expression data with variables (probes) in rows and 
@@ -42,7 +43,11 @@ regular expression for lookup of samples. \code{Null} if no sample to exlude.}
 
 \item{print.symbol.colors}{boolean indicating whether the symbols should be plotted with colors.}
 
-\item{org}{a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) or "Rn" (rattus norwegicus).}
+\item{org}{a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) 
+or "Rn" (rattus norwegicus).}
+
+\item{annotation.packages}{character with bioconductor annotation packages to load. 
+E.g. c("pcaGoPromoter.Hs.hg19", "org.Hs.eg.db") for human or c("pcaGoPromoter.Mm.mm9", "org.Mm.eg.db") for mouse.}
 
 \item{PCs4table}{numeric or numeric vector. Indicates number of PCs (numeric) or distinct PCs (numeric vector) 
 for which result tables of enriched transcription factor binding sites and GO-terms are calculated.}

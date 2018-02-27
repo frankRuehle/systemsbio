@@ -2,28 +2,23 @@
 % Please edit documentation in R/SYB_matrixQTL.R
 \name{matrixQTL}
 \alias{matrixQTL}
-\title{QTL Analysis for expression and/or methylation data.}
+\title{QTL Analysis for expression and methylation data.}
 \usage{
-matrixQTL(eset = NULL, mset = NULL, islandset = NULL,
-  SNPfile_transpAddCoded_name, SNPfile_tfam = NULL,
+matrixQTL(inputset, SNPfile_transpAddCoded_name, SNPfile_tfam = NULL,
   covariates_file_name = NULL, covarsampleID = "IID", covar2adjust = NULL,
-  projectfolder = "QTL", projectname = NULL, sampleGEX = "Sample_Name",
-  sampleMT = "Sample_Name", useModel = modelLINEAR,
-  errorCovariance = numeric(), QTLtype = "both", cisDist = 1e+06,
-  pvOutputThreshold_cis = 1e-06, pvOutputThreshold_tra = 1e-06,
-  pvOutputThreshold_all = 1e-06, genepos = NULL,
-  genemart = useMart("ENSEMBL_MART_ENSEMBL", host =
+  projectfolder = "QTL", projectname = NULL, sampleColumn = "Sample_Name",
+  useModel = modelLINEAR, errorCovariance = numeric(), QTLtype = "both",
+  cisDist = 1e+06, pvOutputThreshold_cis = 1e-06,
+  pvOutputThreshold_tra = 1e-06, pvOutputThreshold_all = 1e-06,
+  genepos = NULL, genemart = useMart("ENSEMBL_MART_ENSEMBL", host =
   "feb2014.archive.ensembl.org", dataset = "hsapiens_gene_ensembl"),
   ensembl_filter = "illumina_humanht_12_v4", updateSNPpos = FALSE,
   snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org",
   dataset = "hsapiens_snp"))
 }
 \arguments{
-\item{eset}{ExpressionSet object.}
-
-\item{mset}{MethylationSet object.}
-
-\item{islandset}{data from summarized methylation Island (output from COHCAP.avg.by.island).}
+\item{inputset}{Either ExpressionSet, SummerizedExperiment, DESeqDataSet, MethylSet or
+data.frame containing summarized methylation Island data from COHCAP.avg.by.island-function (package COHCAP).}
 
 \item{SNPfile_transpAddCoded_name}{character with path to genotype file (transposed and additive coded!).}
 
@@ -42,9 +37,7 @@ from \code{SNPfile_tfam} as column names. Check in advance if you need \code{SNP
 
 \item{projectname}{Character used as suffix for output files.}
 
-\item{sampleGEX}{Character with column name of sample IDs in phenotype data of \code{eset}.}
-
-\item{sampleMT}{Character with column name of sample IDs in phenotype data of \code{mset} or \code{islandset}.}
+\item{sampleColumn}{Character with column name of sample IDs in input dataset.}
 
 \item{useModel}{model to use (modelANOVA or modelLINEAR or modelLINEAR_CROSS). 
 Set useModel = modelLINEAR to model the effect of the genotype as additive linear and test for its 
@@ -68,7 +61,7 @@ term is then tested using t-statistic.}
 \item{pvOutputThreshold_all}{Numeric significance threshold p-value for all QTL tests (cis and trans mixed).}
 
 \item{genepos}{Character with path to gene position file for expression data. If NULL, genepos file is 
-generated with biomaRt from eset probe IDs.}
+generated with biomaRt.}
 
 \item{genemart}{biomaRt object to be used for updating gene positions.}
 
@@ -83,10 +76,10 @@ list containing analysis parameter and QTL results. Intermediary results and plo
 are stored in \code{projectfolder} as side effects.
 }
 \description{
-\code{matrixQTL} uses MatrixEQTL package for QTL analysis of an ExpressionSet or/and a MethylationSet object with SNP genotypes.
+\code{matrixQTL} uses MatrixEQTL package for QTL analysis of expression or methylation data with SNP genotypes.
 }
 \details{
-Expression and methylation data can be processed simulatanously within a single function call. Coordinates 
+Expression or methylation data can be processed for QTL analysis. Coordinates 
 for genes and SNPs are either given in \code{SNPfile_transpAddCoded_name} or \code{genepos}, respectively,
 or are downloaded from biomaRt. Model type and optional covariates can be selected for analysis. 
 Analysis can be perfomed for either cis or trans QTLs or both simulatanously.

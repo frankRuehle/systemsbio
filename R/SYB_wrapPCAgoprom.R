@@ -31,7 +31,10 @@
 #' @param print.sample.names boolean indicating whether sample names shall be plotted in PCA plots 
 #'            (for pcainfoplot they are plotted anyway).  
 #' @param print.symbol.colors boolean indicating whether the symbols should be plotted with colors.
-#' @param org a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) or "Rn" (rattus norwegicus).
+#' @param org a character vector specifying the organism. Either "Hs" (homo sapiens), "Mm" (mus musculus) 
+#' or "Rn" (rattus norwegicus).
+#' @param annotation.packages character with bioconductor annotation packages to load. 
+#' E.g. c("pcaGoPromoter.Hs.hg19", "org.Hs.eg.db") for human or c("pcaGoPromoter.Mm.mm9", "org.Mm.eg.db") for mouse. 
 #' @param PCs4table numeric or numeric vector. Indicates number of PCs (numeric) or distinct PCs (numeric vector) 
 #'            for which result tables of enriched transcription factor binding sites and GO-terms are calculated.
 #' @param PCs2plot numeric or numeric vector. Indicates number of PCs (numeric) or distinct PCs (numeric vector) 
@@ -69,6 +72,7 @@ wrapPCAgoprom <- function(expca,
                           print.sample.names = TRUE,
                           print.symbol.colors = TRUE,
                           org = "Hs", 
+                          annotation.packages = c("pcaGoPromoter.Hs.hg19", "org.Hs.eg.db"),
                           PCs4table = 2,  
                           PCs2plot = c(1,2,3), 
                           probes2enrich = 0.025
@@ -76,7 +80,7 @@ wrapPCAgoprom <- function(expca,
   
 
   # load required libraries
-  pkg.bioc <- c("pcaGoPromoter", "GO.db", "pcaGoPromoter.Hs.hg19", "org.Hs.eg.db")
+  pkg.bioc <- c("pcaGoPromoter", "GO.db", annotation.packages)
   pkg.cran <- c("rgl")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
@@ -89,90 +93,117 @@ wrapPCAgoprom <- function(expca,
   
   if(!is.null(projectname)) {projectname <- paste0(projectname, "_")}
   
-  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
-      
-        ### Select Samples from groups of interest
-        if(!is.null(groupsoi)) {
-          
-          groups.found <- groupsoi %in%  pData(expca)[,groupby]
-          groups.included <- groupsoi[groups.found]
-          
-          cat("\n\nGroups included: ", paste(groups.included, collapse=", "))
-          if(!all(groups.found)) {cat("\nGroup(s)", groupsoi[!groups.found], "not found in pheno data of expression set!")}
-          
-          groups.included.samples <- pData(expca)[,groupby] %in% groups.included # boolean. Samples of included groups
-          expca <- expca[, groups.included.samples] # subset expression set for samples of included groups
-             
-        } else { # include all groups
-          groups.included <- as.character(unique(pData(expca)[,groupby]))
-          cat("\n\nAll groups are included:", paste(groups.included, collapse=", "))
-        } # end of group selection
-  
-      
-    groupvector <- factor(pData(expca)[,groupby]) 
-    samplevector <- pData(expca)[,sample.name.column]
-    expressionMatrix <- exprs(expca)
 
-  } else {
-    cat("\nRows of data matrix must be named after probe identifiers selected in inputType 
-            (Affymetrix probe set ID, geneSymbol or entrezID)\n")
-    cat("groupby must be vector of group assignments in the same order as samples in data matrix")
-    groupvector <- factor(groupby)
-    samplevector <- colnames(expca)
-    expressionMatrix <- expca
+  
+  
+  
+ if(is.matrix(expca)) { # make expressionSet if expca is matrix
+   cat("\nRows of data matrix must be named after probe identifiers selected in inputType 
+                    (Affymetrix probe set ID, geneSymbol or entrezID)\n")
+   cat("groupby must be vector of group assignments in the same order as samples in data matrix")
+   expca <- ExpressionSet(assayData = expca,
+                        phenoData = data.frame(Sample_Name=colnames(expca), Sample_Group = factor(groupby)), 
+                        experimentData = MIAME(),
+                        annotation = character())
+   fData(expca) <- data.frame(features= rownames(expca))
+   }
+  
+ 
+  
+  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
+ 
+       if(!is.null(groupsoi)) {
+         groups.found <- groupsoi %in%  pData(expca)[,groupby] 
+         groups.included <- groupsoi[groups.found]
+         groups.included.samples <- pData(expca)[,groupby] %in% groups.included # boolean. Samples of included groups
+         expca <- expca[, groups.included.samples] # subset expression set for samples of included groups
+       }
+         
+        if(!is.null(samples2exclude)) { # exclude samples matching reg expression in samples2exclude
+           samples2exclude.found <- grepl(samples2exclude, pData(expca)[,sample.name.column])
+           expca <- expca[, !samples2exclude.found] # subset expression set for samples2exclude
+         }
+   
+      groupvector <- factor(pData(expca)[,groupby]) 
+      samplevector <- pData(expca)[,sample.name.column]
+      expressionMatrix <- exprs(expca)
+      featureData <- fData(expca)
+         
+   } else {
+    
+      if(class(expca) %in% c("SummarizedExperiment", "DESeqDataSet")) {
+ 
+        if(!is.null(groupsoi)) {
+          groups.found <- groupsoi %in%  colData(expca)[,groupby] 
+          groups.included <- groupsoi[groups.found]
+          groups.included.samples <- colData(expca)[,groupby] %in% groups.included # boolean. Samples of included groups
+          expca <- expca[, groups.included.samples] # subset expression set for samples of included groups
+        }
+        
+        if(!is.null(samples2exclude)) { # exclude samples matching reg expression in samples2exclude
+          samples2exclude.found <- grepl(samples2exclude, colData(expca)[,sample.name.column])
+          expca <- expca[, !samples2exclude.found] # subset expression set for samples2exclude
+        }
+
+        groupvector <- factor(colData(expca)[,groupby]) 
+        samplevector <- colData(expca)[,sample.name.column]
+        expressionMatrix <- assay(expca)
+        featureData <- as.data.frame(rowData(expca,use.names=TRUE))
+        rownames(featureData) <- rownames(assay(expca))
+        } 
   }
   
+  cat("\nSample list included: ", paste(samplevector, collapse=", "))
+
   
   
-  if(!is.null(samples2exclude)) { # exclude samples matching reg expression in samples2exclude
-    samples2exclude.found <- grepl(samples2exclude, samplevector)
-    cat("\nSamples removed: ", paste(samplevector[samples2exclude.found], collapse=", "))
-    expca <- expca[, !samples2exclude.found] # subset expression set for samples2exclude
-    
-    groupvector <- groupvector[!samples2exclude.found] # remove excluded samples also from group and sample vector
-    samplevector <- samplevector[!samples2exclude.found]
-    expressionMatrix <- expressionMatrix[, !samples2exclude.found]
-      }  
+ 
   
-  cat("\nFinal sample list included: ", paste(samplevector, collapse=", "))
-  # end of sample selection
+  
+   
   
   
   
   ### Row names should be probe identifiers given in inputType (Affymetrix probe set ID, "geneSymbol" or "entrezID")
   # for ExpressionSet objects, the annotation can be obtained from the feature data table
-  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
-    
+
         if (inputType=="geneSymbol") {
-        if("SYMBOLREANNOTATED" %in% names(fData(expca))) {
-          probe.identifier <- "SYMBOLREANNOTATED"
-        } else { # grep first column containing 'symbol'
-          probe.identifier <- grep("symbol", names(fData(expca)), value=T, ignore.case = TRUE)[1]
-        }
-        if(is.na(probe.identifier)) {stop("no gene symbols found in feature data!")}
-        rownames(expressionMatrix) <- fData(expca)[,probe.identifier]
+            if("SYMBOLREANNOTATED" %in% names(featureData)) {
+              probe.identifier <- "SYMBOLREANNOTATED"
+                } else { # grep first column containing 'symbol'
+                  probe.identifier <- grep("symbol", names(featureData), value=T, ignore.case = TRUE)[1]
+                }
+            if(!is.na(probe.identifier)) {
+              cat("\nUsing column", probe.identifier, "as gene Symbol.")
+              rownames(expressionMatrix) <- featureData[,probe.identifier]
+            } else {
+              cat("\nno gene symbols found in feature data. Using rownames instead")
+              }
       }
       
       if (inputType=="entrezID") {
-        if("ENTREZREANNOTATED" %in% names(fData(expca))) {
-          probe.identifier <- "ENTREZREANNOTATED"
-        } else { # grep first column containing 'entrez'
-          probe.identifier <- grep("entrez", names(fData(expca)), value=T, ignore.case = TRUE)[1]
-        }
-        if(is.na(probe.identifier)) {stop("no entrez IDs found in feature data!")}
-        rownames(expressionMatrix) <- fData(expca)[,probe.identifier]
+          if("ENTREZREANNOTATED" %in% names(featureData)) {
+            probe.identifier <- "ENTREZREANNOTATED"
+            } else { # grep first column containing 'entrez'
+              probe.identifier <- grep("entrez", names(featureData), value=T, ignore.case = TRUE)[1]
+            }
+          if(!is.na(probe.identifier)) {
+            cat("\nUsing column", probe.identifier, "as EntrezID.")
+            rownames(expressionMatrix) <- featureData[,probe.identifier]
+          } else {
+            cat("no entrez IDs found in feature data. Using rownames instead")
+            }
       }
-  }
+  
   
   
   ### Number of PC-associated probes to look for TFBS. Either fraction of total probe count or total number otherwise.
-  if(class(expca) %in% c("ExpressionSetIllumina", "ExpressionSet")) {
-    probesInDataset <- nrow(fData(expca))
-      } else {
-        probesInDataset <- nrow(expca)
-   }
+  probesInDataset <- nrow(featureData)
   noProbes <- if(probes2enrich <= 1) {round(probes2enrich*probesInDataset)} else {round(probes2enrich)}
   cat("\n", noProbes, "probes used for enrichment analysis.\n")  
+  
+  
+  
   
   
   ### principal component analysis (pca)

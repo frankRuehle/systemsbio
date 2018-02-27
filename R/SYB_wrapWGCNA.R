@@ -172,7 +172,7 @@ wrapWGCNA <- function(GEXMTSet,
    
   # load required libraries
   pcksCRAN <- c("WGCNA", "ICC", "flashClust")
-  pcksBioc <- c("Biobase", "limma")
+  pcksBioc <- c("Biobase", "limma", "DESeq2", "SummarizedExperiment")
   attach_package(pcksCRAN, pcksBioc)
   
   orig_par <- par(no.readonly=T)      # make a copy of current settings
@@ -212,8 +212,19 @@ wrapWGCNA <- function(GEXMTSet,
       dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
       plot.label="nomalised log2(expression) data"
       plot.label.pruned="GEX"
-                                   
-            }  else {  
+      traitData = pData(GEXMTSet) # phenotype data 
+      
+           } else {
+             
+             if(class(GEXMTSet) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
+               cat("\nClass", class(GEXMTSet), "detected\n")
+               featureGEXMTSet <- as.data.frame(rowData(GEXMTSet,use.names=TRUE))
+               dataGEXMTSet <- assay(GEXMTSet)
+               plot.label="nomalised log2(count) data"
+               plot.label.pruned="counts"
+               traitData = colData(GEXMTSet) # phenotype data 
+               
+             } else {
         
         # for class MethylSet      
         if(grepl("Methyl", class(GEXMTSet), ignore.case=T ) ) {
@@ -223,12 +234,11 @@ wrapWGCNA <- function(GEXMTSet,
           dataGEXMTSet <- getBeta(GEXMTSet)
           plot.label="normalised beta values"
           plot.label.pruned="MT"
-                  
+          traitData = pData(GEXMTSet) # phenotype data 
+          
         } else {cat("wrong object class!");break}
       }
-
-  # phenotype data is accessable by pData(GEXMTSet) for both input types
-  traitData = pData(GEXMTSet)
+    }
   
   ## We transpose the expression data for further analysis.
   objectdat <- as.data.frame(t(dataGEXMTSet))

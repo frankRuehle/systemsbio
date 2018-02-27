@@ -19,16 +19,18 @@
 #'
 #' 
 #' @param genes vector with gene names to analyse or dataframe or character with path to dataframe or list thereof. 
-#' Supplied dataframe needs to include a column with identifiers specified in 'id.column'.
-#' @param newheader optional character vector with new header information for 'genes' dataframe. Only relevant 
+#' Supplied dataframe needs to include a column with identifiers specified in \code{id.column}.
+#' @param newheader optional character vector with new header information for \code{genes} dataframe. Only relevant 
 #'            if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
 #'            NULL otherwise.
-#' @param backgroundlist optional background list for enrichment analysis. Can either be a vector with gene IDs 
-#'                 or dataframe or character with path to dataframe. If given, an 'id.column' needed as in 'genes'. 
-#'                 If "genome", all ENTREZ IDs from the annotation package of the respective org
-#'                 (denoted in 'org') are used as background.
-#'                 If NULL, full ID list from 'genes' is used as background.
-#' @param newheaderBackground optional character vector with new header information for 'backgroundlist' dataframe.
+#' @param backgroundlist optional background IDs for enrichment analysis. Can either be a vector with gene IDs 
+#'                 or dataframe or character with path to dataframe. If given, an \code{id.column} is needed as 
+#'                 in \code{genes} with type of IDs given in \code{id.type}. 
+#'                 If "genome", all ENTREZ IDs from the annotation package of the respective organism
+#'                 (denoted in \code{org}) are used as background.
+#'                 If NULL, full ID list from \code{genes} is used as background (i.e. that \code{genes} need to 
+#'                 contain all genes under investigation without pre-filtering for significance).
+#' @param newheaderBackground optional character vector with new header information for \code{backgroundlist}.
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
 #' @param enrichmentCat character vector with categories to be enriched (GO: gene ontology (MF, BP, CC), 
@@ -36,21 +38,21 @@
 #' @param maxInputGenes (numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).
 #' @param id.type character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
 #'          Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.
-#' @param id.column character with column name for identifier variable in 'genes'. 
-#' @param sortcolumn character with column name of quantitative data in 'genes' used for ordering.
+#' @param id.column character with column name for identifier variable in \code{genes}. 
+#' @param sortcolumn character with column name of quantitative data in \code{genes} used for ordering.
 #'             If Null, ranking of genes is omitted and GSEA not possible.
-#' @param sortdecreasing (boolean) order parameter for hierarchy of values in 'sortcolumn'.
+#' @param sortdecreasing (boolean) order parameter for hierarchy of values in \code{sortcolumn}.
 #'                 FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
 #'                 If FALSE, values in sortcolumn will be transformed prior to GSEA.
-#' @param sortcolumn.threshold numeric threshold for 'sortcolumn' to be included in overepresentation analysis.
-#'                       If sortdecreasing=F, value < sortcolumn.threshold 
-#'                       else value > sortcolumn.threshold
-#' @param fun.transf.incr.values function definition for transforming values in 'sortcolumn' prior to GSEA.
-#'                        Is applied if sortdecreasing=F.
-#' @param FCcolumn (character) optional column name of foldchanges in 'genes' if 'sortcolumn' is used elsewhere.
+#' @param sortcolumn.threshold numeric threshold for \code{sortcolumn} to be included in overepresentation analysis.
+#'                       \code{If sortdecreasing=F, value < sortcolumn.threshold 
+#'                       else value > sortcolumn.threshold}
+#' @param fun.transf.incr.values function definition for transforming values in \code{sortcolumn} prior to GSEA.
+#'                        Is applied if \code{sortdecreasing=F}.
+#' @param FCcolumn (character) optional column name of foldchanges in \code{genes} if \code{sortcolumn} is used elsewhere.
 #'           Used only for cnetplot of enrichment results. Omitted if NULL
 #' @param threshold_FC (numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
-#'               Only relevant for overrepresentation analysis if an unfiltered gene list is given in 'genes'
+#'               Only relevant for overrepresentation analysis if an unfiltered gene list is given in \code{genes}
 #'               to allow for parallel GSEA.
 #' @param pAdjustMethod method for adjusting for multiple testing. 
 #'                One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
@@ -59,6 +61,7 @@
 #' @param enrich.q.valueCutoff numeric q-value threshold for returned enrichment terms.
 #' @param nPerm permutation numbers
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.
+#' @param maxGSSize maximal size of genes annotated for testing
 #' @param figure.res numeric resolution for png.
 #' 
 #' 
@@ -94,6 +97,7 @@ clusterprof <- function (genes,
                          enrich.q.valueCutoff = 0.05,
                          nPerm        = 1000,
                          minGSSize    = 10,
+                         maxGSSize    = 500,
                          figure.res = 300) 
 {
   
@@ -137,6 +141,9 @@ clusterprof <- function (genes,
     genes <- list(genes=genes)
   }
 
+  # initialise help variable to avoid multiple annotation of background list
+  vector.processed <- FALSE
+  
   # initialise result list
   enrichresult <- list()
   
@@ -192,13 +199,17 @@ clusterprof <- function (genes,
       # entrezids <- bitr(genes[[ge]][,id.column], fromType=id.type, toType="ENTREZID", OrgDb=annotationdb)
       entrezids <- basicAnno(data=genes[[ge]], Symbol.column = id.column, Entrez.column = NULL, org=org)
     
-      cat(paste(nrow(entrezids), " of ",  length(unique(genes[[ge]][,id.column])), "unique", id.type, "mapped to ENTREZIDs\n"))
+      cat(paste(nrow(entrezids), "of",  length(unique(genes[[ge]][,id.column])), "unique", id.type, "mapped to", sum(!is.na(entrezids$ENTREZID)), "ENTREZIDs\n"))
+      
       cat(paste("For dublicated", id.type, "only the first element is used (dataset was ordered for", sortcolumn, "decreasing =", sortdecreasing, ")\n")) 
       genes[[ge]] <- plyr::join(genes[[ge]], entrezids, by=id.column, type="right", match="first") 
-      # joined dataframe contains only entries with available ENTREZIDs, but keeps order of 'genes[[ge]]'
+      # joined dataframe contains all entries even without available ENTREZIDs and keeps order of 'genes[[ge]]'
+
     } else {names(genes[[ge]])[names(genes[[ge]])==id.column] <- "ENTREZID"}
     
      # 'genes[[ge]]' now definitively provides a column 'ENTREZID'   
+     # remove entries without 'ENTREZID'
+     genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,"ENTREZID"]),]
      # if multiple probes per gene, only the first gene entry is used 
      # (after sorting, if sortcolumn available).
      genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,"ENTREZID"]),] 
@@ -238,7 +249,8 @@ clusterprof <- function (genes,
   
   ###### read background list if available. Otherwise unfiltered ID list from 'genes[[ge]]' used as background Vector.
   if(!is.null(backgroundlist)) {
-
+  cat("\nProcessing background list")
+    
     if (all(backgroundlist=="genome")) {
       # all ENTREZIDs from the annotation db of the respective genome (given in org) used as background.
       backgroundlist <- keys(get(annotationdb), keytype="ENTREZID")
@@ -249,23 +261,30 @@ clusterprof <- function (genes,
           if(is.character(backgroundlist) && length(backgroundlist)==1) {
             cat("\n\nReading background list:", backgroundlist, "\n")
             backgroundlist <- read.table(backgroundlist, header=is.null(newheaderBackground), sep="\t", na.strings = c("", " ", "NA")) # if no newheaderBackground, header must be in file
-          }
+           }
+ 
+          if(is.vector(backgroundlist, mode="character") && !vector.processed) {
+              backgroundlist <- as.data.frame(backgroundlist, stringsAsFactors =F) # convert vector to dataframe for processing in next chunk
+              colnames(backgroundlist) <- id.column
+              } 
+
           if(is.data.frame(backgroundlist) ) {
-              if(!is.null(newheaderBackground)) { # if 'newheaderBackground' is defined, it is used as names(DEgenes.unfilt)
-                cat("\nNew header added to background list:", newheaderBackground, "\n")
-                colnames(backgroundlist) <- newheaderBackground
-              }
-              # convert IDs to ENTREZ IDs if necessary
-              if(id.type!="ENTREZID") {
-                cat(paste("\nConverting", id.type, "from background list to ENTREZIDs\n"))
-                # backgroundlist <- bitr(backgroundlist, fromType=id.type, toType="ENTREZID", annoDb=annotationdb)
-                backgroundlist <- basicAnno(backgroundlist, Symbol.column = id.column, Entrez.column = NULL, org=org)
-                }
-           backgroundlist <- backgroundlist[!is.na(backgroundlist[,id.column]),id.column] # remove rows without entry in id.column
-           backgroundlist <- as.character(unique(backgroundlist[,"ENTREZID"]))
+                  if(!is.null(newheaderBackground)) { # if 'newheaderBackground' is defined, it is used as header for backgroundlist
+                    cat("\nNew header added to background list:", newheaderBackground, "\n")
+                    colnames(backgroundlist) <- newheaderBackground
+                    }
+                  # convert IDs to ENTREZ IDs if necessary
+                  if(id.type!="ENTREZID" && !("ENTREZID" %in% colnames(backgroundlist))) { 
+                    # cat(paste("\nConverting", id.type, "from background list to ENTREZIDs\n"))
+                    # backgroundlist <- bitr(backgroundlist, fromType=id.type, toType="ENTREZID", annoDb=annotationdb)
+                    backgroundlist <- basicAnno(backgroundlist, Symbol.column = id.column, Entrez.column = NULL, org=org)
+                    }
+               entrez.column.bg <- ifelse(id.type=="ENTREZID", id.column, "ENTREZID")
+               backgroundlist <- backgroundlist[!is.na(backgroundlist[,entrez.column.bg]),entrez.column.bg, drop=F] # remove rows without entry in id.column
+               backgroundlist <- as.character(unique(backgroundlist[,entrez.column.bg]))
+               vector.processed <- TRUE # don't process this vector in 2nd run of loop
           }
 
-     if(is.vector(backgroundlist, mode="character")) {backgroundlist <- unique(backgroundlist)} 
 
     } # end loading and processing of a supplied backgroundlist 
      
@@ -303,6 +322,7 @@ clusterprof <- function (genes,
                                     OrgDb      = annotationdb,
                                     ont           = go,
                                     minGSSize    = minGSSize,
+                                    maxGSSize    = maxGSSize,
                                     pAdjustMethod = pAdjustMethod, 
                                     pvalueCutoff  = enrich.p.valueCutoff,
                                     qvalueCutoff  = enrich.q.valueCutoff,
@@ -318,6 +338,7 @@ clusterprof <- function (genes,
                                                   ont          = go,
                                                   nPerm        = nPerm,
                                                   minGSSize    = minGSSize,
+                                                  maxGSSize    = maxGSSize,
                                                   pvalueCutoff = enrich.p.valueCutoff,
                                                   pAdjustMethod = pAdjustMethod, 
                                                   verbose      = FALSE)
@@ -340,6 +361,7 @@ clusterprof <- function (genes,
                      qvalueCutoff  = enrich.q.valueCutoff,
                      pAdjustMethod = pAdjustMethod, 
                      minGSSize    = minGSSize,
+                     maxGSSize    = maxGSSize,
                      use_internal_data = FALSE)
     
     cat(paste("Overrepresentation analysis for KEGG pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","KEGG")]])), "enriched pathways\n"))
@@ -352,6 +374,7 @@ if (!is.null(sortcolumn)) { # quantitative data available?
                  organism      = org_alt_name,
                  nPerm        = nPerm,
                  minGSSize    = minGSSize,
+                 maxGSSize    = maxGSSize,
                  pvalueCutoff = enrich.p.valueCutoff,
                  pAdjustMethod = pAdjustMethod, 
                  verbose      = FALSE,
@@ -374,6 +397,7 @@ if ("Reactome" %in% enrichmentCat) {
                       qvalueCutoff  = enrich.q.valueCutoff,
                       pAdjustMethod = pAdjustMethod, 
                       minGSSize    = minGSSize,
+                      maxGSSize    = maxGSSize,
                       readable     = TRUE)
   
   cat(paste("Overrepresentation analysis for Reactome pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","Reactome")]])), "enriched pathways\n"))
@@ -388,6 +412,7 @@ if ("Reactome" %in% enrichmentCat) {
                       organism      = org,
                       nPerm        = nPerm,
                       minGSSize    = minGSSize,
+                      maxGSSize    = maxGSSize,
                       pvalueCutoff = enrich.p.valueCutoff,
                       pAdjustMethod = pAdjustMethod, 
                       verbose      = FALSE)
@@ -409,6 +434,7 @@ if ("Reactome" %in% enrichmentCat) {
                     qvalueCutoff  = enrich.q.valueCutoff,
                     pAdjustMethod = pAdjustMethod, 
                     minGSSize    = minGSSize,
+                    maxGSSize    = maxGSSize,
                     readable     = TRUE)
     
     cat(paste("Overrepresentation analysis for Disease Ontology results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","DO")]])), "enriched terms\n"))
@@ -421,6 +447,7 @@ if ("Reactome" %in% enrichmentCat) {
     enrichresult[[ge]][[paste0("GSEA_","DO")]] <- DOSE::gseDO(geneList  = gseagenes,
                           nPerm        = nPerm,
                           minGSSize    = minGSSize,
+                          maxGSSize    = maxGSSize,
                           pvalueCutoff = enrich.p.valueCutoff,
                           pAdjustMethod = pAdjustMethod, 
                           verbose      = FALSE)

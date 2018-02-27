@@ -2,7 +2,7 @@
 #' Differential expression analysis with limma
 #' 
 #' Differential Gene expression analysis for multiple group comparisons incl. output of 
-#' Venn diagrams and heatmaps.
+#' Venn diagrams, volcano plots and heatmaps.
 #' 
 #' Function generates design matrix, fit and differential expression results for dedicated 
 #' group comparisons of the input object. Analysis is performed either for one group comparison 
@@ -110,11 +110,11 @@ diffLimma <- function(GEXMTSet,
   
   
   # load required packages. Packages are not detached afterwards
-  pkg.cran <- c("gplots")
+  pkg.cran <- c("gplots", "VennDiagram")
   pkg.bioc <- c("limma", "Biobase")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
-  projectname <- if (!is.null(projectname) && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
+  projectname <- if (!is.null(projectname)  && projectname!="" && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
   
   
   # Create output directories if not yet existing 
@@ -148,7 +148,8 @@ diffLimma <- function(GEXMTSet,
       } else {return("wrong object class!")}
     }
   
-  # modify plot labels
+  # modify plot labels (heatmap legend)
+  heatmap_legend_xaxis <- "log2(expression)"
   if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score"}
   if (grepl("col", scale)) {heatmap_legend_xaxis <- "column z-score"}
   
@@ -170,9 +171,10 @@ diffLimma <- function(GEXMTSet,
 
   ### Prepare Design Matrix:
 
-  # no contrasts generated from a 0/1 phenotype. Therefore recoded to "y"/"n"
+  # no contrasts generated from a 0/1 phenotype (levels must by syntactically valid names in R). Therefore renamed.
   if(is.numeric(phenoGEXMTSet[,groupColumn]) & all(phenoGEXMTSet[,groupColumn] %in% c(0,1))) {
-      rna <- factor(ifelse(phenoGEXMTSet[,groupColumn]==0, "n", "y"))
+      #rna <- factor(ifelse(phenoGEXMTSet[,groupColumn]==0, "n", "y")) ##old
+      rna <- factor(make.names(phenoGEXMTSet[,groupColumn])) # c("0","1") -> c("X0","X1")
            } else {
         rna <- factor(phenoGEXMTSet[,groupColumn])
         }
@@ -184,7 +186,7 @@ diffLimma <- function(GEXMTSet,
         design <- model.matrix(~matched+rna)
   } else {  
     cat("\nPrepare design matrix\n")
-    design <- model.matrix(~0+rna) # Normalfall ohne paired design
+    design <- model.matrix(~0+rna) # default: no paired design
     colnames(design) <- levels(rna)
         }
   
@@ -385,13 +387,13 @@ for (i in 1:length(comparisons)) {
   cat("\nWrite Volcano plot to", volcanoplot_filename, "\n")  
   
   png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=figure.res) 
-  plot(DEgenes.unfilt[[i]]$logFC, -log10(DEgenes.unfilt[[i]]$adj.P.Val), main=comparisons[i],
+  plot(DEgenes.unfilt[[comparisons[i]]]$logFC, -log10(DEgenes.unfilt[[comparisons[i]]]$adj.P.Val), main=comparisons[i],
        col="gray", pch=16, cex=0.5, xlab="fold change", ylab="-log10 p-value") 
   if(!is.null(p.value.threshold)) {abline(h=-log10(p.value.threshold),lty=c(1))}
   if(!is.null(FC.threshold)) {abline(v=c(FC.threshold, -FC.threshold),lty=2)}
   
-  if(nrow(DEgenes[[i]]) >=1) {  # no highlighting if no diff expressed genes
-    points(DEgenes[[i]]$logFC, -log10(DEgenes[[i]]$adj.P.Val),pch=16, col="black", cex=0.8) 
+  if(nrow(DEgenes[[comparisons[i]]]) >=1) {  # no highlighting if no diff expressed genes
+    points(DEgenes[[comparisons[i]]]$logFC, -log10(DEgenes[[comparisons[i]]]$adj.P.Val),pch=16, col="black", cex=0.8) 
   } 
   dev.off()
   

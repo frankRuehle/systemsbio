@@ -86,7 +86,7 @@ for each group comparison are stored as side-effects in the project folder.
 }
 \description{
 Differential Gene expression analysis for multiple group comparisons incl. output of 
-Venn diagrams and heatmaps.
+Venn diagrams, volcano plots and heatmaps.
 }
 \details{
 Function generates design matrix, fit and differential expression results for dedicated 

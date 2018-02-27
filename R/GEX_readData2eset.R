@@ -10,9 +10,8 @@
 #' Rownames of \code{exprsData} must match with rownames of \code{featureData} (if given). Column names of \code{exprsData}
 #' must match with rownames of \code{phenoData}. Characters "/" and "-" in sample names or group names are 
 #' replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
-#' added using the corresponding annotation package (species name is derived from \code{arrayAnnotation}). The optional
-#' Function given in \code{transform} is used to transform the expression data.
-#' 
+#' added using the corresponding annotation package if available (species name is derived from \code{annotation}). 
+#' The optional function given in \code{transform} is used to transform the expression data.
 #' 
 #' @param exprsData dataframe or character with filepath to expression data to be loaded.
 #'            If no rownames are included, a column containing ProbeIDs is expected and used as feature names.
@@ -24,7 +23,8 @@
 #' @param sampleColumn character with name of sample column in 'phenoData'.
 #' @param groupColumn character with name of group column in 'phenoData'.
 #' @param experimentData MIAME object with optional experiment description.
-#' @param arrayAnnotation character string specifying array annotation package (e.g. "Humanv4"). character() if not available.
+#' @param annotation character string specifying array annotation package (e.g. "Humanv4"). 
+#' character() if not available.
 #' @param transform optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
 #'            if NULL, no data transformation is performed.
 #'            
@@ -37,18 +37,14 @@
 
 
 
-
-
-
 ## Usage 
 readData2eset <- function(exprsData, phenoData, featureData=NULL,
                           ProbeID = "PROBE_ID",
                           sampleColumn = "Sample_Name", 
                           groupColumn  = "Sample_Group",  
                           experimentData = MIAME(),
-                          arrayAnnotation= "Humanv4",
-                          transform = log2,
-                          organism= "human"
+                          annotation= character(),
+                          transform = log2
                           ) {
 
   
@@ -101,11 +97,11 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   featureData <- featureData[match(rownames(featureData), rownames(exprsData)),]
 
   # annotate with Gene symbols or ENTREZIDs with annotation package.
-  if(length(arrayAnnotation)>0) {  # define organism from arrayAnnotation (if given)
+  if(length(annotation)>0) {  # define organism from annotation (if given)
     organism <- NULL 
-      if(grepl("rat", arrayAnnotation, ignore.case=T))   {organism <- "rat"}
-      if(grepl("mouse", arrayAnnotation, ignore.case=T)) {organism <- "mouse"}
-      if(grepl("human", arrayAnnotation, ignore.case=T)) {organism <- "human"}
+      if(grepl("rat", annotation, ignore.case=T))   {organism <- "rat"}
+      if(grepl("mouse", annotation, ignore.case=T)) {organism <- "mouse"}
+      if(grepl("human", annotation, ignore.case=T)) {organism <- "human"}
         
     Symbol.column.name <- grep("SYMBOL", colnames(featureData), ignore.case=T, value=T)[1] # guess column names from featureData
       if(is.na(Symbol.column.name)) {Symbol.column.name <- NULL} # Null if no grep result
@@ -144,7 +140,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   eset <- ExpressionSet(assayData = exprsData,
                             phenoData = AnnotatedDataFrame(phenoData), 
                             experimentData = experimentData,
-                            annotation = arrayAnnotation)
+                            annotation = annotation)
   
   if (length(featureData)>0) {
     fData(eset) <- featureData # add feature data to eset

@@ -13,23 +13,25 @@ clusterprof(genes, newheader = NULL, backgroundlist = NULL,
   -log10(x) }, FCcolumn = "logFC", threshold_FC = log2(1.5),
   org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
   enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
-  figure.res = 300)
+  maxGSSize = 500, figure.res = 300)
 }
 \arguments{
 \item{genes}{vector with gene names to analyse or dataframe or character with path to dataframe or list thereof. 
-Supplied dataframe needs to include a column with identifiers specified in 'id.column'.}
+Supplied dataframe needs to include a column with identifiers specified in \code{id.column}.}
 
-\item{newheader}{optional character vector with new header information for 'genes' dataframe. Only relevant 
+\item{newheader}{optional character vector with new header information for \code{genes} dataframe. Only relevant 
 if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
 NULL otherwise.}
 
-\item{backgroundlist}{optional background list for enrichment analysis. Can either be a vector with gene IDs 
-or dataframe or character with path to dataframe. If given, an 'id.column' needed as in 'genes'. 
-If "genome", all ENTREZ IDs from the annotation package of the respective org
-(denoted in 'org') are used as background.
-If NULL, full ID list from 'genes' is used as background.}
+\item{backgroundlist}{optional background IDs for enrichment analysis. Can either be a vector with gene IDs 
+or dataframe or character with path to dataframe. If given, an \code{id.column} is needed as 
+in \code{genes} with type of IDs given in \code{id.type}. 
+If "genome", all ENTREZ IDs from the annotation package of the respective organism
+(denoted in \code{org}) are used as background.
+If NULL, full ID list from \code{genes} is used as background (i.e. that \code{genes} need to 
+contain all genes under investigation without pre-filtering for significance).}
 
-\item{newheaderBackground}{optional character vector with new header information for 'backgroundlist' dataframe.}
+\item{newheaderBackground}{optional character vector with new header information for \code{backgroundlist}.}
 
 \item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
 
@@ -43,27 +45,27 @@ KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).}
 \item{id.type}{character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
 Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
 
-\item{id.column}{character with column name for identifier variable in 'genes'.}
+\item{id.column}{character with column name for identifier variable in \code{genes}.}
 
-\item{sortcolumn}{character with column name of quantitative data in 'genes' used for ordering.
+\item{sortcolumn}{character with column name of quantitative data in \code{genes} used for ordering.
 If Null, ranking of genes is omitted and GSEA not possible.}
 
-\item{sortdecreasing}{(boolean) order parameter for hierarchy of values in 'sortcolumn'.
+\item{sortdecreasing}{(boolean) order parameter for hierarchy of values in \code{sortcolumn}.
 FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
 If FALSE, values in sortcolumn will be transformed prior to GSEA.}
 
-\item{sortcolumn.threshold}{numeric threshold for 'sortcolumn' to be included in overepresentation analysis.
-If sortdecreasing=F, value < sortcolumn.threshold 
-else value > sortcolumn.threshold}
+\item{sortcolumn.threshold}{numeric threshold for \code{sortcolumn} to be included in overepresentation analysis.
+\code{If sortdecreasing=F, value < sortcolumn.threshold 
+else value > sortcolumn.threshold}}
 
-\item{fun.transf.incr.values}{function definition for transforming values in 'sortcolumn' prior to GSEA.
-Is applied if sortdecreasing=F.}
+\item{fun.transf.incr.values}{function definition for transforming values in \code{sortcolumn} prior to GSEA.
+Is applied if \code{sortdecreasing=F}.}
 
-\item{FCcolumn}{(character) optional column name of foldchanges in 'genes' if 'sortcolumn' is used elsewhere.
+\item{FCcolumn}{(character) optional column name of foldchanges in \code{genes} if \code{sortcolumn} is used elsewhere.
 Used only for cnetplot of enrichment results. Omitted if NULL}
 
 \item{threshold_FC}{(numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
-Only relevant for overrepresentation analysis if an unfiltered gene list is given in 'genes'
+Only relevant for overrepresentation analysis if an unfiltered gene list is given in \code{genes}
 to allow for parallel GSEA.}
 
 \item{org}{character with name of organism ("human", "mouse", "rat").}
@@ -78,6 +80,8 @@ One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"}
 \item{nPerm}{permutation numbers}
 
 \item{minGSSize}{minimal size of genes annotated by Ontology term for testing.}
+
+\item{maxGSSize}{maximal size of genes annotated for testing}
 
 \item{figure.res}{numeric resolution for png.}
 }

@@ -7,7 +7,7 @@
 readData2eset(exprsData, phenoData, featureData = NULL,
   ProbeID = "PROBE_ID", sampleColumn = "Sample_Name",
   groupColumn = "Sample_Group", experimentData = MIAME(),
-  arrayAnnotation = "Humanv4", transform = log2, organism = "human")
+  annotation = character(), transform = log2)
 }
 \arguments{
 \item{exprsData}{dataframe or character with filepath to expression data to be loaded.
@@ -27,7 +27,8 @@ identifiers used to uniquely identify each probe.}
 
 \item{experimentData}{MIAME object with optional experiment description.}
 
-\item{arrayAnnotation}{character string specifying array annotation package (e.g. "Humanv4"). character() if not available.}
+\item{annotation}{character string specifying array annotation package (e.g. "Humanv4"). 
+character() if not available.}
 
 \item{transform}{optional function definition to transform expression data (e.g. log2 for logarithm of base 2).
 if NULL, no data transformation is performed.}
@@ -46,8 +47,8 @@ the column \code{ProbeID} is used as rownames in \code{exprsData} and \code{feat
 Rownames of \code{exprsData} must match with rownames of \code{featureData} (if given). Column names of \code{exprsData}
 must match with rownames of \code{phenoData}. Characters "/" and "-" in sample names or group names are 
 replaced by ".". If either gene symbols or EntrezIDs are missing in feature data, this annotation is
-added using the corresponding annotation package (species name is derived from \code{arrayAnnotation}). The optional
-Function given in \code{transform} is used to transform the expression data.
+added using the corresponding annotation package if available (species name is derived from \code{annotation}). 
+The optional function given in \code{transform} is used to transform the expression data.
 }
 \author{
 Frank Ruehle

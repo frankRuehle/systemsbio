@@ -64,7 +64,7 @@ genoAssoc <- function(gwaa,
   pkg.cran <- c("GenABEL")
   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
- ###### association analysis (additive model)  
+ ###### association analysis   
  attach(phdata(gwaa))
    
    if(grepl("~", trait.name)) {traits <- as.formula(trait.name)

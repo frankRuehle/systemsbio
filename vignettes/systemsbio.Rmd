@@ -46,7 +46,7 @@ library("knitr")
 
 ## Expression Data
 
-### Import expression data
+### Import microarray expression data
 There are two functions to load gene expression data into an ExpressionSet object. If you are analyzing Illumina microarrays, use `read_Illu_expr_array()` for importing the probe sample profile and the control probe profile exported from GenomeStudio. 
 
 ```
@@ -122,6 +122,26 @@ since the data has already been log2-transformed.
 gexn <- norm_exprs(gex, method_norm="quantile", transform="none")
 ```
 
+## Import RNA-Seq count data
+Use `DESeq2::DESeqDataSetFromHTSeqCount` function to import count data e.g. from HTSEQ-count into a `DESeqDataSet` object. Here, "Sample_Group" is the phenotype used for differential expression analysis
+
+```
+dds <- DESeqDataSetFromHTSeqCount(sampleTable = data.frame(sampleName = your_sample_names, 
+                                                           fileName = your_file_names, 
+                                                           your_sample_phenotypes,
+                                  directory = your_directory,
+                                  design= ~ Sample_Group)
+```
+
+DESeq2 uses un-normalized count data for differential expression analysis. To obtain an expression matrix to be used for PCA, etc, you may process the count data e.g. by filtering low abundance transcripts and applying Variance stabilizing transformation. The function `process_dds` processes the `DESeqDataSet` and returns an `SummarizedExperiment` object to be used for further analysis.
+
+```
+sumexp.vst <- process_dds(dds,
+                          min_rowsum = 10,
+                          transform.function = varianceStabilizingTransformation,
+                          export="SummarizedExperiment")
+```
+
 ## Principal component analysis (PCA) and enrichment analysis of PC loadings
 The `pcaGoPromoter` package provides functions for PCA analysis as well as for annotated PCA plots of the given expression data. Additionally, the top PC loadings (features most strongly correlated with PCs) are used for enrichment analysis with respect to gene ontology terms (GO) and transcription factor binding sites (TFBS). The wrapper function used here prepares the respective 2d and 3d PCA plots with respect to sample group assignment for the principal components indicated in the function call. The loadings of each PC are used for enrichment analysis and added to the annotated PCA plot. All plots and result tables are stored in the project folder.  
 
@@ -189,24 +209,24 @@ include_graphics(deg_images)
 
 
 ## Differential gene expression analysis with Limma
-`diffLimma()` uses the `limma` package to determine differentially expressed genes according to the given p-value and fold change thresholds for all group comparisons given in `comparisons`. Tables containing the filtered as well as unfiltered gene lists are stored in the designated `projectfolder`. Heatmaps for each group comparison containg the top differentially expressed genes will be generated automatically. Venn-Diagrams will show the overlap of differentially expressed genes from different group comparisons.
+`diffLimma` uses the `limma` package to determine differentially expressed genes according to the given p-value and fold change thresholds for all group comparisons given in `comparisons`. Tables containing the filtered as well as unfiltered gene lists are stored in the designated `projectfolder`. Heatmaps for each group comparison containg the top differentially expressed genes will be generated automatically. Venn-Diagrams will show the overlap of differentially expressed genes from different group comparisons.
 
 
 ```
 deg <- diffLimma(gexn, 
-                 comparisons= c("case1-control", "case2-control"),
-                 p.value.threshold= 0.05, 
-                 FC.threshold= log2(1.5), 
-                 adjust.method="BH", 
+                 comparisons = c("case1-control", "case2-control"),
+                 p.value.threshold = 0.05, 
+                 FC.threshold = log2(1.5), 
+                 adjust.method = "BH", 
                  projectfolder = "example_analysis/GEX/Diff_limma", 
                  projectname = "example",
                  Symbol.column = "SYMBOL",
-                 geneAnno2keep=c("SYMBOL", "ENTREZID"),
-                 venn_comparisons=list(allcomp= c("case1-control", "case2-control")),
+                 geneAnno2keep = c("SYMBOL", "ENTREZID"),
+                 venn_comparisons = list(allcomp= c("case1-control", "case2-control")),
                  # Heatmap parameter:
-                 maxHM=50,
-                 HMcexCol=1.5,
-                 HMincludeRelevantSamplesOnly=TRUE
+                 maxHM = 50,
+                 scale = c("none"),
+                 HMincludeRelevantSamplesOnly = TRUE
                  )
 ```
 
@@ -218,6 +238,29 @@ deg_images<-c("../inst/doc/figures/Heatmap_example_case1-control.png",
 include_graphics(deg_images)
 ```
 
+
+## Differential gene expression analysis with DESeq2
+Similarily, count data from RNA-Seq can be analysed for differential expression using the `DESeq2` package. The wrapper function `wrapDESeq` works analogously to `diffLimma` as described above. 
+
+```
+deg <- wrapDESeq(dds, 
+                  comparisons = c("case1-control", "case2-control"),
+                  min_rowsum = 10,
+                  p.value.threshold = 0.05, 
+                  adjust.method ="BH", 
+                  FC.threshold = log2(1.5),
+                  projectfolder = "example_analysis/GEX/deseq",
+                  projectname = "example", 
+                  Symbol.column = NULL,
+                  sampleColumn = "Sample_Name",   
+                  groupColumn= "Sample_Group", 
+                  venn_comparisons= list(allcomp= c("case1-control", "case2-control")), 
+                  # Heatmap parameter:
+                  maxHM=50, 
+                  scale = c("none"),
+                  HMincludeRelevantSamplesOnly=TRUE
+                  )
+```
 
 ## Gene Enrichment analysis with clusterProfiler
 The function `clusterprof` takes genelist and optionally background gene list as input to perform enrichment analyses using the `clusterProfiler` package. By default, overrepresentation analysis and gene set enrichment analysis (GSEA) is performed for all categories given in `enrichmentCat`. While overrepresentation analysis applies a significance threshold to test the top genes, GSEA uses all genes of the list e.g. ranked by p-value. All result tables and plots (cnet plots and enrichment maps) are stored in the project folder.
