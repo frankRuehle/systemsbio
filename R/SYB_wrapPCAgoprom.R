@@ -209,19 +209,6 @@ wrapPCAgoprom <- function(expca,
   ### principal component analysis (pca)
   pcaOutput <- pcaGoPromoter::pca(expressionMatrix)
   
-cat("\nhere1") ######################
-print(pcaOutput) ########################### 
-cat("\nexpressionMatrix")
-print(head(expressionMatrix)) 
-cat("\ninputType")
-print(inputType) 
-cat("\norg")
-print(org) 
-cat("\ngroupvector")
-print(groupvector) 
-cat("\nnoProbes")
-print(noProbes) 
-
 
   ### Make PCA informative plot. Restricted to PC1 and PC2 only!
   filename.pcaInfoPlot <- file.path(projectfolder, paste0(projectname, "pcainfoplot_PC1_2.png"))
@@ -234,8 +221,7 @@ print(noProbes)
               noProbes = noProbes, GOtermsAnnotation = TRUE, primoAnnotation = TRUE)
   dev.off()
   
-cat("\nhere2") ##############################
-  
+
   ### PCA plot not restricted to PC1 and PC2 (but still 2D)
   # plot.pca makes same pca-plot as pcaInfoPlot() but without TFBS annotation
   if(length(PCs2plot)==1) {PCs2plot <- 1:PCs2plot}
