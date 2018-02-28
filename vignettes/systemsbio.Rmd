@@ -35,7 +35,7 @@ The ouput of one function serves directly as input for the next function. For pa
 ## Installation
 
 Install it from github:
-    `dev.tools::install_github("frankRuehle/systemsbio", build_vignettes=TRUE)`
+    `devtools::install_github("frankRuehle/systemsbio", build_vignettes=TRUE)`
 
 ```{r} 
 library("systemsbio")
@@ -123,23 +123,23 @@ gexn <- norm_exprs(gex, method_norm="quantile", transform="none")
 ```
 
 ## Import RNA-Seq count data
-Use `DESeq2::DESeqDataSetFromHTSeqCount` function to import count data e.g. from HTSEQ-count into a `DESeqDataSet` object. Here, "Sample_Group" is the phenotype used for differential expression analysis
+Use `DESeq2::DESeqDataSetFromHTSeqCount` function to import count data e.g. from HTSEQ-count into a `DESeqDataSet` object. Here, "Sample_Group" given in the design formula is the phenotype used for differential expression analysis
 
 ```
 dds <- DESeqDataSetFromHTSeqCount(sampleTable = data.frame(sampleName = your_sample_names, 
                                                            fileName = your_file_names, 
                                                            your_sample_phenotypes,
                                   directory = your_directory,
-                                  design= ~ Sample_Group)
+                                  design = ~ Sample_Group)
 ```
 
-DESeq2 uses un-normalized count data for differential expression analysis. To obtain an expression matrix to be used for PCA, etc, you may process the count data e.g. by filtering low abundance transcripts and applying Variance stabilizing transformation. The function `process_dds` processes the `DESeqDataSet` and returns an `SummarizedExperiment` object to be used for further analysis.
+DESeq2 uses un-normalized count data for differential expression analysis. To obtain an expression matrix to be used for PCA, etc, you may process the count data e.g. by filtering low abundance transcripts and transform the data e.g. by applying Variance stabilizing transformation. The function `process_dds` processes the `DESeqDataSet` and returns a `SummarizedExperiment` object to be used for further analysis.
 
 ```
 sumexp.vst <- process_dds(dds,
                           min_rowsum = 10,
                           transform.function = varianceStabilizingTransformation,
-                          export="SummarizedExperiment")
+                          export = "SummarizedExperiment")
 ```
 
 ## Principal component analysis (PCA) and enrichment analysis of PC loadings
