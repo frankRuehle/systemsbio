@@ -115,8 +115,7 @@ wrapDESeq <- function(dds,
   # not necessary, but reduces memory size. Note that more strict filtering to increase power is 
   # automatically applied via independent filtering on the mean of normalized counts within the results function.
   cat("\nApply pre-filtering for rowSums >=", min_rowsum)
-  keep <- rowSums(counts(ddsHTSeq)) >= min_rowsum
-  dds <- ddsHTSeq[keep,]
+  dds <- dds[rowSums(counts(dds)) >= min_rowsum,]
   
   
   # Differential expression
@@ -126,10 +125,12 @@ wrapDESeq <- function(dds,
   
   
   if (class(dds) == "DESeqDataSet") {
-    expmatrix <- DESeq2::rlog(dds, fitType="local") # class: DESeqTransform
+    cat("\nUsing variance Stabilizing Transformation for generating heatmaps")
+    expmatrix <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
+    # expmatrix <- DESeq2::rlog(dds, fitType="local") # class: DESeqTransform
     # normalisation for library size has to be applied AFTER running DEseq(), otherwise no sizeFactors available
     # the and rlog transformation is provided for heatmaps
-    expmatrix <- sweep(assay(expmatrix), 2, DESeq2::sizeFactors(dds),"/")
+    # expmatrix <- sweep(assay(expmatrix), 2, DESeq2::sizeFactors(dds),"/")
     
     features <- mcols(dds,use.names=TRUE)
     # colData(dds) # sample phenotypes

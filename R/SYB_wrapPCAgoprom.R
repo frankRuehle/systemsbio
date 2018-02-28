@@ -177,7 +177,7 @@ wrapPCAgoprom <- function(expca,
               cat("\nUsing column", probe.identifier, "as gene Symbol.")
               rownames(expressionMatrix) <- featureData[,probe.identifier]
             } else {
-              cat("\nno gene symbols found in feature data. Using rownames instead")
+              cat("\nno gene symbols found in feature data. Using rownames instead") # default anyway
               }
       }
       
@@ -209,20 +209,32 @@ wrapPCAgoprom <- function(expca,
   ### principal component analysis (pca)
   pcaOutput <- pcaGoPromoter::pca(expressionMatrix)
   
-  
-  
+cat("\nhere1") ######################
+print(pcaOutput) ########################### 
+cat("\nexpressionMatrix")
+print(head(expressionMatrix)) 
+cat("\ninputType")
+print(inputType) 
+cat("\norg")
+print(org) 
+cat("\ngroupvector")
+print(groupvector) 
+cat("\nnoProbes")
+print(noProbes) 
+
+
   ### Make PCA informative plot. Restricted to PC1 and PC2 only!
   filename.pcaInfoPlot <- file.path(projectfolder, paste0(projectname, "pcainfoplot_PC1_2.png"))
   cat("\n\nSave pcaInfoPlot for PC1 and PC2 to", filename.pcaInfoPlot, "\n")
   png(filename= filename.pcaInfoPlot, width = 150, height = 150, units = "mm", res=figure.res) 
   #tiff(filename= filename.pcaInfoPlot, width = 5500 , height = 5500, res=600, compression = "lzw") # width = 7016, height = 4960
-  pcaGoPromoter::pcaInfoPlot(expressionMatrix,inputType=inputType, org = org, 
+    pcaInfoPlot(expressionMatrix,inputType=inputType, org = org, 
               printNames = TRUE,
               groups= groupvector, 
               noProbes = noProbes, GOtermsAnnotation = TRUE, primoAnnotation = TRUE)
   dev.off()
   
-  
+cat("\nhere2") ##############################
   
   ### PCA plot not restricted to PC1 and PC2 (but still 2D)
   # plot.pca makes same pca-plot as pcaInfoPlot() but without TFBS annotation
@@ -246,7 +258,7 @@ wrapPCAgoprom <- function(expca,
     dev.off()
   }   
   
-  
+
   
   # 3D scatter plot with rgl package
   if (length(PCs2plot)>=3) {
@@ -266,7 +278,7 @@ wrapPCAgoprom <- function(expca,
     rgl::snapshot3d(filename = filename.3dplot, fmt = 'png')
   }
   
-  
+
   
   
   
