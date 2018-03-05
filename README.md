@@ -12,10 +12,11 @@ See the package Vignette [(version without external figures)](./vignettes/system
 1. Install (if you haven't already) the `devtools` package via CRAN:
 
         install.packages(c("devtools", "rstudioapi"))
+        library("devtools")
   
 2. Install `systemsbio` from GitHub via `devtools`:
 
-        devtools::install_github("systemsbio", username="frankRuehle", build_vignettes=TRUE)
+        devtools::install_github("frankRuehle/systemsbio", build_vignettes=TRUE)
 
 
 ## First steps

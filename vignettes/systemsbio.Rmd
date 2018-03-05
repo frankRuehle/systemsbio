@@ -34,12 +34,11 @@ The ouput of one function serves directly as input for the next function. For pa
 
 ## Installation
 
-Install it from github:
+Install it from github using the `devtools` package:
     `devtools::install_github("frankRuehle/systemsbio", build_vignettes=TRUE)`
 
 ```{r} 
 library("systemsbio")
-library("devtools")
 library("knitr")
 ```
 
