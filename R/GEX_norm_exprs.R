@@ -37,7 +37,7 @@
     # load required libraries
     pkg.cran <- NULL
     pkg.bioc <- c("beadarray", "Biobase") # pkg.bioc not detached afterwards
-    attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+    pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
     
 
 ########### Normalisation  options are "quantile", "qspline", "vsn", "rankInvariant", "median" and "none"
@@ -84,8 +84,8 @@ if(class(eset)!="ExpressionSet") {
   } 
 
     
-# Detaching libraries not needed any more
- detach_package(c(pkg.cran))
+# # Detaching libraries not needed any more
+#  detach_package(unique(pks2detach))
     
     
 # return ExpressionSet

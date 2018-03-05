@@ -13,7 +13,7 @@
 #' @param transform.function function name to be used for data transformation, 
 #' e.g. \code{rlog}, \code{rlogTransformation}, \code{varianceStabilizingTransformation}. 
 #' @param norm_sizeFactors logical. If TRUE normalize for library size. This may already be included
-#' in the data transformation (e.g. for \code{varianceStabilizingTransformation}).
+#' in the data transformation (e.g. for \code{rlog} and \code{varianceStabilizingTransformation}).
 #' @param export return either a \code{"SummarizedExperiment"} or a \code{"DESeqDataSet"} object.
 #' @param ... further parameter for \code{transform.function}
 #' 
@@ -35,7 +35,7 @@ process_dds <- function(dds,
 
   # load required packages. Packages are not detached afterwards
   pkg.bioc <- c("DESeq2", "SummarizedExperiment")
-  attach_package(pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.bioc=pkg.bioc)
   
   if(is.null(sizeFactors(dds))) {dds <- DESeq2::estimateSizeFactors(dds)}
   

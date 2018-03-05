@@ -28,6 +28,12 @@
 processLNCipedia <- function(LNCipedia, collapseTranscripts2Genes=T, makeExonRanges=T, addBases= c(0,0)) {
   
   
+  # load required libraries
+  pcksBioc <- c("Biobase", "GenomicRanges")
+  pks2detach <- attach_package(pcksBioc)
+  
+  
+  
   ## read LNCipedia
   if (is.character(LNCipedia)) { # read Lncipedia bed-file
     LNCipedia <- read.table(LNCipedia, header=F, stringsAsFactors = F)

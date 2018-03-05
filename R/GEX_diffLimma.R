@@ -112,7 +112,7 @@ diffLimma <- function(GEXMTSet,
   # load required packages. Packages are not detached afterwards
   pkg.cran <- c("gplots", "VennDiagram")
   pkg.bioc <- c("limma", "Biobase")
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   projectname <- if (!is.null(projectname)  && projectname!="" && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
   
@@ -201,7 +201,8 @@ diffLimma <- function(GEXMTSet,
 
 
 ### Prepare fit: "MArrayLM"-Object ready for diff analysis.
-if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if paired design  
+# input for lmfit: A matrix-like data object containing log-ratios or log-expression values for a series of arrays
+  if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if paired design  
                          fit <- eBayes(fit)
     } else { # if no paired design
       contrasts <- makeContrasts(contrasts=comparisons, levels=design) 

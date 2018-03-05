@@ -62,7 +62,7 @@ genoAssoc <- function(gwaa,
   ## install/load required packages from CRAN and Bioconductor
   pkg.bioc <- NULL
   pkg.cran <- c("GenABEL")
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
  ###### association analysis   
  attach(phdata(gwaa))

@@ -82,7 +82,7 @@ wrapPCAgoprom <- function(expca,
   # load required libraries
   pkg.bioc <- c("pcaGoPromoter", "GO.db", annotation.packages)
   pkg.cran <- c("rgl")
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   
   ### Create result directory if not yet existing 
@@ -288,6 +288,12 @@ wrapPCAgoprom <- function(expca,
       loadsperPC[[paste0("PC",p,d)]] <- getRankedProbeIds(pcaOutput, pc=p, decreasing=(d=="pos") )[1:noProbes]
       # Hansen 2012: "The function getRankedProbeIds generates a ranked list of the probe set IDs that mostly 
       # contribute for placing experiments along the chosen principal component"
+      # "The loading b_pk quantifies the importance of the p'th probe set ID on the chip for the k'th dimension of the reduced predictor space.
+      # The sign and magnitude of the loadings were used to find important probe set IDs for functional interpretation."
+      # The function getRankedProbeIds works on pca objects and is used to select the most important positive and 
+      # negative probe set IDs based on their loadings. Going forward, we use a selection of the 2.5% probes set IDs with 
+      # highest or lowest loadings, respectively."
+      
       
       # save loadings
       write.table(loadsperPC[[paste0("PC",p,d)]], row.names=F, quote=F, sep="\t", col.names = F,
@@ -333,7 +339,7 @@ wrapPCAgoprom <- function(expca,
   
   
   # Detaching libraries not needed any more
-   detach_package(c(pkg.cran, pkg.bioc))
+   detach_package(unique(pks2detach))
   
   
   return(list(PCA=pcaOutput, loadsperPC=loadsperPC, TFtables=TFtables, GOtreeOutput=GOtreeOutput))

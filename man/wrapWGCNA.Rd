@@ -14,7 +14,7 @@ wrapWGCNA(GEXMTSet, projectfolder = "GEX/WGCNA",
   autoColorHeight = FALSE, colorHeight = 0.1, cex.labels = 0.6, ...)
 }
 \arguments{
-\item{GEXMTSet}{ExpressionSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
+\item{GEXMTSet}{ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
 previously stored network object to be loaded from this path. If \code{GEXMTSet} is "load_default", network 
 object is loaded from default directory \code{"file.path(projectfolder, "TOM", "networkConstruction-auto.RData")"}.}
 
@@ -136,8 +136,7 @@ Phenotypes are taken from phenotype data of \code{GEXMTSet} as specified in \cod
 which are defined in \code{groupsets} are also used as phenotypes (e.g. two groups from a differential gene expression experiment). 
 When correlation with group membership is calculated, only those samples are included which belong to the denoted groupset 
 (mind that gene modules were calculated using expression data from all samples).
-All correlation coefficients are calculated using Pearson correlation for numeric phenotypes and intraclass correlation (ICC)
-for categorical phenotypes (e.g. groupsets with more than two groups). Categorical variables with only two levels are 
+All correlation coefficients are calculated using Pearson correlation. Categorical variables with only two levels are 
 coded numerically.
 }
 \note{

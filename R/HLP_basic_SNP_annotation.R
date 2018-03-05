@@ -72,7 +72,7 @@ basic_SNP_annotation <- function(data,
   ## install/load required packages from CRAN and Bioconductor
   pkg.bioc <- c("biomaRt")
   pkg.cran <- c("plyr")
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   # read data if necessary
   if(is.character(data) && length(data)==1) {

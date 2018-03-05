@@ -36,7 +36,7 @@ basicAnno <- function(data,
                     hsapiens = "Homo.sapiens", 
                     mouse = "Mus.musculus",
                     rat="Rattus.norvegicus")
-  attach_package(pkg.bioc= c(annopkg, "GenomicFeatures", "rtracklayer"), pkg.cran = "plyr")
+  pks2detach <- attach_package(pkg.bioc= c(annopkg, "GenomicFeatures", "rtracklayer"), pkg.cran = "plyr")
   
   
   
@@ -88,8 +88,8 @@ basicAnno <- function(data,
 
 
   
-  # Detaching libraries not needed any more
-  # detach_package(c(annopkg))
+  # # Detaching libraries not needed any more
+  # detach_package(unique(pks2detach))
   
   return(data)
   

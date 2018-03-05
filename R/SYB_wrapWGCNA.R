@@ -24,12 +24,11 @@
 #' which are defined in \code{groupsets} are also used as phenotypes (e.g. two groups from a differential gene expression experiment). 
 #' When correlation with group membership is calculated, only those samples are included which belong to the denoted groupset 
 #' (mind that gene modules were calculated using expression data from all samples).
-#' All correlation coefficients are calculated using Pearson correlation for numeric phenotypes and intraclass correlation (ICC)
-#' for categorical phenotypes (e.g. groupsets with more than two groups). Categorical variables with only two levels are 
+#' All correlation coefficients are calculated using Pearson correlation. Categorical variables with only two levels are 
 #' coded numerically.
 #' 
 #' 
-#' @param GEXMTSet ExpressionSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
+#' @param GEXMTSet ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
 #'            previously stored network object to be loaded from this path. If \code{GEXMTSet} is "load_default", network 
 #'            object is loaded from default directory \code{"file.path(projectfolder, "TOM", "networkConstruction-auto.RData")"}.
 #' @param projectfolder character with directory for output files (will be generated if not existing).
@@ -169,11 +168,12 @@ wrapWGCNA <- function(GEXMTSet,
 ) {
   
   
-   
+  
+
   # load required libraries
   pcksCRAN <- c("WGCNA", "ICC", "flashClust")
   pcksBioc <- c("Biobase", "limma", "DESeq2", "SummarizedExperiment")
-  attach_package(pcksCRAN, pcksBioc)
+  pks2detach <- attach_package(pcksCRAN, pcksBioc)
   
   orig_par <- par(no.readonly=T)      # make a copy of current settings
   options(stringsAsFactors = FALSE)
@@ -210,7 +210,7 @@ wrapWGCNA <- function(GEXMTSet,
       
       featureGEXMTSet <- fData(GEXMTSet)[ids_regular,]
       dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
-      plot.label="nomalised log2(expression) data"
+      plot.label="normalised log2(expression) data"
       plot.label.pruned="GEX"
       traitData = pData(GEXMTSet) # phenotype data 
       
@@ -220,7 +220,7 @@ wrapWGCNA <- function(GEXMTSet,
                cat("\nClass", class(GEXMTSet), "detected\n")
                featureGEXMTSet <- as.data.frame(rowData(GEXMTSet,use.names=TRUE))
                dataGEXMTSet <- assay(GEXMTSet)
-               plot.label="nomalised log2(count) data"
+               plot.label="normalised log2(count) data"
                plot.label.pruned="counts"
                traitData = colData(GEXMTSet) # phenotype data 
                
@@ -461,35 +461,40 @@ wrapWGCNA <- function(GEXMTSet,
   for(i in 1:length(phModule)) {
       
       # check if any factor variable has 2 levels and can be converted to numeric (0/1 coded) 
-       if(is.numeric(datTraits.module[,i])) {datTraits[,i] <- datTraits.module[,i]} else {
-          if(length(levels(factor(datTraits.module[,i])))<=2) {datTraits[,i] <- (as.numeric(factor(datTraits.module[,i])))-1} else {
-            datTraits[,i] <- factor(datTraits.module[,i])
-                      }
-                  }
+       if(is.numeric(datTraits.module[,i])) {
+          datTraits[,i] <- datTraits.module[,i]} else { 
+            # if(length(levels(factor(datTraits.module[,i])))<=2) { ########### all categorical traits converted to numerici until ICC replaced by classifier!
+              datTraits[,i] <- (as.numeric(factor(datTraits.module[,i])))-1
+              cat("\n", colnames(datTraits)[i], "converted to numeric by factor level!\n")
+              # } else { ########### all categorical traits converted to numerici until ICC replaced by classifier!
+              #     datTraits[,i] <- factor(datTraits.module[,i]) ########### all categorical traits converted to numerici until ICC replaced by classifier!
+              #    } ########### all categorical traits converted to numerici until ICC replaced by classifier!
+          }
        
       # if phenotype is numeric variable, correlation with expression by pearson correlation
-       if(is.numeric(datTraits[,i])) {
-        GS.datTraits[i] <- as.data.frame(cor(objectdat, datTraits[i], use="pairwise.complete.obs"))
-        names(GS.datTraits)[i] <- paste("cor",names(datTraits)[i], sep=".")
-      } else {
-        # if phenotype is factor variable, correlation with expression by Intraclass Correlation Coefficient (ICC).
-        # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
-        ICCgene <- numeric()
-        for (j in 1:length(objectdat)) {
-          ICCgene <- rbind(ICCgene, ICCest(datTraits[,i], objectdat[,j])$ICC)
-                        }
-        GS.datTraits[i] <- ICCgene
-        names(GS.datTraits)[i] <- paste("icc",names(datTraits)[i], sep=".")
-             }
+           # if(is.numeric(datTraits[,i])) { ##################### replace ICC by classifier
+            GS.datTraits[i] <- as.data.frame(cor(objectdat, datTraits[i], use="pairwise.complete.obs"))
+            names(GS.datTraits)[i] <- paste("cor",names(datTraits)[i], sep=".")
+          # } else {
+          #   # if phenotype is factor variable, correlation with expression by Intraclass Correlation Coefficient (ICC).
+          #   # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
+          #   ICCgene <- numeric()
+          #   for (j in 1:length(objectdat)) {
+          #     ICCgene <- rbind(ICCgene, ICCest(datTraits[,i], objectdat[,j])$ICC)
+          #                   }
+          #   GS.datTraits[i] <- ICCgene
+          #   names(GS.datTraits)[i] <- paste("icc",names(datTraits)[i], sep=".")
+          #        }
+        
       # Calculation of correlation p-value independantly of type of correlation
       GSPvalue[i] <- as.data.frame(corPvalueStudent(as.matrix(GS.datTraits[i]), nSamples))  # not used for Dendrogram
       colnames(GSPvalue)[i] <- paste("p", names(GS.datTraits)[i], sep=".")
   
   } # end of i-loop
 
-  cat("\nNumeric phenotypes are correlated with gene expression by Pearson correlation, 
-  factor variables are correlated by Intraclass Correlation Coefficient (ICC). 
-  Factor variables with only two levels are converted to numeric.\n\n")
+  cat("\nPhenotypes are correlated with gene expression by Pearson correlation.", 
+  # factor variables are correlated by Intraclass Correlation Coefficient (ICC). 
+  "Factor variables with only two levels are converted to numeric.\n\n")
   print(data.frame(trait=phModule, class=sapply(datTraits[,,drop=F],class)))
 
   ###### plot dendrogram for each block:  
@@ -531,21 +536,21 @@ wrapWGCNA <- function(GEXMTSet,
   for(i in 1:length(phModule)) {
      
     # if phenotype is numeric variable, correlation with expression by pearson correlation
-    if(is.numeric(datTraits[,i])) {
-      moduleTraitCor[i] <- as.data.frame(cor(MEs, datTraits[i], use="pairwise.complete.obs"))
-      names(moduleTraitCor)[i] <- paste("cor",names(datTraits)[i], sep=".")
-      } else {
-        # if phenotype is factor variable, correlation with expression by Intraclass Correlation Coefficient (ICC).
-        # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
-        ICCmodule <- numeric()
-        for (j in 1:length(MEs)) {
-          ICCmodule <- rbind(ICCmodule, ICCest(factor(datTraits[,i]), MEs[,j])$ICC)
-        }
-        moduleTraitCor[i] <- ICCmodule
-        names(moduleTraitCor)[i] <- paste("icc",names(datTraits)[i], sep=".")
-        
-    }
-    # Calculation of correlation p-value independently of type of correlation
+       # if(is.numeric(datTraits[,i])) { ##################### replace ICC by classifier
+        moduleTraitCor[i] <- as.data.frame(cor(MEs, datTraits[i], use="pairwise.complete.obs"))
+        names(moduleTraitCor)[i] <- paste("cor",names(datTraits)[i], sep=".")
+      #   } else {
+      #     # if phenotype is factor variable, correlation with expression by Intraclass Correlation Coefficient (ICC).
+      #     # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
+      #     ICCmodule <- numeric()
+      #     for (j in 1:length(MEs)) {
+      #       ICCmodule <- rbind(ICCmodule, ICCest(factor(datTraits[,i]), MEs[,j])$ICC)
+      #     }
+      #     moduleTraitCor[i] <- ICCmodule
+      #     names(moduleTraitCor)[i] <- paste("icc",names(datTraits)[i], sep=".")
+      # }
+
+      # Calculation of correlation p-value independently of type of correlation
     moduleTraitPvalue[i] <- corPvalueStudent(as.matrix(moduleTraitCor[i]), nSamples)  # not used for Dendrogram
     colnames(moduleTraitPvalue)[i] <- paste("p", colnames(moduleTraitCor)[i], sep=".")
   } # end of i-loop
@@ -570,7 +575,7 @@ wrapWGCNA <- function(GEXMTSet,
                  colors = blueWhiteRed(50),
                  textMatrix = textMatrix,
                  setStdMargins = FALSE,
-                 cex.text = 0.7 * cex.labels,
+                 cex.text = 0.8 * cex.labels,
                  cex.lab = cex.labels,
                  zlim = c(-1,1),
                  main = paste("Module-trait relationships -", plot.label))
@@ -624,19 +629,20 @@ wrapWGCNA <- function(GEXMTSet,
       moduleGroupsetCor = cor(MEs, groupsetMat, use = "pairwise.complete.obs")  
       colnames(moduleGroupsetCor) <- names(groupsetMat)
 
-    # loop(i) for every phenotype to calculate ICC correlation if more then two groups
-    for(i in 1: ncol(groupsetMat)) {
-      # if more then two groups, correlation with expression by Intraclass Correlation Coefficient (ICC).
-      if(length(na.omit(unique(groupsetMat[,i]))) > 2) {
-          samplesNA <- is.na(groupsetMat[,i]) # samples not to include in correlation (ICCest has't option "pairwise.complete.obs")
-          ICCmodule <- numeric()
-          for (j in 1:length(MEs)) {  # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
-            ICCmodule <- rbind(ICCmodule, ICCest(factor(groupsetMat[!samplesNA,i]), MEs[!samplesNA,j])$ICC)
-            }
-          moduleGroupsetCor[,i] <- ICCmodule
-          colnames(moduleGroupsetCor)[i] <- paste("icc", colnames(moduleGroupsetCor)[i], sep=".")
-        }
-    } # end of i-loop
+    # # loop(i) for every phenotype to calculate ICC correlation if more then two groups
+    # ##################### replace ICC by classifier
+    # for(i in 1: ncol(groupsetMat)) {
+    #   # if more then two groups, correlation with expression by Intraclass Correlation Coefficient (ICC).
+    #   if(length(na.omit(unique(groupsetMat[,i]))) > 2) {
+    #       samplesNA <- is.na(groupsetMat[,i]) # samples not to include in correlation (ICCest has't option "pairwise.complete.obs")
+    #       ICCmodule <- numeric()
+    #       for (j in 1:length(MEs)) {  # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
+    #         ICCmodule <- rbind(ICCmodule, ICCest(factor(groupsetMat[!samplesNA,i]), MEs[!samplesNA,j])$ICC)
+    #         }
+    #       moduleGroupsetCor[,i] <- ICCmodule
+    #       colnames(moduleGroupsetCor)[i] <- paste("icc", colnames(moduleGroupsetCor)[i], sep=".")
+    #     }
+    # } # end of i-loop
 
     # prepare matrix with sample counts for corPvalueStudent
     samplecount.df <- data.frame(t(samplecount))
@@ -665,7 +671,7 @@ wrapWGCNA <- function(GEXMTSet,
                    colors = blueWhiteRed(50),
                    textMatrix = textMatrix,
                    setStdMargins = FALSE,
-                   cex.text = 0.7 * cex.labels,
+                   cex.text = 0.8 * cex.labels,
                    cex.lab = cex.labels,
                    zlim = c(-1,1),
                    main = paste("Module - Groupset relationships -", plot.label))
@@ -737,21 +743,23 @@ wrapWGCNA <- function(GEXMTSet,
   geneGroupsetCor <- cor(objectdat, groupsetMat, use="pairwise.complete.obs")   
   colnames(geneGroupsetCor) <- paste0("cor.",colnames(geneGroupsetCor))
   
-  # If necessary, pearson correlation coefficients are overwritten by ICC
-  # loop(i) for every groupset to calculate ICC correlation if more then two groups
-  for(i in 1: ncol(groupsetMat)) {
-    # if more then two groups, correlation with expression by Intraclass Correlation Coefficient (ICC).
-    if(length(na.omit(unique(groupsetMat[,i]))) > 2) {
-      samplesNA <- is.na(groupsetMat[,i]) # samples not to include in correlation (ICCest has't option "pairwise.complete.obs")
-      ICCgene <- numeric()
-      for (j in 1:length(objectdat)) {  # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
-        ICCgene <- rbind(ICCgene, ICCest(factor(groupsetMat[!samplesNA,i]), objectdat[!samplesNA,j])$ICC)
-      }
-      geneGroupsetCor[,i] <- ICCgene
-      colnames(geneGroupsetCor)[i] <- paste("icc", colnames(geneGroupsetCor)[i], sep=".")
-    }
-  } # end of i-loop
+  # # If necessary, pearson correlation coefficients are overwritten by ICC
+  # ##################### replace ICC by classifier
+  # # loop(i) for every groupset to calculate ICC correlation if more then two groups
+  # for(i in 1: ncol(groupsetMat)) {
+  #   # if more then two groups, correlation with expression by Intraclass Correlation Coefficient (ICC).
+  #   if(length(na.omit(unique(groupsetMat[,i]))) > 2) {
+  #     samplesNA <- is.na(groupsetMat[,i]) # samples not to include in correlation (ICCest has't option "pairwise.complete.obs")
+  #     ICCgene <- numeric()
+  #     for (j in 1:length(objectdat)) {  # (Calculation is not vectorized, i.e. every value is concatenated by rbind)
+  #       ICCgene <- rbind(ICCgene, ICCest(factor(groupsetMat[!samplesNA,i]), objectdat[!samplesNA,j])$ICC)
+  #     }
+  #     geneGroupsetCor[,i] <- ICCgene
+  #     colnames(geneGroupsetCor)[i] <- paste("icc", colnames(geneGroupsetCor)[i], sep=".")
+  #   }
+  # } # end of i-loop
 
+  
   # prepare matrix with sample counts for corPvalueStudent(). Calculation is independent from correlation type
   samplecount.df.group <- data.frame(t(samplecount))
   samplecount.df.group <- samplecount.df.group[rep(1,each=nrow(geneGroupsetCor)),] # copy row with sample counts for each module
@@ -1055,7 +1063,7 @@ disableWGCNAThreads()
 par(orig_par) # resetting graphical parameter to original values
 
 # Detaching libraries not needed any more
-detach_package(c("WGCNA", "ICC", "minfi"))
+detach_package(unique(pks2detach))
 
 return(net)
 

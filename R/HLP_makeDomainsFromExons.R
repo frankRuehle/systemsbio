@@ -31,7 +31,13 @@
 makeDomainsFromExons <- function(ID, biomaRt, uniprot_domains.gff, suffix.outputFilname =".txt") {
 
 
-    if(grepl("ENSG", ID)) {filter.ensembl <- "ensembl_gene_id"} else {
+  # load required libraries
+  pcksBioc <- c("Biobase", "biomaRt")
+  pks2detach <- attach_package(pcksBioc)
+  
+  
+  
+     if(grepl("ENSG", ID)) {filter.ensembl <- "ensembl_gene_id"} else {
          if(grepl("ENST", ID)) {filter.ensembl <- "ensembl_transcript_id"} else {
                                      filter.ensembl <-  "hgnc_symbol"}} # or "external_gene_id" in hg38
   

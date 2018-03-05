@@ -77,7 +77,7 @@ DavidEnrich <- function (genes,
   # load required libraries
   pkg.cran <- NULL
   pkg.bioc <- c("RDAVIDWebService", "GSEABase", "KEGG.db", "KEGGgraph") 
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
  
   # read file if 'genes' is character string with file path
@@ -163,7 +163,7 @@ DavidEnrich <- function (genes,
   
  
   # Detaching libraries not needed any more
-  detach_package(c(pkg.cran, pkg.bioc))
+  detach_package(unique(pks2detach))
   
   return(davidResult) # Get functional annotation chart as R object.
 } # end of function definition 

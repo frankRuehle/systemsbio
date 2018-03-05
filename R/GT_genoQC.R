@@ -60,7 +60,7 @@ genoQC <- function(gwaa,
    ## install/load required packages from CRAN and Bioconductor
    pkg.bioc <- NULL
    pkg.cran <- c("GenABEL")
-   attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
                     
    projectname <- if (!is.null(projectname)) {paste0(projectname, "_")} else {""}
                     

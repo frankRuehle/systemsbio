@@ -286,11 +286,6 @@ report[[sq]] <- PWMEnrich::groupReport(res, top=0.05)  # top: what proportion of
 # versus being more widespread but weaker (in which case breadth is bigger). We can also sort by this column:
 # report[[sq]] = groupReport(res, by.top.motifs=TRUE)
   
-### Special conditions for Human Sequences:
-# the only major difference is that the P-value of groups of sequences (i.e. groupReport()) is replaced with an 
-# average of log(P-values) of individual sequences. To get most complete results we recommend examining motif enrichment 
-# based on this score and breadth (last column of groupReport)
-
 ### Comments from Robert Stojnic (package author) in mails from 23.05.2016 and 25.05.2016
 # Raw score is an average of affinity scores, i.e. exp(PWM score) over the whole sequence. The numerical values 
 # is itself not very informative unless it's compared to the distribution over the genome. 
@@ -309,7 +304,6 @@ cat("\nWriting PWMEnrich report to:\n", file.path(projectfolder, paste0(projectn
 reportdf <- as.data.frame(report[[sq]])
 write.table(reportdf, file=file.path(projectfolder, paste0(projectname, sq, "_PWMEnrich_report.txt")), sep="\t", quote=F, row.names=F)
 
-#pdf(file.path(projectfolder, paste0(projectname, sq, "_PWMEnrich_top.pdf")), paper="a4") 
 png(file.path(projectfolder, paste0(projectname, sq, "_PWMEnrich_top.png")), width = 210, height = 297, units = "mm", res=figure.res) 
 PWMEnrich::plot(report[[sq]][1:10], fontsize=10, id.fontsize=10)
 dev.off()

@@ -53,7 +53,7 @@ readData2eset <- function(exprsData, phenoData, featureData=NULL,
   
   # load required packages. limma and Biobase are not detached afterwards
   pkg.bioc <- c("limma", "Biobase")
-  attach_package(pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.bioc=pkg.bioc)
   
   
 ### Expression data 

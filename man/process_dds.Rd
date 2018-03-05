@@ -17,7 +17,7 @@ are removed from the count matrix.}
 e.g. \code{rlog}, \code{rlogTransformation}, \code{varianceStabilizingTransformation}.}
 
 \item{norm_sizeFactors}{logical. If TRUE normalize for library size. This may already be included
-in the data transformation (e.g. for \code{varianceStabilizingTransformation}).}
+in the data transformation (e.g. for \code{rlog} and \code{varianceStabilizingTransformation}).}
 
 \item{export}{return either a \code{"SummarizedExperiment"} or a \code{"DESeqDataSet"} object.}
 

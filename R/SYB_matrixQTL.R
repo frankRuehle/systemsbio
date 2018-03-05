@@ -86,7 +86,7 @@ matrixQTL <- function(inputset,
 ## install/load required packages from CRAN and Bioconductor
 pkg.bioc <- c("biomaRt")
 pkg.cran <- c("MatrixEQTL", "GenABEL", "plyr")
-attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
 
 
 
@@ -460,7 +460,10 @@ rm(SNPfile) # SNPfile not needed any more
       plot(resultQTL)
   dev.off()
   
-
+  
+  # Detaching libraries not needed any more
+  detach_package(unique(pks2detach))
+  
  return(resultQTL) 
   
 } 

@@ -86,7 +86,7 @@ wrapDESeq <- function(dds,
   # load required packages. Packages are not detached afterwards
   pkg.cran <- c("gplots", "VennDiagram")
   pkg.bioc <- c("DESeq2", "limma", "Biobase")
-  attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
+  pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   projectname <- if (!is.null(projectname) && projectname!=""  && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
   
@@ -128,10 +128,7 @@ wrapDESeq <- function(dds,
     cat("\nUsing variance Stabilizing Transformation for generating heatmaps")
     expmatrix <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
     # expmatrix <- DESeq2::rlog(dds, fitType="local") # class: DESeqTransform
-    # normalisation for library size has to be applied AFTER running DEseq(), otherwise no sizeFactors available
-    # the and rlog transformation is provided for heatmaps
-    # expmatrix <- sweep(assay(expmatrix), 2, DESeq2::sizeFactors(dds),"/")
-    
+
     features <- mcols(dds,use.names=TRUE)
     # colData(dds) # sample phenotypes
   }
