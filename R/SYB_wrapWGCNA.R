@@ -209,6 +209,7 @@ wrapWGCNA <- function(GEXMTSet,
         } else {ids_regular <- 1:nrow(fData(GEXMTSet))}
       
       featureGEXMTSet <- fData(GEXMTSet)[ids_regular,]
+      featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
       dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
       plot.label="normalised log2(expression) data"
       plot.label.pruned="GEX"
@@ -219,6 +220,7 @@ wrapWGCNA <- function(GEXMTSet,
              if(class(GEXMTSet) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
                cat("\nClass", class(GEXMTSet), "detected\n")
                featureGEXMTSet <- as.data.frame(rowData(GEXMTSet,use.names=TRUE))
+               featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
                dataGEXMTSet <- assay(GEXMTSet)
                plot.label="normalised log2(count) data"
                plot.label.pruned="counts"
@@ -231,6 +233,7 @@ wrapWGCNA <- function(GEXMTSet,
           cat("\nClass", class(GEXMTSet), "detected\n")
           attach_package(pcksBioc="minfi")
           featureGEXMTSet <- mcols(GEXMTSet, use.names=T)
+          featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
           dataGEXMTSet <- getBeta(GEXMTSet)
           plot.label="normalised beta values"
           plot.label.pruned="MT"
@@ -367,14 +370,19 @@ wrapWGCNA <- function(GEXMTSet,
   # Math answer: module eigengene (ME) = first principal component
   # Network answer: the most highly connected intramodular hub gene. Both turn out to be equivalent
   
+  # module eigengenes
+  MEs <- WGCNA::orderMEs(net$MEs)
+  
   # To see how many modules were identified and what the module sizes are:
   cat("\n\nNetwork Modules\n")
   moduleColors = net$colors
-  print(table(moduleColors))
-  write.table(table(moduleColors), file.path(projectfolder, "Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
+  module.table <- as.data.frame(table(moduleColors))
+  module.table <- module.table[match(gsub("ME", "", names(MEs)), module.table[,1]),] # same order of eigengenes as in MEs (needed for heatmap labels) 
+  print(module.table)
+  write.table(module.table, file.path(projectfolder, "Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
 
-  # module eigengenes
-  MEs <- WGCNA::orderMEs(net$MEs)
+  MEsLength <- match(sub("ME", "", names(MEs)), temp$Var1)
+  
   MEcount <- length(colnames(MEs))
   rownames(MEs) <- rownames(traitData)
   write.table(MEs, file.path(projectfolder, "ModuleEigengenes_colorLabel.txt"), row.names=F, quote=F, sep="\t")
@@ -570,7 +578,7 @@ wrapWGCNA <- function(GEXMTSet,
   WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                  xLabels = colnames(moduleTraitCor),
                  yLabels = names(MEs),
-                 ySymbols = names(MEs),
+                 ySymbols = paste0(module.table[,1], " (", module.table[,2], ")"),
                  colorLabels = FALSE,
                  colors = blueWhiteRed(50),
                  textMatrix = textMatrix,
@@ -666,7 +674,7 @@ wrapWGCNA <- function(GEXMTSet,
     labeledHeatmap(Matrix = moduleGroupsetCor,
                    xLabels = gsub("-", " vs.\n", colnames(moduleGroupsetCor)),
                    yLabels = names(MEs),
-                   ySymbols = names(MEs),
+                   ySymbols = paste0(module.table[,1], " (", module.table[,2], ")"),
                    colorLabels = FALSE,
                    colors = blueWhiteRed(50),
                    textMatrix = textMatrix,

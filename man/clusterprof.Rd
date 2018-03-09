@@ -103,8 +103,10 @@ The IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the
 for the species denoted in \code{org}.
 Optionally, quanitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
 the data. If quantitative data are no fold changes, fold changes may be given additionally in \code{FCcolumn}.
-They are used only for cnetplot of enrichment results only. If Null the data in \code{sortcolumn} is also used for 
-the cnetplots. Be aware that the legend of the cnetplots will be "Fold Change" anyway!
+This data is used for cnetplot of enrichment results as well as for KEGG pathway mapping of enriched 
+KEGG pathways (if any) using the \code{pathview} package.
+If \code{FCcolumn == NULL} the data in \code{sortcolumn} is also used for the cnetplots and pathway mapping. 
+Be aware that the legend of the cnetplots will be "Fold Change" anyway.
 If no quantitative data is provided, sorting and GSEA will be skipped.
 Optionally, a background list can be provided for enrichment analysis.
 }

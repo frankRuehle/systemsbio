@@ -12,8 +12,10 @@
 #' for the species denoted in \code{org}.
 #' Optionally, quanitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
 #' the data. If quantitative data are no fold changes, fold changes may be given additionally in \code{FCcolumn}.
-#' They are used only for cnetplot of enrichment results only. If Null the data in \code{sortcolumn} is also used for 
-#' the cnetplots. Be aware that the legend of the cnetplots will be "Fold Change" anyway!
+#' This data is used for cnetplot of enrichment results as well as for KEGG pathway mapping of enriched 
+#' KEGG pathways (if any) using the \code{pathview} package.
+#' If \code{FCcolumn == NULL} the data in \code{sortcolumn} is also used for the cnetplots and pathway mapping. 
+#' Be aware that the legend of the cnetplots will be "Fold Change" anyway.
 #' If no quantitative data is provided, sorting and GSEA will be skipped.
 #' Optionally, a background list can be provided for enrichment analysis.   
 #'
@@ -118,20 +120,20 @@ clusterprof <- function (genes,
                                   mouse = "org.Mm.eg.db",
                                   rat= "org.Rn.eg.db")
   
-  org_alt_name <- switch(org, human = "hsa", # db parameter differ in GO and KEGG functions in clusterProfiler
+  org_alt_name <- switch(org, human = "hsa", # org parameter differs in GO and KEGG functions in clusterProfiler
                          mouse = "mmu",
                          rat= "rno")
   
   ## install/load required packages from CRAN and Bioconductor
-  pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", annotationdb)
+  pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", "pathview", annotationdb)
   pkg.cran <- c("plyr")
   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   
   if(!is.null(id.column)) {
-  if(id.column!="ENTREZID" && "ENTREZID" %in% names(genes)) {
-    warning("Column ENTREZIDs found. Consider these data for id.column")
-    }
+    if(id.column!="ENTREZID" && "ENTREZID" %in% names(genes)) {
+      warning("Column ENTREZIDs found. Consider these data for id.column")
+      }
   }
   
   
@@ -157,40 +159,46 @@ clusterprof <- function (genes,
     genes[[ge]] <- read.table(genes[[ge]], header=is.null(newheader), sep="\t", na.strings = c("", " ", "NA")) # if no newheader, header must be in file
   }
   
-  if(is.data.frame(genes[[ge]]) & !is.null(newheader)) {# if 'newheader' is defined, it is used as names(DEgenes.unfilt)
-    cat("\nNew header added to input file:", newheader, "\n")
-    colnames(genes[[ge]]) <- newheader
-  }
+  if(is.data.frame(genes[[ge]])) {
+     
+     if (!is.null(newheader)) {# if 'newheader' is defined, it is used as names(DEgenes.unfilt)
+        cat("\nNew header added to input file:", newheader, "\n")
+        colnames(genes[[ge]]) <- newheader
+      }
   
   columns2use <- c(id.column, sortcolumn, FCcolumn) 
   columnsfound <- columns2use[columns2use %in% names(genes[[ge]])]
-  if (!all(columns2use %in% names(genes[[ge]]))) {
-    warning("column(s) ", columns2use[!(columns2use %in% names(genes[[ge]]))], " not found in data header.")
-  }  
+    if (!all(columns2use %in% names(genes[[ge]]))) {
+      warning("column(s) ", columns2use[!(columns2use %in% names(genes[[ge]]))], " not found in data header.")
+      }  
+  
   genes[[ge]] <- genes[[ge]][,columnsfound, drop=F]  # reduce dataframe to columns of interest
-    
+  }
+      
   if(is.vector(genes[[ge]], mode="character")) {
     if(!is.null(names(genes[[ge]]))) { # if named vector with IDs as element names and quantitative information as elements
       genes[[ge]] <- data.frame(names(genes[[ge]]), genes[[ge]])
       names(genes[[ge]]) <- c(id.column, sortcolumn)        
         } else { # if unnamed vector with IDs but no quantitative information (no sortcolumn)
-            genes[[ge]] <- data.frame(genes[[ge]])
+            id.column <- id.type
+            genes[[ge]] <- data.frame(genes[[ge]], stringsAsFactors = F) # convert single vector to dataframe
             names(genes[[ge]]) <- c(id.column)        
             }
         }
   
   # now 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
-      genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,id.column]),] # remove rows without entry in id.column
+      genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,id.column]), , drop=F] # remove rows without entry in id.column
       if (!is.null(sortcolumn)) {
-      if (sortcolumn %in% names(genes[[ge]])) {    
-        cat(paste("\nSorting input dataframe for", sortcolumn, ", decreasing =", sortdecreasing, "\n"))
-        genes[[ge]] <- genes[[ge]][order(genes[[ge]][,sortcolumn], decreasing=sortdecreasing),] # sorting genes[[ge]] for quantitative variable
-        
-        # if multiple probes per gene, only the first gene entry is used 
-        genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,id.column]),] 
-        }}
+        if (sortcolumn %in% names(genes[[ge]])) {    
+          cat(paste("\nSorting input dataframe for", sortcolumn, ", decreasing =", sortdecreasing, "\n"))
+          genes[[ge]] <- genes[[ge]][order(genes[[ge]][,sortcolumn], decreasing=sortdecreasing),] # sorting genes[[ge]] for quantitative variable
+          
+          # if multiple probes per gene, only the first gene entry is used 
+          genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,id.column]),] 
+          }
+      }
      
-      
+ 
       
   ## convert IDs to ENTREZ IDs if necessary
     if(id.type!="ENTREZID") {
@@ -201,7 +209,7 @@ clusterprof <- function (genes,
     
       cat(paste(nrow(entrezids), "of",  length(unique(genes[[ge]][,id.column])), "unique", id.type, "mapped to", sum(!is.na(entrezids$ENTREZID)), "ENTREZIDs\n"))
       
-      cat(paste("For dublicated", id.type, "only the first element is used (dataset was ordered for", sortcolumn, "decreasing =", sortdecreasing, ")\n")) 
+      cat(paste("For dublicated", id.type, "only the first element is used (after sorting if applicable)\n")) 
       genes[[ge]] <- plyr::join(genes[[ge]], entrezids, by=id.column, type="right", match="first") 
       # joined dataframe contains all entries even without available ENTREZIDs and keeps order of 'genes[[ge]]'
 
@@ -230,7 +238,7 @@ clusterprof <- function (genes,
                         filtercat2.threshold= threshold_FC)
      
   cat(paste("\n", min(nrow(filtgenes), maxInputGenes), "unique genes for overrepresentation analysis.\n"))  
-  filtgenes <- filtgenes[1:min(nrow(filtgenes), maxInputGenes),]
+  filtgenes <- filtgenes[1:min(nrow(filtgenes), maxInputGenes), , drop=F]
   
   
   ## Processing list for Gene Set Enrichment Analysis (GSEA). Ordered named Vector needed.
@@ -469,24 +477,69 @@ for(usedcat in names(enrichresult[[ge]])) {
     if(nrow(as.data.frame(enrichresult[[ge]][[usedcat]])) >=1) {
   
     cat(paste("\nProcessing", usedcat))
+    
+    ## create output directory
+    subfolder <- ifelse(ge == "genes", projectfolder, paste0(projectfolder, "/", ge))
+    projectnamesuffix <- ifelse(ge == "genes", NULL, paste0(ge, "_"))
+    if (!file.exists(file.path(subfolder))) {dir.create(file.path(subfolder), recursive=T)} 
+      
     # Result table
     write.table(as.data.frame(enrichresult[[ge]][[usedcat]]), quote=F, row.names=F, sep="\t",
-                file=file.path(projectfolder, paste0(projectname, ge, "_", usedcat, "_resulttable.txt")))
+                file=file.path(subfolder, paste0(projectname, projectnamesuffix, usedcat, "_resulttable.txt")))
   
     # Enrichment map
-    #tiff(file.path(projectfolder, paste0(projectname, ge, "_", usedcat, "_enrichmentMap.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-    png(file.path(projectfolder, paste0(projectname, ge, "_", usedcat, "_enrichmentMap.png")), width = 300, height = 300, units = "mm", res=figure.res)
+    png(file.path(subfolder, paste0(projectname, projectnamesuffix, usedcat, "_enrichmentMap.png")), width = 300, height = 300, units = "mm", res=figure.res)
     try(DOSE::enrichMap(enrichresult[[ge]][[usedcat]], n = 30), silent=T)
     dev.off()
     
     # cnet plot (Remark: legend will be 'Fold change' even if other quantitative data are included)
-    #tiff(file.path(projectfolder, paste0(projectname, ge, "_", usedcat, "_cnetPlot.tiff")), width = 7016 , height = 4960, res=600, compression = "lzw")
-    png(file.path(projectfolder, paste0(projectname, ge, "_", usedcat, "_cnetPlot.png")), width = 300, height = 300, units = "mm", res=figure.res)
+    png(file.path(subfolder, paste0(projectname, projectnamesuffix, usedcat, "_cnetPlot.png")), width = 300, height = 300, units = "mm", res=figure.res)
     try(DOSE::cnetplot(enrichresult[[ge]][[usedcat]], showCategory = 5, categorySize="pvalue", 
              foldChange= if(!is.null(FCcolumn)) {filtgenes[,FCcolumn]} else {filtgenes[,sortcolumn]}), silent=T)
     dev.off()
 
-    }
+    # Pathview maps for KEGG
+    if(grepl("KEGG", usedcat)) {
+     
+      pathway.dir <- file.path(subfolder, paste0(usedcat, "_pathway_maps"))
+      if (!file.exists(pathway.dir)) {dir.create(pathway.dir, recursive=T)} 
+      workingdir <- getwd()
+      setwd(pathway.dir)
+      
+      for(k in 1:nrow(enrichresult[[ge]][[usedcat]])) {
+           
+        kegggenes <- enrichresult[[ge]][[usedcat]][k, "geneID"]
+        kegggenes <- unlist(strsplit(kegggenes, split="/", fixed=T))
+        # 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
+        kegggenes <- genes[[ge]][genes[[ge]][,"ENTREZID"] %in% kegggenes, ]
+        if(!is.null(FCcolumn)) {
+          tmp.entrezids <- kegggenes$ENTREZID    
+          kegggenes <- kegggenes[,FCcolumn]
+          names(kegggenes) <- tmp.entrezids
+          kegglimit <- max(abs(kegggenes))
+          plot.col.key <- T
+            } else {
+              kegggenes <- kegggenes[,"ENTREZID"]
+              kegglimit <- 1
+              plot.col.key <- F
+              }
+            
+        pathview::pathview(
+            # numeric vector named with ENTREZ IDs
+            gene.data  = kegggenes,
+            pathway.id = enrichresult[[ge]][[usedcat]][k, "ID"],
+            species    = org_alt_name,
+            gene.idtype = "entrez",
+            limit= list(gene= kegglimit, cpd=1),
+            plot.col.key = plot.col.key)
+            }
+      
+      setwd(workingdir)
+      }
+    
+    
+    
+  }
 }
 
 cat("\n")
