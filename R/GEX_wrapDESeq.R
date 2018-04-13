@@ -94,8 +94,10 @@ wrapDESeq <- function(dds,
   # Create output directories if not yet existing 
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
   if (!file.exists(file.path(projectfolder, "deseq_unfiltered"))) {dir.create(file.path(projectfolder, "deseq_unfiltered")) }
+  if (!file.exists(file.path(projectfolder, "deseq_filtered"))) {dir.create(file.path(projectfolder, "deseq_filtered")) }
   if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
   if (!file.exists(file.path(projectfolder, "Volcano_plots"))) {dir.create(file.path(projectfolder, "Volcano_plots")) }
+  if (!file.exists(file.path(projectfolder, "MA_plots"))) {dir.create(file.path(projectfolder, "MA_plots")) }
   
   
  
@@ -126,9 +128,9 @@ wrapDESeq <- function(dds,
   
   if (class(dds) == "DESeqDataSet") {
     cat("\nUsing variance Stabilizing Transformation for generating heatmaps")
-    expmatrix <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
+    vsd <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
     # expmatrix <- DESeq2::rlog(dds, fitType="local") # class: DESeqTransform
-
+    expmatrix <- assay(vsd)
     features <- mcols(dds,use.names=TRUE)
     # colData(dds) # sample phenotypes
   }
@@ -179,14 +181,14 @@ for (i in 1:length(comparisons)) {
   
   # Writing result gene tables
   write.table(table_unfilt[[comparisons[i]]], sep="\t", quote=F, row.names=F,
-              file= file.path(projectfolder, paste0("deseq_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")))
+              file= file.path(projectfolder, "deseq_unfiltered", paste0(projectname, comparisons[i], "_unfilt.txt")))
   
   write.table(table_filt[[comparisons[i]]], sep="\t", quote=F, row.names=F,
-              file= file.path(projectfolder, paste0(projectname, comparisons[i], ".txt")))
+              file= file.path(projectfolder, "deseq_filtered", paste0(projectname, comparisons[i], ".txt")))
   
   cat(paste("\n", nrow(table_filt[[comparisons[i]]]),"differentially regulated elements for comparison:",comparisons[i]))
-  cat(paste("\nWrite gene tables to", file.path(projectfolder, paste0("deseq_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")),
-            "and", file.path(projectfolder, paste0(projectname, comparisons[i], ".txt"))))
+  cat(paste("\nWrite gene tables to", file.path(projectfolder, "deseq_unfiltered", paste0(projectname, comparisons[i], "_unfilt.txt")),
+            "and", file.path(projectfolder, "deseq_filtered", paste0(projectname, comparisons[i], ".txt"))))
   
   
  
@@ -217,9 +219,11 @@ for (i in 1:length(comparisons)) {
         cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".png", sep="" )), "\n")  
         
         if (nrow(table_filt[[comparisons[i]]]) > maxHM) {DEgenesHM <- table_filt[[comparisons[i]]][1:maxHM,]} else {DEgenesHM <- table_filt[[comparisons[i]]]}
-        
+ 
+
         plotmatrix <- expmatrix[rownames(expmatrix) %in% rownames(DEgenesHM), ,drop=F]
-        
+
+
         # If Symbols are available, rows are annotated with symbols instead of probe IDs   
         indexRownames <- match(rownames(plotmatrix), rownames(features))
 
@@ -245,8 +249,9 @@ for (i in 1:length(comparisons)) {
        
           groupColorCode <- groupColorCode[colData(dds)[,groupColumn] %in% groups2plot] # adjust ColSideColors in heatmaps to relevant groups
          }
-        
-        png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
+ 
+
+  png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
         #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".pdf", sep="" )), width = 10, height = 14) 
         heatmap.2(plotmatrix, main=comparisons[i], margins = c(15, 15), Rowv=TRUE, Colv=TRUE, dendrogram="both",  
                   ColSideColors= groupColorCode, 
@@ -260,10 +265,10 @@ for (i in 1:length(comparisons)) {
    
 
   # MA-plot
-  filename.MA <- file.path(projectfolder, paste0("MA_plot_", projectname, comparisons[i], ".png"))
-  cat("\nWrite Dispersion plot to", filename.MA)
+  filename.MA <- file.path(projectfolder, "MA_plots", paste0("MA_plot_", projectname, comparisons[i], ".png"))
+  cat("\nWrite MA-plot to", filename.MA)
   png(filename= filename.MA, width = 150, height = 150, units = "mm", res=figure.res)
-  plotMA(res.unfilt[[comparisons[i]]], ylim=c(-2,2))
+  DESeq2::plotMA(res.unfilt[[comparisons[i]]], ylim=c(-2,2), alpha = 0.05) # 
   dev.off()
   
   
@@ -301,6 +306,15 @@ cat("\nWrite Dispersion plot to", filename.Disp)
 png(filename= filename.Disp, width = 150, height = 150, units = "mm", res=figure.res)
 DESeq2::plotDispEsts(dds, main="Dispersion Estimates")
 dev.off()
+
+
+# pca plot
+filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot.png"))
+cat("\nWrite pca plot to", filename.pca)
+png(filename= filename.pca, width = 150, height = 150, units = "mm", res=figure.res)
+DESeq2::plotPCA(vsd, intgroup= groupColumn)
+dev.off()
+
 
 
 # # plot counts: examine the counts of reads for a single gene across the groups

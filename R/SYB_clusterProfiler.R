@@ -524,7 +524,8 @@ for(usedcat in names(enrichresult[[ge]])) {
               plot.col.key <- F
               }
             
-        pathview::pathview(
+        try(
+         pathview::pathview(
             # numeric vector named with ENTREZ IDs
             gene.data  = kegggenes,
             pathway.id = enrichresult[[ge]][[usedcat]][k, "ID"],
@@ -532,6 +533,7 @@ for(usedcat in names(enrichresult[[ge]])) {
             gene.idtype = "entrez",
             limit= list(gene= kegglimit, cpd=1),
             plot.col.key = plot.col.key)
+         ,silent=F)
             }
       
       setwd(workingdir)
