@@ -381,8 +381,6 @@ wrapWGCNA <- function(GEXMTSet,
   print(module.table)
   write.table(module.table, file.path(projectfolder, "Module_Sizes.txt"), quote=F, row.names=F, sep="\t")
 
-  MEsLength <- match(sub("ME", "", names(MEs)), temp$Var1)
-  
   MEcount <- length(colnames(MEs))
   rownames(MEs) <- rownames(traitData)
   write.table(MEs, file.path(projectfolder, "ModuleEigengenes_colorLabel.txt"), row.names=F, quote=F, sep="\t")

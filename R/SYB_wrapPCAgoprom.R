@@ -131,7 +131,7 @@ wrapPCAgoprom <- function(expca,
          
    } else {
     
-      if(class(expca) %in% c("SummarizedExperiment", "DESeqDataSet")) {
+      if(class(expca) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
  
         if(!is.null(groupsoi)) {
           groups.found <- groupsoi %in%  colData(expca)[,groupby] 

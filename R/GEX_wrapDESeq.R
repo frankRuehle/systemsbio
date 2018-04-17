@@ -158,7 +158,18 @@ for (i in 1:length(comparisons)) {
   table_unfilt[[comparisons[i]]] <- table_unfilt[[comparisons[i]]][!is.na(table_unfilt[[comparisons[i]]][,"padj"]),]
   # add column with rownames id
   table_unfilt[[comparisons[i]]] <- data.frame(id.rownames= rownames(table_unfilt[[comparisons[i]]]), table_unfilt[[comparisons[i]]])
-   
+  # add Symbol column
+  if(!is.null(Symbol.column)) {
+    if(!(Symbol.column %in% names(mcols(dds)))) {stop("Symbolcolumn not found in feature data!")}
+    table_unfilt[[comparisons[i]]][, Symbol.column] <- mcols(dds)[match(rownames(table_unfilt[[comparisons[i]]]), rownames(dds)), Symbol.column]
+  }
+  # add ENTREZID column
+  if(any(grepl("entrezid", names(mcols(dds)), ignore.case = T))) {
+    entrezIdColumnname <- grep("entrezid", names(mcols(dds)), ignore.case = T, value = T)[1] # get name of (first) EntrezID column 
+        table_unfilt[[comparisons[i]]][, entrezIdColumnname] <- mcols(dds)[match(rownames(table_unfilt[[comparisons[i]]]), rownames(dds)), entrezIdColumnname]
+  }
+  
+  
   # filter for significance
   table_filt[[comparisons[i]]]  <- filterGeneLists(table_unfilt[[comparisons[i]]],
                                                newheader=NULL,

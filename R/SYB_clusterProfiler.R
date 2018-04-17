@@ -125,14 +125,14 @@ clusterprof <- function (genes,
                          rat= "rno")
   
   ## install/load required packages from CRAN and Bioconductor
-  pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", "pathview", annotationdb)
+  pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", "topGO", "pathview", annotationdb)
   pkg.cran <- c("plyr")
   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   
   if(!is.null(id.column)) {
     if(id.column!="ENTREZID" && "ENTREZID" %in% names(genes)) {
-      warning("Column ENTREZIDs found. Consider these data for id.column")
+      warning("Column ENTREZIDs found. Consider these data for id.column.")
       }
   }
   
@@ -218,6 +218,7 @@ clusterprof <- function (genes,
      # 'genes[[ge]]' now definitively provides a column 'ENTREZID'   
      # remove entries without 'ENTREZID'
      genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,"ENTREZID"]),]
+     genes[[ge]] <- genes[[ge]][genes[[ge]][,"ENTREZID"] != "",]
      # if multiple probes per gene, only the first gene entry is used 
      # (after sorting, if sortcolumn available).
      genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,"ENTREZID"]),] 
@@ -252,9 +253,6 @@ clusterprof <- function (genes,
   }
   
   
-  
-
-  
   ###### read background list if available. Otherwise unfiltered ID list from 'genes[[ge]]' used as background Vector.
   if(!is.null(backgroundlist)) {
   cat("\nProcessing background list")
@@ -262,7 +260,7 @@ clusterprof <- function (genes,
     if (all(backgroundlist=="genome")) {
       # all ENTREZIDs from the annotation db of the respective genome (given in org) used as background.
       backgroundlist <- keys(get(annotationdb), keytype="ENTREZID")
-      cat(paste("\nUsing", length(backgroundlist), "ENTREZ IDs from",annotationdb, "as background.\n"))      
+      cat(paste("\nUsing", length(backgroundlist), "ENTREZ IDs from", annotationdb, "as background.\n"))      
       } else {
     
           # read file if 'backgroundlist' is character string with file path
@@ -271,7 +269,7 @@ clusterprof <- function (genes,
             backgroundlist <- read.table(backgroundlist, header=is.null(newheaderBackground), sep="\t", na.strings = c("", " ", "NA")) # if no newheaderBackground, header must be in file
            }
  
-          if(is.vector(backgroundlist, mode="character") && !vector.processed) {
+          if(is.vector(backgroundlist, mode=c("character")) && !vector.processed) {
               backgroundlist <- as.data.frame(backgroundlist, stringsAsFactors =F) # convert vector to dataframe for processing in next chunk
               colnames(backgroundlist) <- id.column
               } 
@@ -289,19 +287,29 @@ clusterprof <- function (genes,
                     }
                entrez.column.bg <- ifelse(id.type=="ENTREZID", id.column, "ENTREZID")
                backgroundlist <- backgroundlist[!is.na(backgroundlist[,entrez.column.bg]),entrez.column.bg, drop=F] # remove rows without entry in id.column
+               backgroundlist <- backgroundlist[backgroundlist[,entrez.column.bg] !="", entrez.column.bg, drop=F] # remove rows with entry "" in id.column
                backgroundlist <- as.character(unique(backgroundlist[,entrez.column.bg]))
                vector.processed <- TRUE # don't process this vector in 2nd run of loop
-          }
-
+          } else {
+              if(!vector.processed) {
+                cat("\nBackground list used as given without any modification (assuming Entrez IDs):")
+                print(head(backgroundlist))  
+                cat("\n")
+                }
+              }
 
     } # end loading and processing of a supplied backgroundlist 
      
-    cat(paste("\n", length(backgroundlist), "ENTREZ IDs in background list.\n"))
-
+    cat(paste("\n", length(backgroundlist), "ENTREZ IDs in background list:\n"))
+    print(head(backgroundlist))  
+    cat("\n")
+    
     } else { # if backgroundlist is NULL, all EntrezIDs from 'genes[[ge]]' used as background instead.
 
       backgroundlist <- as.character(unique(genes[[ge]][,"ENTREZID"]))
-      cat(paste("\n", length(backgroundlist), "ENTREZ IDs used from input object as background.\n"))
+      cat(paste("\n", length(backgroundlist), "ENTREZ IDs used from input object as background:\n"))
+      print(head(backgroundlist))  
+      cat("\n")
     }
   
 
@@ -325,6 +333,8 @@ clusterprof <- function (genes,
 
   for (go in c("MF", "BP", "CC")) {
     if(nrow(filtgenes)>1) {
+
+
       enrichresult[[ge]][[paste0("Overrep_",go)]] <- clusterProfiler::enrichGO(gene = filtgenes[,"ENTREZID"],
                                     universe      = backgroundlist,
                                     OrgDb      = annotationdb,
@@ -360,6 +370,7 @@ clusterprof <- function (genes,
 ##### KEGG pathway enrichment
 # KEGG over-representation test
 
+
   if ("KEGG" %in% enrichmentCat) {
     if(nrow(filtgenes)>1) {
       enrichresult[[ge]][[paste0("Overrep_","KEGG")]] <- clusterProfiler::enrichKEGG(gene = filtgenes[,"ENTREZID"],
@@ -374,6 +385,7 @@ clusterprof <- function (genes,
     
     cat(paste("Overrepresentation analysis for KEGG pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","KEGG")]])), "enriched pathways\n"))
     }
+
 
 # KEGG Gene Set Enrichment Analysis
 if (!is.null(sortcolumn)) { # quantitative data available?
@@ -480,7 +492,7 @@ for(usedcat in names(enrichresult[[ge]])) {
     
     ## create output directory
     subfolder <- ifelse(ge == "genes", projectfolder, paste0(projectfolder, "/", ge))
-    projectnamesuffix <- ifelse(ge == "genes", NULL, paste0(ge, "_"))
+    projectnamesuffix <- ifelse(ge == "genes", "", paste0(ge, "_"))
     if (!file.exists(file.path(subfolder))) {dir.create(file.path(subfolder), recursive=T)} 
       
     # Result table
@@ -498,6 +510,15 @@ for(usedcat in names(enrichresult[[ge]])) {
              foldChange= if(!is.null(FCcolumn)) {filtgenes[,FCcolumn]} else {filtgenes[,sortcolumn]}), silent=T)
     dev.off()
 
+    # enriched GO induced graph
+    if(grepl("CC|MF|BP", usedcat)) {
+      png(file.path(subfolder, paste0(projectname, projectnamesuffix, usedcat, "_GOgraph.png")), width = 300, height = 300, units = "mm", res=figure.res)
+      try(clusterProfiler::plotGOgraph(enrichresult[[ge]][[usedcat]], firstSigNodes = 10, useFullNames = TRUE), silent=T)
+      dev.off()
+      }
+    
+    
+    
     # Pathview maps for KEGG
     if(grepl("KEGG", usedcat)) {
      
@@ -507,8 +528,13 @@ for(usedcat in names(enrichresult[[ge]])) {
       setwd(pathway.dir)
       
       for(k in 1:nrow(enrichresult[[ge]][[usedcat]])) {
-           
-        kegggenes <- enrichresult[[ge]][[usedcat]][k, "geneID"]
+        
+        if(grepl("gsea", usedcat, ignore.case =T)) { # column name with gene IDs differs for GSEA and overrep analysis
+                temp_geneid_column <- "core_enrichment"} else {
+                temp_geneid_column <- "geneID"
+                }
+        
+        kegggenes <- enrichresult[[ge]][[usedcat]][k, temp_geneid_column]
         kegggenes <- unlist(strsplit(kegggenes, split="/", fixed=T))
         # 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
         kegggenes <- genes[[ge]][genes[[ge]][,"ENTREZID"] %in% kegggenes, ]
@@ -538,8 +564,6 @@ for(usedcat in names(enrichresult[[ge]])) {
       
       setwd(workingdir)
       }
-    
-    
     
   }
 }
