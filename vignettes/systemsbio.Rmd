@@ -54,10 +54,9 @@ gex <- read_Illu_expr_array(
             qcFile = "ControlProbeProfile.txt", 
             sampleSheet = "sample_sheet.csv",
             sampleColumn = "Sample_Name", 
-            groupColumn  = "Sample_Group",  
             exprchip= "HumanHT-12 v4",
             org= "human",
-            covarfile = "covariates.txt",  # optionally for additional phenotypes
+            covarfile = "covariates.txt",  # optional for additional phenotypes
             method_norm = "none", 
             transform= "log2"  
             ) 

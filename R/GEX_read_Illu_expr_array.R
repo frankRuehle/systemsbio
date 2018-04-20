@@ -4,8 +4,8 @@
 #' 
 #' Create an ExpressionSetIllumina object from Illumina GenomeStudio output files.
 #' 
-#' Unnormalized expression data from an Illumina GenomeStudio project is read into a ExpressionSetIllumina object.
-#' If a covariate file is given, covariates are included in the phenotype data of the object. 
+#' Unnormalized expression data from an Illumina GenomeStudio project is read into a \code{ExpressionSetIllumina} object.
+#' If a covariate file is given, covariates are included into the phenotype data of the object. 
 #' If a paired sample design was chosen, the variable indicating sample pairing must be included either in
 #' the sample sheet file or in the covariates file. In default settings, the expression data is log2-transformed
 #' but not normalized.
@@ -15,28 +15,30 @@
 #' 
 #' 
 #' @param dataFile character with filepath to SampleProbeProfile from GenomeStudio (tab-delimited txt-file) 
-#'           containing columns with AVG_Signal, Detection Pval, BEAD_STDERR und Avg_NBEADS
-#' @param qcFile character with filepath to ControlProbeProfile from GenomeStudio (tab-delimited txt-file)
-#'         containing columns with AVG_Signal und Detection Pval 
+#'           containing columns with \code{AVG_Signal}, \code{Detection Pval}, \code{BEAD_STDERR} und \code{Avg_NBEADS}.
+#'           Additional columns are ignored except for \code{"PROBE_ID"}, \code{"SYMBOL"} and \code{"ENTREZ_GENE_ID"}.
+#' @param qcFile character with filepath to \code{ControlProbeProfile} from GenomeStudio (tab-delimited txt-file)
+#'         containing columns with \code{AVG_Signal} und \code{Detection Pval} 
 #' @param sampleSheet character with filepath to Sample sheet from GenomeStudio project (csv-file). The header is expected in row 8.
 #' @param ProbeID character string with name of the column in dataFile that contains identifiers used to uniquely identify each probe 
-#' @param skip number of header lines to skip at the top of dataFile. 
+#' @param skip number of header lines to skip at the top of \code{dataFile}. 
 #' @param controlID character string specifying the column in qcFile that contains the identifiers that 
-#'            uniquely identify each control probe 
+#'            uniquely identify each control probe. If the \code{ControlGeneProfile} from GenomeStudio is used, 
+#'            you will need to set \code{controlID="TargetID"} 
 #' @param qc.skip number of header lines to skip at the top of qcFile 
 #' @param qc.columns list defining the column headings in qcFile which correspond to the matrices stored in the 
 #'             QCInfo slot of the final ExpressionSetIllumina object
 #' @param sampleColumn Name of sample column in sample sheet
 #' @param groupColumn Name of group column in sample sheet
-#' @param exprchip character string specifying expression chip type (e.g. "HumanHT-12 v?", "MouseWG-6 v?", "MouseRef-8 v?")
-#' @param org character string specifying organism: "human", "rat", "mouse".
+#' @param exprchip character string specifying expression chip type (e.g. \code{"HumanHT-12 v4"}, \code{"MouseWG-6 v2"}, \code{"MouseRef-8 v2"}, \code{"RatRef-12 v1"}.
+#' @param org character string specifying organism: \code{"human"}, \code{"rat"}, \code{"mouse"}.
 #' @param covarfile character with filepath if a covariates file is given. NULL otherwise.
 #' @param covarsampleID character with name of sample column in (optional) covariates file.   
-#' @param matchvar NULL if unpaired study design. In  paired study design, character with variable name 
-#'           indicating pairing of samples. This column must be contained either in sampleSheet or covariates file. 
-#' @param method_norm character with normalisation method. Options are "quantile", "qspline", "vsn", "rankInvariant", "median" and "none"
-#' @param transform character with data transformation method. Options are "none", "log2", "neqc", "rsn" and "vst".
-#' @param fields2Add character vector with names of Illumina mappings to add to feature data (chip type dedicated in 'exprchip').
+#' @param method_norm character with normalisation method. Options are \code{"quantile"}, \code{"qspline"}, 
+#' \code{"vsn"}, \code{"rankInvariant"}, \code{"median"} and \code{"none"}
+#' @param transform character with data transformation method. Options are \code{"none"}, \code{"log2"}, \code{"neqc"}, \code{"rsn"} and \code{"vst"}.
+#' @param fields2Add character vector with names of Illumina mappings to add to feature data (chip type dedicated in \code{exprchip}).
+#' Remark: works only if feature data is \code{"PROBE_ID"}, but this identifier may be non-unique and may therefore throw an error when loading.
 #'
 #'
 #' @return Annotated (and log-transformed) ExpressionSetIllumina object
@@ -51,18 +53,17 @@ read_Illu_expr_array <- function(
       dataFile, 
       qcFile, 
       sampleSheet,
-      ProbeID = "PROBE_ID", 
+      ProbeID = "ProbeID", 
       skip = 0, 
       controlID= "ProbeID", 
       qc.skip = 0, 
       qc.columns = list(exprs = "AVG_Signal", Detection = "Detection Pval"),
       sampleColumn = "Sample_Name", 
       groupColumn  = "Sample_Group",  
-      exprchip= "HumanHT-12 v4",
-      org= "human",
+      exprchip= NULL,
+      org= NULL,
       covarfile = NULL, 
       covarsampleID = "ID",   
-      matchvar = NULL, 
       method_norm = "none", 
       transform= "log2",  
       fields2Add= NULL 
@@ -77,17 +78,23 @@ read_Illu_expr_array <- function(
   
   
   # determine name of Illumina array annotation package and install/load it
-  exprchip <- tolower(exprchip)
-  exprchipBez     <- sub("-.*", "", exprchip)
-  exprchipVersion <- sub(".*v", "v", exprchip)
-  ArrayAnnotation.GEX <- switch(org, human = paste("Human", exprchipVersion, sep=""), 
-                                mouse = paste("Mouse", exprchipVersion, sep=""))
-  chipannopkg <- paste0("illumina", ArrayAnnotation.GEX, ".db")
-  
-  attach_package(pkg.bioc=chipannopkg)
-  
-  
-
+  if(!is.null(exprchip)) {
+    if(is.null(org)) {stop("\nOrganism not specified!")}
+    org <- tolower(org)
+    if(!(org %in% c("human", "mouse", "rat"))) {stop("\norg needs to be either human, mouse or rat")}
+    exprchip <- tolower(exprchip)
+    exprchipBez     <- sub("-.*", "", exprchip)
+    exprchipVersion <- sub(".*v", "v", exprchip)
+    ArrayAnnotation.GEX <- switch(org, human = paste("Human", exprchipVersion, sep=""), 
+                                  mouse = paste("Mouse", exprchipVersion, sep=""),
+                                  rat = paste("Rat", exprchipVersion, sep=""))
+    chipannopkg <- paste0("illumina", ArrayAnnotation.GEX, ".db")
+    
+    attach_package(pkg.bioc=chipannopkg)
+    
+    #cat("\nArray Annotation package:", chipannopkg)
+    cat("\nSee keytypes(", chipannopkg, ") for available annotation data.")
+  }
 
 # Reading Bead-Summary Data
 cat("\nRead bead data. Illumina annotation package:", chipannopkg, "\n")
@@ -97,7 +104,7 @@ cat("\nRead bead data. Illumina annotation package:", chipannopkg, "\n")
                              ProbeID = ProbeID, skip = skip, 
                              controlID = controlID, qc.skip = qc.skip, qc.columns = qc.columns,
                              illuminaAnnotation = ArrayAnnotation.GEX,
-                             annoCols = c("PROBE_ID","SYMBOL")) 
+                             annoCols = c("PROBE_ID", "SYMBOL", "ENTREZ_GENE_ID")) #
 
   # Comment: the following warning messages are observed frequently:
   # Warning messages:
@@ -130,7 +137,7 @@ pData(eset)[,sampleColumn] <- factor(pData(eset)[,sampleColumn])
 pData(eset)[,groupColumn]  <- factor(pData(eset)[,groupColumn])
 if("Sentrix_ID" %in% names(pData(eset))) {pData(eset)$Sentrix_ID <- factor(pData(eset)$Sentrix_ID)}
 if("Sentrix_Position" %in% names(pData(eset))) {pData(eset)$Sentrix_Position <- factor(pData(eset)$Sentrix_Position)}
-if (!is.null(matchvar)) {pData(eset)[,matchvar] <- factor(pData(eset)[,matchvar])}
+#if (!is.null(matchvar)) {pData(eset)[,matchvar] <- factor(pData(eset)[,matchvar])}
 
 # name row names by sample names, otherwise rownames from first column of pData
 sampleNames(eset) <- pData(eset)[,sampleColumn]
