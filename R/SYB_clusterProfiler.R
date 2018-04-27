@@ -35,10 +35,11 @@
 #' @param newheaderBackground optional character vector with new header information for \code{backgroundlist}.
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
-#' @param enrichmentCat character vector with categories to be enriched (GO: gene ontology (MF, BP, CC), 
-#'                KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).
-#' @param maxInputGenes (numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).
-#' @param id.type character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
+#' @param enrichmentCat character vector with categories to be enriched (\code{GO}: gene ontology (MF, BP, CC), 
+#'                \code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).
+#'                Disease ontology is for human only.
+#' @param maxInputGenes (numeric) max number of top diff regulated elements used for enrichment analysis (or NULL).
+#' @param id.type character with identifier type from annotation package (\code{"ENTREZID"} or \code{"SYMBOL"})
 #'          Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.
 #' @param id.column character with column name for identifier variable in \code{genes}. 
 #' @param sortcolumn character with column name of quantitative data in \code{genes} used for ordering.
@@ -61,7 +62,7 @@
 #' @param org character with name of organism ("human", "mouse", "rat").
 #' @param enrich.p.valueCutoff numeric p-value threshold for returned enrichment terms.
 #' @param enrich.q.valueCutoff numeric q-value threshold for returned enrichment terms.
-#' @param nPerm permutation numbers
+#' @param nPerm permutation numbers for gene set enrichment analysis
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.
 #' @param maxGSSize maximal size of genes annotated for testing
 #' @param figure.res numeric resolution for png.
@@ -127,6 +128,7 @@ clusterprof <- function (genes,
   ## install/load required packages from CRAN and Bioconductor
   pkg.bioc <- c("clusterProfiler", "DOSE", "ReactomePA", "topGO", "pathview", annotationdb)
   pkg.cran <- c("plyr")
+
   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   
@@ -223,8 +225,7 @@ clusterprof <- function (genes,
      # (after sorting, if sortcolumn available).
      genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,"ENTREZID"]),] 
       
-      
-  
+
   ### Filtering: Threshold applied to gene list: 'maxInputGenes' as well as 'sortcolumn.threshold' if applicable
 
      filtgenes <- filterGeneLists(genes[[ge]],
@@ -238,7 +239,11 @@ clusterprof <- function (genes,
                         filtercat2.function = abs,
                         filtercat2.threshold= threshold_FC)
      
-  cat(paste("\n", min(nrow(filtgenes), maxInputGenes), "unique genes for overrepresentation analysis.\n"))  
+  filtgenes[,"ENTREZID"] <- as.character(filtgenes[,"ENTREZID"]) # convert numeric EntrezIDs to characters
+  cat(paste("\n", min(nrow(filtgenes), maxInputGenes), "unique genes for overrepresentation analysis:\n"))  
+  print(head(filtgenes$ENTREZID))  
+    cat("\n")
+
   filtgenes <- filtgenes[1:min(nrow(filtgenes), maxInputGenes), , drop=F]
   
   
@@ -249,7 +254,9 @@ clusterprof <- function (genes,
     # for increasing sortcolumn (e.g. p-values). Low values transformed to high values
     if(sortdecreasing==F) {gseagenes <- fun.transf.incr.values(gseagenes)} 
     gseagenes <- sort(gseagenes, decreasing=T) # Vector in decreasing order.
-    cat(paste("\n", length(gseagenes), "unique genes for gene set enrichment analysis.\n"))  
+    cat(paste("\n", length(gseagenes), "unique genes for gene set enrichment analysis:\n"))
+    print(head(names(gseagenes)))  
+    cat("\n")
   }
   
   
@@ -321,7 +328,13 @@ clusterprof <- function (genes,
   # remove categories not supported by clusterProfile
   enrichmentCat.found <- enrichmentCat %in% c("GO", "KEGG", "Reactome", "DO")
   enrichmentCat <- enrichmentCat[enrichmentCat.found]
-  cat(paste("\nCategories used for enrichment analysis with clusterProfiler:", paste(enrichmentCat, collapse=" "), "\n"))
+  if(("DO" %in% enrichmentCat) & org !="human") {
+    cat("\nDiesease ontology (DO) available for human only!")
+    enrichmentCat <- enrichmentCat[enrichmentCat!="DO"]
+    if(length(enrichmentCat)==0) {stop("\nNo valid categories selected!")}  
+  }
+  
+  cat(paste("\nCategories used for enrichment analysis with clusterProfiler:", paste(enrichmentCat, collapse=" "), "\n\n"))
   
   # initialise result list
   enrichresult[[ge]] <- list()
@@ -443,9 +456,10 @@ if ("Reactome" %in% enrichmentCat) {
 }
 
 
-  ##### Disease Ontology enrichment
+  ##### Disease Ontology enrichment (for human only!)
   # DO over-representation test
   if ("DO" %in% enrichmentCat) {
+
     if(nrow(filtgenes)>1) {
       enrichresult[[ge]][[paste0("Overrep_","DO")]] <- DOSE::enrichDO(gene =  filtgenes[,"ENTREZID"],
                     ont="DO",
@@ -474,8 +488,6 @@ if ("Reactome" %in% enrichmentCat) {
   
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","DO")]])), "enriched terms.\n"))
   }
-
-
 }
 
 

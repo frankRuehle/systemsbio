@@ -37,12 +37,13 @@ contain all genes under investigation without pre-filtering for significance).}
 
 \item{projectname}{optional character prefix for output file names.}
 
-\item{enrichmentCat}{character vector with categories to be enriched (GO: gene ontology (MF, BP, CC), 
-KEGG: KEGG pathways, Reactome: Reactome pathways, DO: Disease ontology).}
+\item{enrichmentCat}{character vector with categories to be enriched (\code{GO}: gene ontology (MF, BP, CC), 
+\code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).
+Disease ontology is for human only.}
 
-\item{maxInputGenes}{(numeric) max number of top diff regulated elements used for enrichment analysis.(or NULL).}
+\item{maxInputGenes}{(numeric) max number of top diff regulated elements used for enrichment analysis (or NULL).}
 
-\item{id.type}{character with identifier type from annotation package ("ENTREZID" or "SYMBOL")
+\item{id.type}{character with identifier type from annotation package (\code{"ENTREZID"} or \code{"SYMBOL"})
 Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
 
 \item{id.column}{character with column name for identifier variable in \code{genes}.}
@@ -77,7 +78,7 @@ One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"}
 
 \item{enrich.q.valueCutoff}{numeric q-value threshold for returned enrichment terms.}
 
-\item{nPerm}{permutation numbers}
+\item{nPerm}{permutation numbers for gene set enrichment analysis}
 
 \item{minGSSize}{minimal size of genes annotated by Ontology term for testing.}
 

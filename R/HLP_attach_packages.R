@@ -10,6 +10,8 @@
 #' 
 #' @param pkg.cran Character vector with names of CRAN packages to attach
 #' @param pkg.bioc Character vector with names of Bioconductor packages to attach
+#' @param suppressUpdatesBioc logical. If \code{FALSE}, the user is asked whether old bioconductor packages should 
+#' be updated. If \code{TRUE}, the user is not prompted to update old packages. 
 #' @param source.bioc character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})
 #' @param pkg Character vector with names of packages to be detached
 #' 
@@ -26,7 +28,7 @@
 
 ##### Attach packages
 # either from CRAN or Bioconductor
-attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bioconductor.org/biocLite.R") {
+attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, suppressUpdatesBioc=T, source.bioc="http://bioconductor.org/biocLite.R") {
  
   not.yet.attached.pkg.cran <- NULL
   not.yet.attached.pkg.bioc <- NULL
@@ -47,7 +49,7 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, source.bioc="http://bio
     source(source.bioc)
     for (p in 1:length(pkg.bioc)) {  
       if (!is.element(pkg.bioc[p], installed.packages()[,1])) {
-        biocLite(pkg.bioc[p])}
+        biocLite(pkg.bioc[p], suppressUpdates = suppressUpdatesBioc)}
       require(pkg.bioc[p], character.only = TRUE) 
     }
   }

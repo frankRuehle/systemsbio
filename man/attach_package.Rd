@@ -4,13 +4,16 @@
 \alias{attach_package}
 \title{Organise temporarily needed packages}
 \usage{
-attach_package(pkg.cran = NULL, pkg.bioc = NULL,
+attach_package(pkg.cran = NULL, pkg.bioc = NULL, suppressUpdatesBioc = T,
   source.bioc = "http://bioconductor.org/biocLite.R")
 }
 \arguments{
 \item{pkg.cran}{Character vector with names of CRAN packages to attach}
 
 \item{pkg.bioc}{Character vector with names of Bioconductor packages to attach}
+
+\item{suppressUpdatesBioc}{logical. If \code{FALSE}, the user is asked whether old bioconductor packages should 
+be updated. If \code{TRUE}, the user is not prompted to update old packages.}
 
 \item{source.bioc}{character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})}
 
