@@ -8,8 +8,9 @@ wrapDESeq(dds, min_rowsum = 10, comparisons, p.value.threshold = 0.05,
   adjust.method = "BH", FC.threshold = log2(1.5),
   projectfolder = file.path("GEX/deseq"), projectname = "",
   Symbol.column = NULL, sampleColumn = "Sample_Name",
-  groupColumn = "Sample_Group", venn_comparisons = NULL, maxHM = 50,
-  scale = c("none"), HMcexRow = 1.1, HMcexCol = 1.1, figure.res = 300,
+  groupColumn = "Sample_Group", add_anno_columns = NULL,
+  venn_comparisons = NULL, maxHM = 50, scale = c("none"),
+  HMcexRow = 1.1, HMcexCol = 1.1, figure.res = 300,
   HMincludeRelevantSamplesOnly = TRUE, color.palette = "heat.colors")
 }
 \arguments{
@@ -35,6 +36,9 @@ are removed from the count matrix.}
 \item{sampleColumn}{character with column name of Sample names in \code{dds}}
 
 \item{groupColumn}{character with column name of group names in \code{dds}. Group names must match \code{comparisons}!}
+
+\item{add_anno_columns}{character with names of feature annotation columns given in \code{dds}, which shall
+be added to the output tables. Omitted if \code{NULL}.}
 
 \item{venn_comparisons}{character vector or (named) list of character vectors with group comparisons to be included 
 in Venn Diagram (max 5 comparisons per Venn diagramm). Must be subset of \code{comparisons} or NULL.}
