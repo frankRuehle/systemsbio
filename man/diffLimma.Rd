@@ -57,8 +57,10 @@ or the column direction, or none (default). Either \code{"none"}, \code{"row"} o
 
 \item{figure.res}{numeric resolution for png.}
 
-\item{HMincludeRelevantSamplesOnly}{(boolean) if TRUE include only Samples in heatmap, 
-which are in groups of the respective group comparison.}
+\item{HMincludeRelevantSamplesOnly}{(boolean) if \code{TRUE} include only Samples in heatmap, which belong to the groups of the 
+respective group comparison. If \code{FALSE}, all samples are plotted in the heatmaps. If a custom selection of sample groups 
+is required for the heatmap of each group comparison, \code{HMincludeRelevantSamplesOnly} can be a named list of the form 
+\code{list("groupA-groupB" = c("groupA", "groupB", "groupX"))}}
 
 \item{color.palette}{select color palette for heatmaps}
 

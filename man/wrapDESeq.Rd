@@ -4,7 +4,7 @@
 \alias{wrapDESeq}
 \title{Differential expression analysis with DESeq2}
 \usage{
-wrapDESeq(dds, min_rowsum = 10, comparisons, p.value.threshold = 0.05,
+wrapDESeq(dds, comparisons, min_rowsum = 10, p.value.threshold = 0.05,
   adjust.method = "BH", FC.threshold = log2(1.5),
   projectfolder = file.path("GEX/deseq"), projectname = "",
   Symbol.column = NULL, sampleColumn = "Sample_Name",
@@ -16,10 +16,10 @@ wrapDESeq(dds, min_rowsum = 10, comparisons, p.value.threshold = 0.05,
 \arguments{
 \item{dds}{DESeqDataSet}
 
+\item{comparisons}{character vector with group comparisons in format \code{"groupA-groupB"}}
+
 \item{min_rowsum}{numeric. Minimum rowsum of countmatrix of \code{dds}. All rows with \code{rowSums < min_rowsum}
 are removed from the count matrix.}
-
-\item{comparisons}{character vector with group comparisons in format \code{"groupA-groupB"}}
 
 \item{p.value.threshold}{numeric p-value threshold}
 
@@ -54,8 +54,10 @@ or the column direction, or none (default). Either \code{"none"}, \code{"row"} o
 
 \item{figure.res}{numeric resolution for png.}
 
-\item{HMincludeRelevantSamplesOnly}{(boolean) if TRUE include only Samples in heatmap, 
-which are in groups of the respective group comparison.}
+\item{HMincludeRelevantSamplesOnly}{(boolean) if \code{TRUE} include only Samples in heatmap, which belong to the groups of the 
+respective group comparison. If \code{FALSE}, all samples are plotted in the heatmaps. If a custom selection of sample groups 
+is required for the heatmap of each group comparison, \code{HMincludeRelevantSamplesOnly} can be a named list of the form 
+\code{list("groupA-groupB" = c("groupA", "groupB", "groupX"))}}
 
 \item{color.palette}{select color palette for heatmaps}
 }

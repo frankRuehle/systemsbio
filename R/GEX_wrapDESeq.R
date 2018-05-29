@@ -14,9 +14,9 @@
 #' differentially expressed genes for each group comparison. 
 #'  
 #' @param dds DESeqDataSet
+#' @param comparisons character vector with group comparisons in format \code{"groupA-groupB"} 
 #' @param min_rowsum numeric. Minimum rowsum of countmatrix of \code{dds}. All rows with \code{rowSums < min_rowsum}
 #' are removed from the count matrix. 
-#' @param comparisons character vector with group comparisons in format \code{"groupA-groupB"} 
 #' @param p.value.threshold numeric p-value threshold 
 #' @param adjust.method adjustment method for multiple testing (\code{"none", "BH", "BY" and "holm"})
 #' @param FC.threshold numeric foldchange threshold. 
@@ -38,8 +38,10 @@
 #' @param HMcexRow labelsize for rownames in Heatmap
 #' @param HMcexCol labelsize for colnames in Heatmap
 #' @param figure.res numeric resolution for png.
-#' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
-#'                                which are in groups of the respective group comparison.  
+#' @param HMincludeRelevantSamplesOnly (boolean) if \code{TRUE} include only Samples in heatmap, which belong to the groups of the 
+#' respective group comparison. If \code{FALSE}, all samples are plotted in the heatmaps. If a custom selection of sample groups 
+#' is required for the heatmap of each group comparison, \code{HMincludeRelevantSamplesOnly} can be a named list of the form 
+#' \code{list("groupA-groupB" = c("groupA", "groupB", "groupX"))}
 #' @param color.palette select color palette for heatmaps                     
 #'                           
 #'
@@ -59,8 +61,8 @@
 
 
 wrapDESeq <- function(dds, 
-                  min_rowsum = 10,
                   comparisons,
+                  min_rowsum = 10,
                   p.value.threshold = 0.05, 
                   adjust.method="BH", 
                   FC.threshold = log2(1.5),
@@ -103,7 +105,8 @@ wrapDESeq <- function(dds,
   if (!file.exists(file.path(projectfolder, "MA_plots"))) {dir.create(file.path(projectfolder, "MA_plots")) }
   
   
- 
+  if (class(dds) != "DESeqDataSet") {stop("\ndds is not of class DESeqDataSet!")}
+  
    # modify plot labels (heatmap legend)
   heatmap_legend_xaxis <- "log2(counts)"
   if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score"}
@@ -123,23 +126,35 @@ wrapDESeq <- function(dds,
   cat("\nApply pre-filtering for rowSums >=", min_rowsum, ".", nrow(dds), "genes remaining.")
   
   
+  
+  
   # Differential expression
   # also generates sizefactors for library size normalisation used in results function.
   cat("\nDifferential expression analysis with DESeq2.")
-  dds <- DESeq(dds)
+  dds <- DESeq(dds) 
   
-  
-  if (class(dds) == "DESeqDataSet") {
-    cat("\nUsing variance Stabilizing Transformation for generating heatmaps")
+
+   # preparing data matrix using variance Stabilizing Transformation
+    cat("\nUsing variance Stabilizing Transformation for generating heatmaps and pca plot")
     vsd <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
-    # expmatrix <- DESeq2::rlog(dds, fitType="local") # class: DESeqTransform
+    # class: DESeqTransform
+    # expmatrix <- DESeq2::rlog(dds, fitType="local") 
     expmatrix <- assay(vsd)
-    features <- mcols(dds,use.names=TRUE)
+    features <- mcols(dds, use.names=TRUE)
     # colData(dds) # sample phenotypes
-  }
+  
+  
+  # pca plot
+  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot.png"))
+  cat("\nWrite pca plot to", filename.pca)
+  print(vsd)
+  png(filename= filename.pca, width = 150, height = 150, units = "mm", res= figure.res)
+  print(DESeq2::plotPCA(vsd, intgroup= groupColumn, ntop = nrow(vsd))) # use all genes for pca plot instead top 500 selected by highest row variance
+  dev.off()
   
   
   
+ 
 
 ######### differential group comparisons
 res.unfilt <- list()
@@ -204,9 +219,9 @@ for (i in 1:length(comparisons)) {
 
   # comment bioconductor workflow on http://www.bioconductor.org/help/workflows/rnaseqGene/
   # The column log2FoldChange is the effect size estimate. It tells us how much the gene's expression seems to 
-  # have changed due to treatment with dexamethasone in comparison to untreated samples. This value is reported 
+  # have changed due to treatment in comparison to untreated samples. This value is reported 
   # on a logarithmic scale to base 2: for example, a log2 fold change of 1.5 means that the gene's expression 
-  # is increased by a multiplicative factor of 2**1.5=2.82.
+  # is increased by a multiplicative factor of 2**1.5=2.82. 
   
   
   # Writing result gene tables
@@ -264,10 +279,16 @@ for (i in 1:length(comparisons)) {
         
         groupColorCode <- rainbow(length(unique(colData(dds)[,groupColumn])))[as.numeric(factor(colData(dds)[,groupColumn]))] # for ColSideColors in heatmaps
         
-        #  if HMincludeRelevantSamplesOnly=T, only samples considered belonging to the respective group comparison 
-        if (HMincludeRelevantSamplesOnly) {
-          groups2plot <- unlist(strsplit(comparisons[i], "-") )  
-          groups2plot <- unique(sub("[(|)]", "", groups2plot))  # for comparison of comparison
+        #  if HMincludeRelevantSamplesOnly=F, all samples are plotted in every group comparison
+        if (isTRUE(HMincludeRelevantSamplesOnly) | is.list(HMincludeRelevantSamplesOnly)) {
+          
+          if (is.list(HMincludeRelevantSamplesOnly) & !is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) {
+            groups2plot <- HMincludeRelevantSamplesOnly[[comparisons[i]]] # plot samples of groups given as character in HMincludeRelevantSamplesOnly
+          } else {
+            groups2plot <- unlist(strsplit(comparisons[i], "-") )  # plot only samples considered belonging to the respective group comparison 
+            groups2plot <- unique(sub("[(|)]", "", groups2plot))  # for comparison of comparison
+            }
+            
           sampleTable <- colData(dds)[,c(sampleColumn,groupColumn)]
           samples2plot <- character()
           
@@ -323,11 +344,14 @@ if(is.null(venn_comparisons)) {venn_comparisons <- comparisons}
       category.names <- ifelse(nchar (category.names)>15, sub("-", "-\n", category.names), category.names)
       for (i in names(venndata)) {venndata[[i]] <- rownames(venndata[[i]])}
       png(filename= filename.Venn, width = 150, height = 150, units = "mm", res=figure.res)
-      venn.plot <- venn.diagram(venndata, filename= NULL, category.names= category.names, cex = 1, cat.cex=1, alpha=0.3, margin=0.3)
+      venn.plot <- venn.diagram(venndata, filename= NULL, imagetype = "png", category.names= category.names, 
+                                cex = 1, cat.cex=1, alpha=0.3, margin=0.3)
       grid.draw(venn.plot)
       dev.off()
     }
   } # end v-loop
+
+
 
 
 # Dispersion plot
@@ -336,15 +360,6 @@ cat("\nWrite Dispersion plot to", filename.Disp)
 png(filename= filename.Disp, width = 150, height = 150, units = "mm", res=figure.res)
 DESeq2::plotDispEsts(dds, main="Dispersion Estimates")
 dev.off()
-
-
-# pca plot
-filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot.png"))
-cat("\nWrite pca plot to", filename.pca)
-png(filename= filename.pca, width = 150, height = 150, units = "mm", res=figure.res)
-DESeq2::plotPCA(vsd, intgroup= groupColumn)
-dev.off()
-
 
 
 # # plot counts: examine the counts of reads for a single gene across the groups

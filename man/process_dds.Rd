@@ -14,12 +14,13 @@ process_dds(dds, min_rowsum = 10, transform.function = NULL,
 are removed from the count matrix.}
 
 \item{transform.function}{function name to be used for data transformation, 
-e.g. \code{rlog}, \code{rlogTransformation}, \code{varianceStabilizingTransformation}.}
+e.g. \code{DESeq2::rlog} or \code{DESeq2::rlogTransformation} for log2-transformation or \code{DESeq2::varianceStabilizingTransformation}.}
 
 \item{norm_sizeFactors}{logical. If TRUE normalize for library size. This may already be included
 in the data transformation (e.g. for \code{rlog} and \code{varianceStabilizingTransformation}).}
 
-\item{export}{return either a \code{"SummarizedExperiment"} or a \code{"DESeqDataSet"} object.}
+\item{export}{return either a \code{"SummarizedExperiment"} or a \code{"DESeq"} object 
+(i.e. either \code{"DESeqDataSet"} or \code{"DESeqTransform"} object).}
 
 \item{...}{further parameter for \code{transform.function}}
 }
@@ -31,8 +32,8 @@ Process count matrix of DESeqDataSet to SummarizedExperiment to be used as expre
 }
 \details{
 The count matrix of the input object is filtered for low abundancy transcripts, normalized for 
-library size factor (size factors are  first calculated if necessary) and is log2-transformed
-using the \code{DESeq2::rlog} function. The design parameter of the initial \code{DESeqDataSet}
+library size factor (size factors are first calculated if necessary) and is transformed
+according to the function given in \code{transform.function}. The design parameter of the initial \code{DESeqDataSet}
 is omitted
 }
 \author{

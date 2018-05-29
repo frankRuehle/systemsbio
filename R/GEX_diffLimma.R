@@ -44,8 +44,10 @@
 #' @param HMcexRow labelsize for rownames in Heatmap
 #' @param HMcexCol labelsize for colnames in Heatmap
 #' @param figure.res numeric resolution for png.
-#' @param HMincludeRelevantSamplesOnly (boolean) if TRUE include only Samples in heatmap, 
-#'                                which are in groups of the respective group comparison.  
+#' @param HMincludeRelevantSamplesOnly (boolean) if \code{TRUE} include only Samples in heatmap, which belong to the groups of the 
+#' respective group comparison. If \code{FALSE}, all samples are plotted in the heatmaps. If a custom selection of sample groups 
+#' is required for the heatmap of each group comparison, \code{HMincludeRelevantSamplesOnly} can be a named list of the form 
+#' \code{list("groupA-groupB" = c("groupA", "groupB", "groupX"))}
 #' @param color.palette select color palette for heatmaps                     
 #' @param FC.heatmap.comparisons character vector or (named) list of character vectors with group comparsions to be 
 #'                         included in foldchange heatmaps. One FC heatmap is generated for each character vector.
@@ -425,10 +427,17 @@ for (i in 1:length(comparisons)) {
         
         groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
         
-        #  if HMincludeRelevantSamplesOnly=T, only samples considered belonging to the respective group comparison 
-        if (HMincludeRelevantSamplesOnly) {
-          groups2plot <- unlist(strsplit(comparisons[i], "-") )  
-          groups2plot <- unique(sub("[(|)]", "", groups2plot))  # for comparison of comparison
+
+          #  if HMincludeRelevantSamplesOnly=F, all samples are plotted in every group comparison
+          if (isTRUE(HMincludeRelevantSamplesOnly) | is.list(HMincludeRelevantSamplesOnly)) {
+            
+            if (is.list(HMincludeRelevantSamplesOnly) & !is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) { 
+              groups2plot <- HMincludeRelevantSamplesOnly[[comparisons[i]]] # plot samples of groups given as character in HMincludeRelevantSamplesOnly
+            } else {
+              groups2plot <- unlist(strsplit(comparisons[i], "-") )  # plot only samples considered belonging to the respective group comparison 
+              groups2plot <- unique(sub("[(|)]", "", groups2plot))  # for comparison of comparison
+            }
+           
           sampleTable <- phenoGEXMTSet[,c(sampleColumn,groupColumn)]
           samples2plot <- character()
           
