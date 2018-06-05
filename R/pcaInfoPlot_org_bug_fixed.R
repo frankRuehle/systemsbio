@@ -39,23 +39,17 @@ pcaInfoPlot <- function (eData, inputType = "hgu133plus2", org = "Hs", groups,
     GOtreePC1neg <- GOtree(probesPC1neg, inputType = inputType, org = org)
     GOtreePC2pos <- GOtree(probesPC2pos, inputType = inputType, org = org)
     GOtreePC2neg <- GOtree(probesPC2neg, inputType = inputType, org = org)
-    GOtreeObjs <- list(GOtreePC1pos, GOtreePC1neg, GOtreePC2pos, 
-                       GOtreePC2neg)
+    GOtreeObjs <- list(GOtreePC1pos, GOtreePC1neg, GOtreePC2pos, GOtreePC2neg)
   }
   else {
     GOtreeObjs <- NA
   }
   if (primoAnnotation) {
-    primoPC1pos <- primo(probesPC1pos, inputType = inputType, 
-                         org = org)
-    primoPC1neg <- primo(probesPC1neg, inputType = inputType, 
-                         org = org)
-    primoPC2pos <- primo(probesPC2pos, inputType = inputType, 
-                         org = org)
-    primoPC2neg <- primo(probesPC2neg, inputType = inputType, 
-                         org = org)
-    primoObjs <- list(primoPC1pos, primoPC1neg, primoPC2pos, 
-                      primoPC2neg)
+    primoPC1pos <- primo(probesPC1pos, inputType = inputType, org = org)
+    primoPC1neg <- primo(probesPC1neg, inputType = inputType, org = org)
+    primoPC2pos <- primo(probesPC2pos, inputType = inputType, org = org)
+    primoPC2neg <- primo(probesPC2neg, inputType = inputType, org = org)
+    primoObjs <- list(primoPC1pos, primoPC1neg, primoPC2pos, primoPC2neg)
   }
   else {
     primoObjs <- NA

@@ -113,11 +113,11 @@ gex <- gex[, !sampleNames(gex) %in% c("samplenamesToRemove")]
 ```
 
 ## Normalize expression set
-Next, the dataset will be quantile-normalized using the `norm_exprs()` function. log2-transformation is not necessary,
+Next, the dataset will be quantile-normalized using the `process_eset()` function. log2-transformation is not necessary,
 since the data has already been log2-transformed.
 
 ```
-gexn <- norm_exprs(gex, method_norm="quantile", transform="none")
+gexn <- process_eset(gex, method_norm="quantile", transform="none")
 ```
 
 ## Import RNA-Seq count data
@@ -137,7 +137,7 @@ DESeq2 uses un-normalized count data for differential expression analysis. To ob
 sumexp.vst <- process_dds(dds,
                           min_rowsum = 10,
                           transform.function = varianceStabilizingTransformation,
-                          export = "SummarizedExperiment")
+                          return_SummarizedExperiment = TRUE)
 ```
 
 ## Principal component analysis (PCA) and enrichment analysis of PC loadings
@@ -207,16 +207,16 @@ include_graphics(deg_images)
 
 
 ## Differential gene expression analysis with Limma
-`diffLimma` uses the `limma` package to determine differentially expressed genes according to the given p-value and fold change thresholds for all group comparisons given in `comparisons`. Tables containing the filtered as well as unfiltered gene lists are stored in the designated `projectfolder`. Heatmaps for each group comparison containg the top differentially expressed genes will be generated automatically. Venn-Diagrams will show the overlap of differentially expressed genes from different group comparisons.
+`wrapLimma` uses the `limma` package to determine differentially expressed genes according to the given p-value and fold change thresholds for all group comparisons given in `comparisons`. Tables containing the filtered as well as unfiltered gene lists are stored in the designated `projectfolder`. Heatmaps for each group comparison containg the top differentially expressed genes will be generated automatically. Venn-Diagrams will show the overlap of differentially expressed genes from different group comparisons.
 
 
 ```
-deg <- diffLimma(gexn, 
+deg <- wrapLimma(gexn, 
                  comparisons = c("case1-control", "case2-control"),
                  p.value.threshold = 0.05, 
                  FC.threshold = log2(1.5), 
                  adjust.method = "BH", 
-                 projectfolder = "example_analysis/GEX/Diff_limma", 
+                 projectfolder = "example_analysis/GEX/limma", 
                  projectname = "example",
                  Symbol.column = "SYMBOL",
                  geneAnno2keep = c("SYMBOL", "ENTREZID"),

@@ -4,18 +4,18 @@
 \alias{wrapWGCNA}
 \title{Wrapper for weighted gene co-expression network analysis.}
 \usage{
-wrapWGCNA(GEXMTSet, projectfolder = "GEX/WGCNA",
-  softThresholdPower = "auto", corType = "bicor", networkType = "signed",
-  TOMType = "signed", maxBlockSize = 45000, TOMplot = FALSE,
-  MDSplot = FALSE, phDendro = NULL, phModule = NULL,
-  sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
-  groupsets = NULL, symbolColumn = NULL, flashClustMethod = "average",
-  moduleBoxplotsPerFigure = 16, figure.res = 300, dendroRowText = T,
-  autoColorHeight = FALSE, colorHeight = 0.1, cex.labels = 0.6, ...)
+wrapWGCNA(data, projectfolder = "GEX/WGCNA", softThresholdPower = "auto",
+  corType = "bicor", networkType = "signed", TOMType = "signed",
+  maxBlockSize = 45000, TOMplot = FALSE, MDSplot = FALSE,
+  phDendro = NULL, phModule = NULL, sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group", groupsets = NULL, symbolColumn = NULL,
+  flashClustMethod = "average", moduleBoxplotsPerFigure = 16,
+  figure.res = 300, dendroRowText = T, autoColorHeight = FALSE,
+  colorHeight = 0.1, cex.labels = 0.6, ...)
 }
 \arguments{
-\item{GEXMTSet}{ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
-previously stored network object to be loaded from this path. If \code{GEXMTSet} is "load_default", network 
+\item{data}{ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{data} is character containing a filepath, the functions assumes
+previously stored network object to be loaded from this path. If \code{data} is "load_default", network 
 object is loaded from default directory \code{"file.path(projectfolder, "TOM", "networkConstruction-auto.RData")"}.}
 
 \item{projectfolder}{character with directory for output files (will be generated if not existing).}
@@ -34,7 +34,7 @@ In an "signed" network, negatively correlated genes will not be put into one mod
 If "unsigned", the standard TOM will be used (more generally, TOM function will receive the adjacency as input). 
 If "signed", TOM will keep track of the sign of correlations between neighbours.}
 
-\item{maxBlockSize}{integer giving maximum block size for module detection. If the number of genes in \code{GEXMTSet} exceeds \code{maxBlockSize}, 
+\item{maxBlockSize}{integer giving maximum block size for module detection. If the number of genes in \code{data} exceeds \code{maxBlockSize}, 
 genes will be pre-clustered into blocks whose size should not exceed \code{maxBlockSize} (\code{maxBlockSize} must not exceed 46340).
 It's intended to use as big block sizes as possible, but mind that big blocksizes will heavily impact memory usage.}
 
@@ -46,13 +46,13 @@ Modules correspond to red squares along the diagonal.}
 by a dissimilarity matrix. Each row of the dissimilarity matrix is visualized by a point in a Euclidean space.
 Each dot (gene) is colored by the module assignment.}
 
-\item{phDendro}{character vector with phenotypes of \code{GEXMTSet} object to be displayed in sample dendrogram.}
+\item{phDendro}{character vector with phenotypes of \code{data} object to be displayed in sample dendrogram.}
 
 \item{phModule}{character vector with phenotypes to correlate module eigengenes with in heatmap.}
 
-\item{sampleColumn}{character with column name of Sample names in pheno data of \code{GEXMTSet}.}
+\item{sampleColumn}{character with column name of Sample names in pheno data of \code{data}.}
 
-\item{groupColumn}{character with column name of group names in pheno data of \code{GEXMTSet}.}
+\item{groupColumn}{character with column name of group names in pheno data of \code{data}.}
 
 \item{groupsets}{character vector with names of group sets in format "groupA-groupB". Groups summarized in parentheses
 "(groupA-groupB)" are coded as ONE group. They are used for correlation of module eigengenes with 
@@ -60,7 +60,7 @@ corresponding samples of selected groupsets. Mind that eigengenes are calculated
 while correlation is calculated for samples of denoted groupsets only.
 Group names must match names in \code{groupColumn}. Omitted if NULL.}
 
-\item{symbolColumn}{character with name of feature identifier in feature data of \code{GEXMTSet}.}
+\item{symbolColumn}{character with name of feature identifier in feature data of \code{data}.}
 
 \item{flashClustMethod}{character with agglomeration method used for hierarchical clustering in \code{flashClust}-package. 
 Either "ward", "single", "complete", "average", "mcquitty", "median" or "centroid".}
@@ -132,7 +132,7 @@ The function calculates the following parameter:
   \item GS: gene significance: correlation of the gene with a phenotype.
   \item Module-trait relationship: correlation of a module eigengene with a phenotype.
   }
-Phenotypes are taken from phenotype data of \code{GEXMTSet} as specified in \code{phModule}. Furthermore, membership of samples in groups
+Phenotypes are taken from phenotype data of \code{data} as specified in \code{phModule}. Furthermore, membership of samples in groups
 which are defined in \code{groupsets} are also used as phenotypes (e.g. two groups from a differential gene expression experiment). 
 When correlation with group membership is calculated, only those samples are included which belong to the denoted groupset 
 (mind that gene modules were calculated using expression data from all samples).
@@ -167,7 +167,7 @@ The procedure is divided in several steps:
           }
   \item Generate output tables
      \itemize{
-        \item \code{networkDatOutput = data.frame(featureGEXMTSet, moduleColors, GS.datTraits, GSPvalue, geneGroupsetCor, geneGroupsetPvalue)}
+        \item \code{networkDatOutput = data.frame(featuredata, moduleColors, GS.datTraits, GSPvalue, geneGroupsetCor, geneGroupsetPvalue)}
         \item \code{networkDatOutput_incl_MM = data.frame(networkDatOutput, datKME[,modOrder], MMPvalue[,modOrder])}
         }
   \item Visualization of networks within R (TOMplot, MDSplot).

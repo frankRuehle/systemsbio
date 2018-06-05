@@ -19,7 +19,7 @@
 #' selected group comparisons.
 #' 
 #' 
-#' @param GEXMTSet ExpressionSet or MethylSet
+#' @param data ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet.
 #' @param comparisons character vector with group comparisons in format \code{"groupA-groupB"} or 
 #'              nested comparisons in format \code{"(groupA-groupB)-(groupC-groupD)"}.
 #' @param p.value.threshold numeric p-value threshold 
@@ -29,14 +29,14 @@
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
 #' 
-#' @param matchvar (character) if paired design, name of column to be used to group samples. NULL for unpaired design.
-#' @param Symbol.column character with column name of Gene Symbols in \code{GEXMTSet} or NULL.
-#' @param sampleColumn character with column name of Sample names in \code{GEXMTSet}
-#' @param groupColumn character with column name of group names in \code{GEXMTSet}. Group names must match \code{comparisons}!
-#' @param useWeights (boolean) if TRUE, arrays are weighted for their quality.
+#' @param matchvar (character) if paired design, name of column to be used to group samples. \code{NULL} for unpaired design.
+#' @param Symbol.column character with column name of Gene Symbols in \code{data} or \code{NULL}.
+#' @param sampleColumn character with column name of Sample names in \code{data}
+#' @param groupColumn character with column name of group names in \code{data}. Group names must match \code{comparisons}!
+#' @param useWeights (boolean) if \code{TRUE}, arrays are weighted for their quality.
 #' @param geneAnno2keep (character vector) annotation columns in feature data to keep in output
 #' @param venn_comparisons character vector or (named) list of character vectors with group comparisons to be included 
-#'                   in Venn Diagram (max 5 comparisons per Venn diagramm). Must be subset of \code{comparisons} or NULL.
+#'                   in Venn Diagram (max 5 comparisons per Venn diagramm). Must be subset of \code{comparisons} or \code{NULL}.
 #'
 #' @param maxHM (numeric) max number of top diff. regulated elements printed in Heatmap
 #' @param scale character indicating if the values should be centered and scaled in either the row direction 
@@ -51,14 +51,14 @@
 #' @param color.palette select color palette for heatmaps                     
 #' @param FC.heatmap.comparisons character vector or (named) list of character vectors with group comparsions to be 
 #'                         included in foldchange heatmaps. One FC heatmap is generated for each character vector.
-#'                         If NULL no FC heatmaps are generated.
+#'                         If \code{NULL} no FC heatmaps are generated.
 #' @param FC.heatmap.geneselection character vector containing elements of \code{c("all", "intersect", "union")}. 
 #'                           Which probes shall be used for foldchange heatmaps? \code{"allprobes"}: no restriction,  
 #'                           \code{"intersect"}: only probes are used which are differentially expressed in all respective group comparisons.
 #'                           \code{"union"}: only probes are used which are differentially expressed in any of the respective group comparisons.
 #'                           Probes are prioritised by F-Test p-value calculated for all group comparisons denoted in \code{comparisons}
 #'                           as well as by minimum adjusted p-value of respective group comparisons plotted in this heatmap.
-#'                           Obsolete if 'FC.heatmap.comparisons' is NULL.
+#'                           Obsolete if \code{FC.heatmap.comparisons} is \code{NULL}.
 #'                           
 #'
 #' @return List of 2 elements 
@@ -72,17 +72,17 @@
 #' 
 #' @author Frank Ruehle
 #' 
-#' @export diffLimma
+#' @export 
 
 
 
-diffLimma <- function(GEXMTSet, 
+wrapLimma <- function(data, 
                       comparisons,
                       p.value.threshold = 0.05, 
                       adjust.method="BH", 
                       FC.threshold = log2(1.5),
                       
-                      projectfolder = file.path("GEX/Diff_limma"),
+                      projectfolder = file.path("GEX/limma"),
                       projectname = "", 
                       
                       matchvar=NULL, 
@@ -121,42 +121,60 @@ diffLimma <- function(GEXMTSet,
   
   # Create output directories if not yet existing 
   if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
-  if (!file.exists(file.path(projectfolder, "Diff_limma_unfiltered"))) {dir.create(file.path(projectfolder, "Diff_limma_unfiltered")) }
+  if (!file.exists(file.path(projectfolder, "limma_unfiltered"))) {dir.create(file.path(projectfolder, "limma_unfiltered")) }
+  if (!file.exists(file.path(projectfolder, "limma_filtered"))) {dir.create(file.path(projectfolder, "limma_filtered")) }
   if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
   if (!file.exists(file.path(projectfolder, "Volcano_plots"))) {dir.create(file.path(projectfolder, "Volcano_plots")) }
   
   
   
   #### data preparation for expression or methylation data input
-  phenoGEXMTSet <- pData(GEXMTSet)
+
   
-  if (grepl("expression", class(GEXMTSet), ignore.case=T) ) {
+  
+  if(class(data) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
+    cat("\nClass", class(data), "detected\n")
     Exp <- "GEX"
-    if("Status" %in% colnames(fData(GEXMTSet))) { # define regular probes if control probes still present in expression set
-        ids_regular <- rownames(fData(GEXMTSet)[fData(GEXMTSet)$Status=="regular",])
-        } else {ids_regular <- 1:nrow(exprs(GEXMTSet))}
-    featureGEXMTSet <- fData(GEXMTSet)[ids_regular,] # remove control probes from expression set
-    dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
-    heatmap_legend_xaxis="log2(expression)" # for heatmap
-    # pvalue <- "P.Value" # character with column name of p values
-      }  else {  
-      
-      if(grepl("methyl", class(GEXMTSet), ignore.case=T) ) {
-        Exp <- "MT"
-        featureGEXMTSet <- mcols(GEXMTSet, use.names=T)
-        dataGEXMTSet <- getBeta(GEXMTSet)
-        heatmap_legend_xaxis="beta values" # for heatmap
-        # pvalue <- "P.Value" # character with column name of p values
-      } else {return("wrong object class!")}
-    }
+    phenodata = colData(data) # phenotype data 
+    featuredata <- as.data.frame(rowData(data,use.names=TRUE))
+    featuredata <- data.frame(rowfeatures= rownames(featuredata), featuredata)
+    assaydata <- assay(data)
+    heatmap_legend_xaxis = "read counts"
+    
+  } else {
+
+    if (grepl("expression", class(data), ignore.case=T) ) {
+      cat("\nClass", class(data), "detected\n")
+      Exp <- "GEX"
+      phenodata <- pData(data)
+      if("Status" %in% colnames(fData(data))) { # define regular probes if control probes still present in expression set
+          ids_regular <- rownames(fData(data)[fData(data)$Status=="regular",])
+          } else {ids_regular <- 1:nrow(exprs(data))}
+      featuredata <- fData(data)[ids_regular,] # remove control probes from expression set
+      assaydata <- exprs(data)[ids_regular,]
+      heatmap_legend_xaxis="log2(expression)" # for heatmap
+      # pvalue <- "P.Value" # character with column name of p values
+        }  else {  
+        
+        if(grepl("methyl", class(data), ignore.case=T) ) {
+          cat("\nClass", class(data), "detected\n")
+          Exp <- "MT"
+          phenodata <- pData(data)
+          featuredata <- mcols(data, use.names=T)
+          assaydata <- getBeta(data)
+          heatmap_legend_xaxis="beta values" # for heatmap
+          # pvalue <- "P.Value" # character with column name of p values
+        } else {return("wrong object class!")}
+      }
+  }
+  
   
   # modify plot labels (heatmap legend)
   heatmap_legend_xaxis <- "log2(expression)"
   if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score"}
   if (grepl("col", scale)) {heatmap_legend_xaxis <- "column z-score"}
   
-  
-  
+
   # if no thresholds given for p-value and foldchange, values are applied to omit filtering
   if(is.null(p.value.threshold)) {p.value.threshold <- 1}
   if(is.null(FC.threshold)) {FC.threshold <- 0}
@@ -174,17 +192,16 @@ diffLimma <- function(GEXMTSet,
   ### Prepare Design Matrix:
 
   # no contrasts generated from a 0/1 phenotype (levels must by syntactically valid names in R). Therefore renamed.
-  if(is.numeric(phenoGEXMTSet[,groupColumn]) & all(phenoGEXMTSet[,groupColumn] %in% c(0,1))) {
-      #rna <- factor(ifelse(phenoGEXMTSet[,groupColumn]==0, "n", "y")) ##old
-      rna <- factor(make.names(phenoGEXMTSet[,groupColumn])) # c("0","1") -> c("X0","X1")
+  if(is.numeric(phenodata[,groupColumn]) & all(phenodata[,groupColumn] %in% c(0,1))) {
+      rna <- factor(make.names(phenodata[,groupColumn])) # c("0","1") -> c("X0","X1")
            } else {
-        rna <- factor(phenoGEXMTSet[,groupColumn])
+        rna <- factor(phenodata[,groupColumn])
         }
   
   
   if (!is.null(matchvar)) {
         cat("\nPrepare design matrix for paired design\n")
-        matched <- phenoGEXMTSet[,matchvar] # wenn paired design
+        matched <- phenodata[,matchvar] # wenn paired design
         design <- model.matrix(~matched+rna)
   } else {  
     cat("\nPrepare design matrix\n")
@@ -195,7 +212,7 @@ diffLimma <- function(GEXMTSet,
   # array weights: arrays weighted for their quality
   if(useWeights) {
     cat("\nArray quality weighting\n")
-    aw <- arrayWeights(dataGEXMTSet, design)  
+    aw <- arrayWeights(assaydata, design)  
       } else { aw <- NULL}
 
 
@@ -204,11 +221,11 @@ diffLimma <- function(GEXMTSet,
 
 ### Prepare fit: "MArrayLM"-Object ready for diff analysis.
 # input for lmfit: A matrix-like data object containing log-ratios or log-expression values for a series of arrays
-  if (!is.null(matchvar)) {fit <- lmFit(dataGEXMTSet, design, weights=aw) # if paired design  
+  if (!is.null(matchvar)) {fit <- lmFit(assaydata, design, weights=aw) # if paired design  
                          fit <- eBayes(fit)
     } else { # if no paired design
       contrasts <- makeContrasts(contrasts=comparisons, levels=design) 
-      fit <- lmFit(dataGEXMTSet, design, weights=aw)  
+      fit <- lmFit(assaydata, design, weights=aw)  
       fit <- eBayes(contrasts.fit(fit, contrasts))
       }
 
@@ -239,7 +256,7 @@ diffLimma <- function(GEXMTSet,
 # Columns with names of group comparisons represent log foldchanges
   DiffAllGroups_Ftest <- topTable(fit, coef=NULL, confint=TRUE, p.value=1, lfc=FC.threshold, 
                                   adjust.method=adjust.method, number=Inf, 
-                                  genelist=featureGEXMTSet[,names(featureGEXMTSet) %in% geneAnno2keep, drop=F])
+                                  genelist=featuredata[,names(featuredata) %in% geneAnno2keep, drop=F])
   if(Exp=="MT") {names(DiffAllGroups_Ftest)[names(DiffAllGroups_Ftest)=="AveExpr"] <- "AveBeta"}
   
   DiffAllGroups_Ftest <- data.frame(PROBE_ID=rownames(DiffAllGroups_Ftest), DiffAllGroups_Ftest)
@@ -251,30 +268,30 @@ diffLimma <- function(GEXMTSet,
   names(DiffAllGroups_Ftest)[columns2replace] <- ftest.columns[columns2replace]
   
   
-  cat("\nWrite F-Test result to", file.path(projectfolder, paste0(projectname, "all_Groups_Ftest.txt")), "\n")
+  cat("\nWrite F-Test result to", file.path(projectfolder, "limma_filtered", paste0(projectname, "all_Groups_Ftest.txt")), "\n")
   DiffAllGroups_Ftest.sign <- DiffAllGroups_Ftest[DiffAllGroups_Ftest$adj.P.Val<p.value.threshold,]
   write.table(DiffAllGroups_Ftest.sign, 
-              file= file.path(projectfolder, paste0(projectname, "all_Groups_Ftest.txt")), sep="\t", quote=F, row.names=F)
+              file= file.path(projectfolder, "limma_filtered", paste0(projectname, "all_Groups_Ftest.txt")), sep="\t", quote=F, row.names=F)
   
   
   
       ### Heatmap with all samples. Genes selected by F-Test
       if(!is.null(DiffAllGroups_Ftest.sign)) {
         if(nrow(DiffAllGroups_Ftest.sign) >=2) {
-          cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.png", sep="" )), "\n")  
+          cat("\nWrite F-Test Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.png", sep="" )), "\n")  
         
         if (nrow(DiffAllGroups_Ftest.sign) > maxHM) {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign[1:maxHM,]} else {DEgenesHM.Ftest <- DiffAllGroups_Ftest.sign}
-        plotmatrix <- dataGEXMTSet[rownames(dataGEXMTSet) %in% rownames(DEgenesHM.Ftest), ,drop=F]
+        plotmatrix <- assaydata[rownames(assaydata) %in% rownames(DEgenesHM.Ftest), ,drop=F]
         
         # If Symbols are available, rows are annotated with symbols instead of probe IDs   
-        indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
+        indexRownames <- match(rownames(plotmatrix), rownames(featuredata))
         
         if(!is.null(Symbol.column)) {
-          rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
-                                         as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+          rownames(plotmatrix) <- ifelse(featuredata[indexRownames,Symbol.column] != "" & !is.na(featuredata[indexRownames,Symbol.column]), 
+                                         as.character(featuredata[indexRownames,Symbol.column]), rownames(plotmatrix))
         }
         
-        groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
+        groupColorCode <- rainbow(length(unique(phenodata[,groupColumn])))[as.numeric(factor(phenodata[,groupColumn]))] # for ColSideColors in heatmaps
         
         png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
         #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_Ftest.pdf", sep="" )), width = 10, height = 14) 
@@ -289,36 +306,37 @@ diffLimma <- function(GEXMTSet,
 
 ## Diff expressed genes caculated by ANOVA for all groups 
       
-      aov.result <- apply(dataGEXMTSet, 1, function(x) {
-        unlist(summary(aov(x ~ phenoGEXMTSet[,groupColumn]))[[1]][1, "Pr(>F)"])})  # ANOVA for each gene results in p-value vector
+      aov.result <- apply(assaydata, 1, function(x) {
+        unlist(summary(aov(x ~ phenodata[,groupColumn]))[[1]][1, "Pr(>F)"])})  # ANOVA for each gene results in p-value vector
       
       aov.result.sign <- aov.result[aov.result< p.value.threshold]  # filtering and sorting ANOVA result
       aov.result.sign <- sort(aov.result.sign)
-      
-      cat("\nWrite ANOVA result to", file.path(projectfolder, paste0(projectname, "all_Groups_ANOVA.txt")), "\n")
-      write.table(as.data.frame(aov.result.sign), row.names=T, col.names = "Pr(>F)",
-                  file= file.path(projectfolder, paste0(projectname, "all_Groups_ANOVA.txt")), sep="\t", quote=F)
+      cat("\nWrite ANOVA result to", file.path(projectfolder, "limma_filtered", paste0(projectname, "all_Groups_ANOVA.txt")), "\n")
+      # write.table(as.data.frame(aov.result.sign), row.names=T, col.names = "Pr(>F)",
+      #             file= file.path(projectfolder, "limma_filtered", paste0(projectname, "all_Groups_ANOVA.txt")), sep="\t", quote=F)
+      write.table(data.frame(feature=names(aov.result.sign), p=aov.result.sign), row.names=F, 
+                  file= file.path(projectfolder, "limma_filtered", paste0(projectname, "all_Groups_ANOVA.txt")), sep="\t", quote=F)
       
       
       
       ### Heatmap with all samples. Genes selected by ANOVA
       if(length(aov.result.sign) >=2) {
-        cat("\nWrite Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.png", sep="" )), "\n")  
+        cat("\nWrite ANOVA Heatmap to", file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.png", sep="" )), "\n")  
      
          maxgenesANOVA <- maxHM # 1000
       
          if (length(aov.result.sign) > maxgenesANOVA) {aov.result.sign <- aov.result.sign[1:maxgenesANOVA]} 
-        plotmatrix.aov <- dataGEXMTSet[rownames(dataGEXMTSet) %in% names(aov.result.sign), ,drop=F]
+        plotmatrix.aov <- assaydata[rownames(assaydata) %in% names(aov.result.sign), ,drop=F]
 
       # If Symbols are available, rows are annotated with symbols instead of probe IDs   
-      indexRownames <- match(rownames(plotmatrix.aov), rownames(featureGEXMTSet))
+      indexRownames <- match(rownames(plotmatrix.aov), rownames(featuredata))
       
       if(!is.null(Symbol.column)) {
-        rownames(plotmatrix.aov) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
-                                       as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix.aov))
+        rownames(plotmatrix.aov) <- ifelse(featuredata[indexRownames,Symbol.column] != "" & !is.na(featuredata[indexRownames,Symbol.column]), 
+                                       as.character(featuredata[indexRownames,Symbol.column]), rownames(plotmatrix.aov))
       }
       
-      groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
+      groupColorCode <- rainbow(length(unique(phenodata[,groupColumn])))[as.numeric(factor(phenodata[,groupColumn]))] # for ColSideColors in heatmaps
       
       png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
       #pdf(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, "all_Samples_ANOVA.pdf", sep="" )), width = 10, height = 14) 
@@ -341,6 +359,7 @@ DEgenes <- list()
 
 # loop for all dedicated group comparisons
 for (i in 1:length(comparisons)) {
+  cat("\n\nProcessing comparison", i, ":", comparisons[i])
   
   # Calculate differential expressed genes for each group comparison (filtered and unfiltered)
   # coef is column of investigation from design matrix. In matched design the first two columns are "(Intercept)" and "matched".
@@ -348,7 +367,7 @@ for (i in 1:length(comparisons)) {
   
   DEgenes.unfilt[[comparisons[i]]] <- topTable(fit, coef=coef, confint=TRUE, number=Inf, sort.by="p",
                                                adjust.method=adjust.method, 
-                                               genelist=featureGEXMTSet[,names(featureGEXMTSet) %in% geneAnno2keep, drop=F])
+                                               genelist=featuredata[,names(featuredata) %in% geneAnno2keep, drop=F])
   
   if(Exp=="MT") {names(DEgenes.unfilt[[i]])[names(DEgenes.unfilt[[i]])=="AveExpr"] <- "AveBeta"}
   
@@ -372,14 +391,14 @@ for (i in 1:length(comparisons)) {
   helptable.filt   <- data.frame(PROBE_ID=rownames(DEgenes[[comparisons[i]]]), DEgenes[[comparisons[i]]])
   
   write.table(helptable.unfilt, sep="\t", quote=F, row.names=F,
-              file= file.path(projectfolder, paste0("Diff_limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")))
+              file= file.path(projectfolder, paste0("limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")))
   
   write.table(helptable.filt, sep="\t", quote=F, row.names=F,
-              file= file.path(projectfolder, paste0(projectname, comparisons[i], ".txt")))
+              file= file.path(projectfolder, paste0("limma_filtered"), paste0(projectname, comparisons[i], ".txt")))
   
-  cat(paste("\n", nrow(helptable.filt),"differentially regulated elements for comparison:",comparisons[i]))
-  cat(paste("\nWrite gene tables to", file.path(projectfolder, paste0("Diff_limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")),
-            "and", file.path(projectfolder, paste0(projectname, comparisons[i], ".txt"))))
+  cat(paste(nrow(helptable.filt),"differentially regulated elements for comparison:",comparisons[i]))
+  cat(paste("\nWrite gene tables to", file.path(projectfolder, paste0("limma_unfiltered"), paste0(projectname, comparisons[i], "_unfilt.txt")),
+            "and", file.path(projectfolder, paste0("limma_filtered"), paste0(projectname, comparisons[i], ".txt"))))
   
   
  
@@ -387,7 +406,7 @@ for (i in 1:length(comparisons)) {
   
   volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, comparisons[i], ".png", sep="" ))
   
-  cat("\nWrite Volcano plot to", volcanoplot_filename, "\n")  
+  cat("\nWrite Volcano plot to", volcanoplot_filename)  
   
   png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=figure.res) 
   plot(DEgenes.unfilt[[comparisons[i]]]$logFC, -log10(DEgenes.unfilt[[comparisons[i]]]$adj.P.Val), main=comparisons[i],
@@ -415,30 +434,31 @@ for (i in 1:length(comparisons)) {
         
         if (nrow(DEgenes[[i]]) > maxHM) {DEgenesHM <- DEgenes[[i]][1:maxHM,]} else {DEgenesHM <- DEgenes[[i]]}
         
-        plotmatrix <- dataGEXMTSet[rownames(dataGEXMTSet) %in% rownames(DEgenesHM), ,drop=F]
+        plotmatrix <- assaydata[rownames(assaydata) %in% rownames(DEgenesHM), ,drop=F]
         
         # If Symbols are available, rows are annotated with symbols instead of probe IDs   
-        indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
+        indexRownames <- match(rownames(plotmatrix), rownames(featuredata))
 
         if(!is.null(Symbol.column)) {
-          rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]), 
-                                         as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+          rownames(plotmatrix) <- ifelse(featuredata[indexRownames,Symbol.column] != "" & !is.na(featuredata[indexRownames,Symbol.column]), 
+                                         as.character(featuredata[indexRownames,Symbol.column]), rownames(plotmatrix))
           }
         
-        groupColorCode <- rainbow(length(unique(pData(GEXMTSet)[,groupColumn])))[as.numeric(factor(pData(GEXMTSet)[,groupColumn]))] # for ColSideColors in heatmaps
+        groupColorCode <- rainbow(length(unique(phenodata[,groupColumn])))[as.numeric(factor(phenodata[,groupColumn]))] # for ColSideColors in heatmaps
         
 
           #  if HMincludeRelevantSamplesOnly=F, all samples are plotted in every group comparison
           if (isTRUE(HMincludeRelevantSamplesOnly) | is.list(HMincludeRelevantSamplesOnly)) {
             
-            if (is.list(HMincludeRelevantSamplesOnly) & !is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) { 
+            if (is.list(HMincludeRelevantSamplesOnly)) { 
+              if(is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) {stop(paste("\nname", comparisons[i], "not found as list element in HMincludeRelevantSamplesOnly"))} 
               groups2plot <- HMincludeRelevantSamplesOnly[[comparisons[i]]] # plot samples of groups given as character in HMincludeRelevantSamplesOnly
             } else {
               groups2plot <- unlist(strsplit(comparisons[i], "-") )  # plot only samples considered belonging to the respective group comparison 
               groups2plot <- unique(sub("[(|)]", "", groups2plot))  # for comparison of comparison
             }
            
-          sampleTable <- phenoGEXMTSet[,c(sampleColumn,groupColumn)]
+          sampleTable <- phenodata[,c(sampleColumn,groupColumn)]
           samples2plot <- character()
           
           for (j in 1:length(groups2plot)) {
@@ -447,7 +467,7 @@ for (i in 1:length(comparisons)) {
           cols2plot <- colnames(plotmatrix) %in% samples2plot
           plotmatrix <- plotmatrix[, cols2plot]
        
-          groupColorCode <- groupColorCode[pData(GEXMTSet)[,groupColumn] %in% groups2plot] # adjust ColSideColors in heatmaps to relevant groups
+          groupColorCode <- groupColorCode[phenodata[,groupColumn] %in% groups2plot] # adjust ColSideColors in heatmaps to relevant groups
          }
         
         png(file.path(projectfolder, "Heatmaps", paste("Heatmap_", projectname, comparisons[i], ".png", sep="" )), width = 210, height = 297, units = "mm", res=figure.res) 
@@ -502,10 +522,10 @@ for (i in 1:length(comparisons)) {
                                                           names(DiffAllGroups_Ftest) %in% FC.heatmap.comparisons[[fc]], drop=F])
             
             # If Symbols are available, rows are annotated with symbols instead of probe IDs
-            indexRownames <- match(rownames(plotmatrix), rownames(featureGEXMTSet))
+            indexRownames <- match(rownames(plotmatrix), rownames(featuredata))
             if(!is.null(Symbol.column)) {
-              rownames(plotmatrix) <- ifelse(featureGEXMTSet[indexRownames,Symbol.column] != "" & !is.na(featureGEXMTSet[indexRownames,Symbol.column]),
-                                             as.character(featureGEXMTSet[indexRownames,Symbol.column]), rownames(plotmatrix))
+              rownames(plotmatrix) <- ifelse(featuredata[indexRownames,Symbol.column] != "" & !is.na(featuredata[indexRownames,Symbol.column]),
+                                             as.character(featuredata[indexRownames,Symbol.column]), rownames(plotmatrix))
             }
 
             if(nrow(plotmatrix) >1) {  # no Heatmap if just one diff expressed gene

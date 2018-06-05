@@ -20,7 +20,7 @@
 #'   \item GS: gene significance: correlation of the gene with a phenotype.
 #'   \item Module-trait relationship: correlation of a module eigengene with a phenotype.
 #'   }
-#' Phenotypes are taken from phenotype data of \code{GEXMTSet} as specified in \code{phModule}. Furthermore, membership of samples in groups
+#' Phenotypes are taken from phenotype data of \code{data} as specified in \code{phModule}. Furthermore, membership of samples in groups
 #' which are defined in \code{groupsets} are also used as phenotypes (e.g. two groups from a differential gene expression experiment). 
 #' When correlation with group membership is calculated, only those samples are included which belong to the denoted groupset 
 #' (mind that gene modules were calculated using expression data from all samples).
@@ -28,8 +28,8 @@
 #' coded numerically.
 #' 
 #' 
-#' @param GEXMTSet ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{GEXMTSet} is character containing a filepath, the functions assumes
-#'            previously stored network object to be loaded from this path. If \code{GEXMTSet} is "load_default", network 
+#' @param data ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{data} is character containing a filepath, the functions assumes
+#'            previously stored network object to be loaded from this path. If \code{data} is "load_default", network 
 #'            object is loaded from default directory \code{"file.path(projectfolder, "TOM", "networkConstruction-auto.RData")"}.
 #' @param projectfolder character with directory for output files (will be generated if not existing).
 #' @param softThresholdPower soft-thresholding power for network construction. If "auto", function selects 
@@ -42,7 +42,7 @@
 #' @param TOMType character with one of "none", "unsigned", "signed". If "none", adjacency will be used for clustering. 
 #'           If "unsigned", the standard TOM will be used (more generally, TOM function will receive the adjacency as input). 
 #'           If "signed", TOM will keep track of the sign of correlations between neighbours.
-#' @param maxBlockSize integer giving maximum block size for module detection. If the number of genes in \code{GEXMTSet} exceeds \code{maxBlockSize}, 
+#' @param maxBlockSize integer giving maximum block size for module detection. If the number of genes in \code{data} exceeds \code{maxBlockSize}, 
 #'               genes will be pre-clustered into blocks whose size should not exceed \code{maxBlockSize} (\code{maxBlockSize} must not exceed 46340).
 #'               It's intended to use as big block sizes as possible, but mind that big blocksizes will heavily impact memory usage.
 #' @param TOMplot boolean. If TRUE make Topological Overlap Matrix (TOM) plot (also known as connectivity plot) of the network connections.
@@ -51,16 +51,16 @@
 #' @param MDSplot boolean. If TRUE make Multidimensional scaling plot (MDS) to visualize pairwise relationships specified 
 #'          by a dissimilarity matrix. Each row of the dissimilarity matrix is visualized by a point in a Euclidean space.
 #'          Each dot (gene) is colored by the module assignment.
-#' @param phDendro character vector with phenotypes of \code{GEXMTSet} object to be displayed in sample dendrogram. 
+#' @param phDendro character vector with phenotypes of \code{data} object to be displayed in sample dendrogram. 
 #' @param phModule character vector with phenotypes to correlate module eigengenes with in heatmap.
-#' @param sampleColumn character with column name of Sample names in pheno data of \code{GEXMTSet}.
-#' @param groupColumn character with column name of group names in pheno data of \code{GEXMTSet}. 
+#' @param sampleColumn character with column name of Sample names in pheno data of \code{data}.
+#' @param groupColumn character with column name of group names in pheno data of \code{data}. 
 #' @param groupsets character vector with names of group sets in format "groupA-groupB". Groups summarized in parentheses
 #'            "(groupA-groupB)" are coded as ONE group. They are used for correlation of module eigengenes with 
 #'            corresponding samples of selected groupsets. Mind that eigengenes are calculated using all samples,
 #'            while correlation is calculated for samples of denoted groupsets only.
 #'            Group names must match names in \code{groupColumn}. Omitted if NULL. 
-#' @param symbolColumn character with name of feature identifier in feature data of \code{GEXMTSet}.
+#' @param symbolColumn character with name of feature identifier in feature data of \code{data}.
 #' @param flashClustMethod character with agglomeration method used for hierarchical clustering in \code{flashClust}-package. 
 #'                   Either "ward", "single", "complete", "average", "mcquitty", "median" or "centroid". 
 #' @param moduleBoxplotsPerFigure numeric. Number of module boxplots to be included in a single figure.
@@ -138,14 +138,14 @@
 #'           }
 #'   \item Generate output tables
 #'      \itemize{
-#'         \item \code{networkDatOutput = data.frame(featureGEXMTSet, moduleColors, GS.datTraits, GSPvalue, geneGroupsetCor, geneGroupsetPvalue)}
+#'         \item \code{networkDatOutput = data.frame(featuredata, moduleColors, GS.datTraits, GSPvalue, geneGroupsetCor, geneGroupsetPvalue)}
 #'         \item \code{networkDatOutput_incl_MM = data.frame(networkDatOutput, datKME[,modOrder], MMPvalue[,modOrder])}
 #'         }
 #'   \item Visualization of networks within R (TOMplot, MDSplot).
 #'         }
 
 
-wrapWGCNA <- function(GEXMTSet, 
+wrapWGCNA <- function(data, 
                   projectfolder= "GEX/WGCNA",
                   softThresholdPower="auto", 
                   corType="bicor", 
@@ -194,57 +194,57 @@ wrapWGCNA <- function(GEXMTSet,
   
   
     
-    ### Check if input object 'GEXMTSet' is an ExpressionSet or MethySet object or character containing filepath to 
+    ### Check if input object 'data' is an ExpressionSet or MethySet object or character containing filepath to 
     # previously strored networl object.
-    if(is.character(GEXMTSet)) {
-      if (GEXMTSet=="load_default") {GEXMTSet <- file.path(projectfolder, "TOM", "networkConstruction-auto.RData")}
-      load(file = GEXMTSet) # file.path(projectfolder, "TOM", "networkConstruction-auto.RData")
+    if(is.character(data)) {
+      if (data=="load_default") {data <- file.path(projectfolder, "TOM", "networkConstruction-auto.RData")}
+      load(file = data) # file.path(projectfolder, "TOM", "networkConstruction-auto.RData")
       } else {
     # Get expression/methylation data, and feature data from input object 
     # for class ExpressionSet
-    if (grepl("Expression", class(GEXMTSet), ignore.case=T ) ) {
-      cat("\nClass", class(GEXMTSet), "detected\n")
-      if("Status" %in% colnames(fData(GEXMTSet))) { # define regular probes if control probes still present in expression set
-        ids_regular <- rownames(fData(GEXMTSet)[fData(GEXMTSet)$Status=="regular",])
-        } else {ids_regular <- 1:nrow(fData(GEXMTSet))}
+    if (grepl("Expression", class(data), ignore.case=T ) ) {
+      cat("\nClass", class(data), "detected\n")
+          if("Status" %in% colnames(fData(data))) { # define regular probes if control probes still present in expression set
+            ids_regular <- rownames(fData(data)[fData(data)$Status=="regular",])
+            } else {ids_regular <- 1:nrow(fData(data))}
       
-      featureGEXMTSet <- fData(GEXMTSet)[ids_regular,]
-      featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
-      dataGEXMTSet <- exprs(GEXMTSet)[ids_regular,]
+      featuredata <- fData(data)[ids_regular,]
+      featuredata <- data.frame(rowfeatures= rownames(featuredata), featuredata)
+      assaydata <- exprs(data)[ids_regular,]
       plot.label="normalised log2(expression) data"
       plot.label.pruned="GEX"
-      traitData = pData(GEXMTSet) # phenotype data 
+      traitData = pData(data) # phenotype data 
       
            } else {
              
-             if(class(GEXMTSet) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
-               cat("\nClass", class(GEXMTSet), "detected\n")
-               featureGEXMTSet <- as.data.frame(rowData(GEXMTSet,use.names=TRUE))
-               featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
-               dataGEXMTSet <- assay(GEXMTSet)
+             if(class(data) %in% c("SummarizedExperiment", "DESeqDataSet", "DESeqTransform")) {
+               cat("\nClass", class(data), "detected\n")
+               featuredata <- as.data.frame(rowData(data,use.names=TRUE))
+               featuredata <- data.frame(rowfeatures= rownames(featuredata), featuredata)
+               assaydata <- assay(data)
                plot.label="normalised log2(count) data"
                plot.label.pruned="counts"
-               traitData = colData(GEXMTSet) # phenotype data 
+               traitData = colData(data) # phenotype data 
                
              } else {
         
         # for class MethylSet      
-        if(grepl("Methyl", class(GEXMTSet), ignore.case=T ) ) {
-          cat("\nClass", class(GEXMTSet), "detected\n")
+        if(grepl("Methyl", class(data), ignore.case=T ) ) {
+          cat("\nClass", class(data), "detected\n")
           attach_package(pcksBioc="minfi")
-          featureGEXMTSet <- mcols(GEXMTSet, use.names=T)
-          featureGEXMTSet <- data.frame(rowfeatures= rownames(featureGEXMTSet), featureGEXMTSet)
-          dataGEXMTSet <- getBeta(GEXMTSet)
+          featuredata <- mcols(data, use.names=T)
+          featuredata <- data.frame(rowfeatures= rownames(featuredata), featuredata)
+          assaydata <- getBeta(data)
           plot.label="normalised beta values"
           plot.label.pruned="MT"
-          traitData = pData(GEXMTSet) # phenotype data 
+          traitData = pData(data) # phenotype data 
           
         } else {cat("wrong object class!");break}
       }
     }
   
   ## We transpose the expression data for further analysis.
-  objectdat <- as.data.frame(t(dataGEXMTSet))
+  objectdat <- as.data.frame(t(assaydata))
   }
   
   # Define numbers of genes and samples
@@ -328,7 +328,7 @@ wrapWGCNA <- function(GEXMTSet,
 
   
 ##### Step2: Automatic network construction and module detection (if soft-thresholding power is given)
-  if(!is.character(GEXMTSet)) { # check if 'net' has already been loaded from file.
+  if(!is.character(data)) { # check if 'net' has already been loaded from file.
     cat(paste("\nConstructing the gene network and identifying modules; softThresholdPower =", softThresholdPower, "\n"))
   
     net <- WGCNA::blockwiseModules(objectdat, power = softThresholdPower,
@@ -783,7 +783,7 @@ wrapWGCNA <- function(GEXMTSet,
     # select 8 top associated modules for each Groupset given in 'groupsets': 
     cat(paste("\nGroupset:", gset, "\n"))
     moduleGroupsetPvalue <- as.data.frame(moduleGroupsetPvalue)
-    selectModules <- rownames(moduleGroupsetPvalue[order(moduleGroupsetPvalue[,gset], decreasing=F), , drop=F])[1:8] # drop=F to avoid loss of dimensions when just 1 Groupset
+    selectModules <- rownames(moduleGroupsetPvalue[order(moduleGroupsetPvalue[,gset], decreasing=F), , drop=F])[1:min(8, ncol(MEs))] # drop=F to avoid loss of dimensions when just 1 Groupset
     selectModules <- substring(selectModules,3) # remove substring "ME"
       
     # plot 8 scatter plots for each group Groupset
@@ -816,7 +816,7 @@ wrapWGCNA <- function(GEXMTSet,
   # 'networkDatOutput' contains feature data of all genes, module assignment, Gene correlation with traits
   # and (if selected) gene correlation with groupsets
   #
-  # featureGEXMTSet = feature annotations
+  # featuredata = feature annotations
   # moduleColors = Modul assignment
   # GS.datTraits equals geneTraitSignificance. prefix: "cor" or "icc"
   # GSPvalue = p_value(geneTraitSignificance). prefix: "p.cor" or "p.icc"
@@ -824,7 +824,7 @@ wrapWGCNA <- function(GEXMTSet,
   # MMPvalue = p_value(geneModuleMembership). "p.MM"
   
   cat("\nGenerating Network Output Tables\n")
-  networkDatOutput0 <- data.frame(featureGEXMTSet, moduleColors, GS.datTraits, GSPvalue)
+  networkDatOutput0 <- data.frame(featuredata, moduleColors, GS.datTraits, GSPvalue)
   
   if(!is.null(groupsets)) {
     networkDatOutput0 <- data.frame(networkDatOutput0, geneGroupsetCor, geneGroupsetPvalue, check.names = F)
@@ -858,7 +858,7 @@ wrapWGCNA <- function(GEXMTSet,
        for (module in selectModules) {
          i <- i+1
          restModule <- networkDatOutput_MM$moduleColors==module
-         defColnames <- c(colnames(featureGEXMTSet), "moduleColors", 
+         defColnames <- c(colnames(featuredata), "moduleColors", 
                           grep(trait, names(GS.datTraits), value=T), 
                           grep(trait, names(GSPvalue), value=T))  
          moduleColnames <- grep(paste0("MM.",module, "$"), names(networkDatOutput_MM), value=T)
@@ -880,7 +880,7 @@ wrapWGCNA <- function(GEXMTSet,
     for (module in selectModules) {
       i <- i+1
       restModule <- networkDatOutput_MM$moduleColors==module
-      defColnames <- c(colnames(featureGEXMTSet), "moduleColors", 
+      defColnames <- c(colnames(featuredata), "moduleColors", 
                        grep(gsets, colnames(geneGroupsetCor), value=T), 
                        grep(gsets, colnames(geneGroupsetPvalue), value=T))  
       moduleColnames <- grep(paste0("MM.",module, "$"), names(networkDatOutput_MM), value=T)
@@ -981,9 +981,9 @@ if(FALSE) {
 cat("\nGenerating input files for VisANT\n")
 
 # for WGCNA::exportNetworkToVisANT. Plot Symbol in network if available, else plot probename
-probeToGene <- data.frame(probes=rownames(featureGEXMTSet), 
-                          Symbols= ifelse(featureGEXMTSet[,symbolColumn] != "" & !is.na(featureGEXMTSet[,symbolColumn]), 
-                                          featureGEXMTSet[,symbolColumn], rownames(featureGEXMTSet)) )
+probeToGene <- data.frame(probes=rownames(featuredata), 
+                          Symbols= ifelse(featuredata[,symbolColumn] != "" & !is.na(featuredata[,symbolColumn]), 
+                                          featuredata[,symbolColumn], rownames(featuredata)) )
 
 
 for (trait in phModule) {

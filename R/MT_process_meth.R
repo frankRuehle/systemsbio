@@ -42,7 +42,7 @@
 
 # Annotierung der CpG-sites:
 
-prep_anno_meth <- function(RGset, 
+process_meth <- function(RGset, 
                     projectfolder = "MT",
                     projectname = NULL,
                     preprocessing = c("illumina", "swan"),

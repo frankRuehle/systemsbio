@@ -1,6 +1,3 @@
-
-
-
 #' Processing of expression data
 #' 
 #' Normalisation, transformation and/or probe quality filtering of expression data.
@@ -21,13 +18,13 @@
 #' 
 #' @author Frank Ruehle
 #' 
-#' @export norm_exprs
+#' @export 
 
 
 
 
  
-  norm_exprs <- function(eset, 
+  process_eset <- function(eset, 
                          method_norm="quantile", 
                          transform="none"     
                          )  {

@@ -53,8 +53,8 @@
 
 
 
-diffMinfi <- function(GRset, 
-                      projectfolder = "MT",
+wrapMinfi <- function(GRset, 
+                      projectfolder = "MT/minfi",
                       projectname = NULL,
                       phenotype, 
                       type.covar = "categorical", 

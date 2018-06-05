@@ -2,10 +2,10 @@
 % Please edit documentation in R/GEX_process_dds.R
 \name{process_dds}
 \alias{process_dds}
-\title{Transform DESeqDataSet to SummarizedExperiment}
+\title{Processing and data transformation of DESeqDataSet}
 \usage{
-process_dds(dds, min_rowsum = 10, transform.function = NULL,
-  norm_sizeFactors = FALSE, export = "SummarizedExperiment", ...)
+process_dds(dds, min_rowsum = 10, norm_sizeFactors = FALSE,
+  transform.function = NULL, return_SummarizedExperiment = FALSE, ...)
 }
 \arguments{
 \item{dds}{\code{DESeqDataSet}}
@@ -13,28 +13,38 @@ process_dds(dds, min_rowsum = 10, transform.function = NULL,
 \item{min_rowsum}{numeric. Minimum rowsum of countmatrix. All rows with \code{rowSums < min_rowsum}
 are removed from the count matrix.}
 
-\item{transform.function}{function name to be used for data transformation, 
-e.g. \code{DESeq2::rlog} or \code{DESeq2::rlogTransformation} for log2-transformation or \code{DESeq2::varianceStabilizingTransformation}.}
-
-\item{norm_sizeFactors}{logical. If TRUE normalize for library size. This may already be included
+\item{norm_sizeFactors}{logical. If \code{TRUE} normalize for library size. This may already be included
 in the data transformation (e.g. for \code{rlog} and \code{varianceStabilizingTransformation}).}
 
-\item{export}{return either a \code{"SummarizedExperiment"} or a \code{"DESeq"} object 
-(i.e. either \code{"DESeqDataSet"} or \code{"DESeqTransform"} object).}
+\item{transform.function}{function name to be used for data transformation, 
+e.g. \code{DESeq2::rlog} or \code{DESeq2::rlogTransformation} for log2-transformation, 
+\code{DESeq2::varianceStabilizingTransformation}, \code{fpkm}, \code{fpm}, \code{voom}.}
+
+\item{return_SummarizedExperiment}{logical. If \code{True} function returns a \code{SummarizedExperiment} object. 
+If FALSE the processed input object is returned (may be \code{matrix}, \code{DESeqDataSet} or \code{DESeqTransform}).}
 
 \item{...}{further parameter for \code{transform.function}}
 }
 \value{
-\code{SummarizedExperiment} or \code{DESeqDataSet} object
+\code{SummarizedExperiment} or processed input object (\code{matrix}, \code{DESeqDataSet} or 
+\code{DESeqTransform} depending on applied data transformation)
 }
 \description{
-Process count matrix of DESeqDataSet to SummarizedExperiment to be used as expression matrix.
+Process count matrix of DESeqDataSet and optionally convert it to a SummarizedExperiment object.
 }
 \details{
 The count matrix of the input object is filtered for low abundancy transcripts, normalized for 
 library size factor (size factors are first calculated if necessary) and is transformed
-according to the function given in \code{transform.function}. The design parameter of the initial \code{DESeqDataSet}
-is omitted
+according to the function given in \code{transform.function}. Parameters for the selected 
+\code{transform.function} can be passed via the \code{...} -argument (see help for the 
+respective function). The \code{DESeq2} package recommends \code{varianceStabilizingTransformation}
+for further processing of the read count matrix. If you prefer to analyse reads with limma, you may 
+apply \code{voom} transformation as recommended in the \code{limma} documentation. The \code{voom}
+transformation can be complemented by the same between-array normalization methods as would be used 
+for microarrays (e.g. quantile normalization) via the \code{normalize.method} parameter of \code{voom}.
+The function will return either the processed input object or an \code{SummarizedExperiment} object
+if \code{return_SummarizedExperiment} is set to \code{TRUE}. In this case, the design parameter of 
+the initial \code{DESeqDataSet} is omitted.
 }
 \author{
 Frank Ruehle

@@ -125,14 +125,6 @@ wrapDESeq <- function(dds,
   dds <- dds[rowSums(counts(dds)) >= min_rowsum,]
   cat("\nApply pre-filtering for rowSums >=", min_rowsum, ".", nrow(dds), "genes remaining.")
   
-  
-  
-  
-  # Differential expression
-  # also generates sizefactors for library size normalisation used in results function.
-  cat("\nDifferential expression analysis with DESeq2.")
-  dds <- DESeq(dds) 
-  
 
    # preparing data matrix using variance Stabilizing Transformation
     cat("\nUsing variance Stabilizing Transformation for generating heatmaps and pca plot")
@@ -152,7 +144,13 @@ wrapDESeq <- function(dds,
   print(DESeq2::plotPCA(vsd, intgroup= groupColumn, ntop = nrow(vsd))) # use all genes for pca plot instead top 500 selected by highest row variance
   dev.off()
   
+ 
   
+   
+  # Differential expression
+  # also generates sizefactors for library size normalisation used in results function.
+  cat("\nDifferential expression analysis with DESeq2.")
+  dds <- DESeq(dds) 
   
  
 
@@ -179,8 +177,6 @@ for (i in 1:length(comparisons)) {
   # add column with rownames id
   table_unfilt[[comparisons[i]]] <- data.frame(id.rownames= rownames(table_unfilt[[comparisons[i]]]), table_unfilt[[comparisons[i]]])
 
- 
-  
   #  # add Symbol column
   # if(!is.null(Symbol.column)) {
   #   if(!(Symbol.column %in% names(mcols(dds)))) {stop("Symbolcolumn not found in feature data!")}
@@ -282,7 +278,8 @@ for (i in 1:length(comparisons)) {
         #  if HMincludeRelevantSamplesOnly=F, all samples are plotted in every group comparison
         if (isTRUE(HMincludeRelevantSamplesOnly) | is.list(HMincludeRelevantSamplesOnly)) {
           
-          if (is.list(HMincludeRelevantSamplesOnly) & !is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) {
+          if (is.list(HMincludeRelevantSamplesOnly)) {
+            if(is.null(HMincludeRelevantSamplesOnly[[comparisons[i]]])) {stop(paste("\nname", comparisons[i], "not found as list element in HMincludeRelevantSamplesOnly"))} 
             groups2plot <- HMincludeRelevantSamplesOnly[[comparisons[i]]] # plot samples of groups given as character in HMincludeRelevantSamplesOnly
           } else {
             groups2plot <- unlist(strsplit(comparisons[i], "-") )  # plot only samples considered belonging to the respective group comparison 
