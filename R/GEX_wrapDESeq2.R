@@ -56,11 +56,11 @@
 #' 
 #' @author Frank Ruehle
 #' 
-#' @export wrapDESeq
+#' @export wrapDESeq2
 
 
 
-wrapDESeq <- function(dds, 
+wrapDESeq2 <- function(dds, 
                   comparisons,
                   min_rowsum = 10,
                   p.value.threshold = 0.05, 

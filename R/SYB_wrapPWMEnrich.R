@@ -52,7 +52,7 @@
 #' 
 
 
-TFsearch <- function(sequences, 
+wrapPWMEnrich <- function(sequences, 
                      newheader = NULL,  
                      annoColumn = NULL,  
                      name.organism="hsapiens", 
@@ -89,7 +89,7 @@ TFsearch <- function(sequences,
   
   
   # check organism
-  if (!grepl("human|sapiens", name.organism, ignore.case = TRUE)) {stop("TFsearch for human data only")} 
+  if (!grepl("human|sapiens", name.organism, ignore.case = TRUE)) {stop("TF search for human data only")} 
   
   # load required libraries
   pkg.cran <- NULL
@@ -372,7 +372,7 @@ detach_package(unique(pks2detach))
 
 return(report[[sq]])
 
-} # end of TFsearch
+} # end of function
 
 
 

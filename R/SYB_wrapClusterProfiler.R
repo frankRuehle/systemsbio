@@ -1,16 +1,16 @@
 
 #' Wrapper for gene enrichment analysis using clusterProfiler
 #' 
-#' Applying overrepresentation analysis and gene set enrichment analysis to supplied gene list
+#' Applying over-representation analysis and gene set enrichment analysis to supplied gene list
 #' 
 #' Function uses genelist and optionally background gene list as input to perform enrichment analysis 
-#' using the \code{clusterProfiler}-package. By default, overrepresentation analysis and gene set enrichment analysis 
+#' using the \code{clusterProfiler}-package. By default, over-representation analysis and gene set enrichment analysis 
 #' (GSEA) is performed for all categories given in \code{enrichmentCat}.
 #' The Gene list can be supplied as vector with ids given in \code{id.type},
 #' dataframe with IDs of type \code{id.type} given in column \code{id.column} or character string with path of data file.
 #' The IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the annotation package
 #' for the species denoted in \code{org}.
-#' Optionally, quanitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
+#' Optionally, quantitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
 #' the data. If quantitative data are no fold changes, fold changes may be given additionally in \code{FCcolumn}.
 #' This data is used for cnetplot of enrichment results as well as for KEGG pathway mapping of enriched 
 #' KEGG pathways (if any) using the \code{pathview} package.
@@ -33,7 +33,7 @@
 #'                 If NULL, full ID list from \code{genes} is used as background (i.e. that \code{genes} need to 
 #'                 contain all genes under investigation without pre-filtering for significance).
 #' @param newheaderBackground optional character vector with new header information for \code{backgroundlist}.
-#' @param projectfolder character with directory for output files (will be generated if not exisiting).
+#' @param projectfolder character with directory for output files (will be generated if not existing).
 #' @param projectname optional character prefix for output file names.
 #' @param enrichmentCat character vector with categories to be enriched (\code{GO}: gene ontology (MF, BP, CC), 
 #'                \code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).
@@ -47,7 +47,7 @@
 #' @param sortdecreasing (boolean) order parameter for hierarchy of values in \code{sortcolumn}.
 #'                 FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
 #'                 If FALSE, values in sortcolumn will be transformed prior to GSEA.
-#' @param sortcolumn.threshold numeric threshold for \code{sortcolumn} to be included in overepresentation analysis.
+#' @param sortcolumn.threshold numeric threshold for \code{sortcolumn} to be included in over-representation analysis.
 #'                       \code{If sortdecreasing=F, value < sortcolumn.threshold 
 #'                       else value > sortcolumn.threshold}
 #' @param fun.transf.incr.values function definition for transforming values in \code{sortcolumn} prior to GSEA.
@@ -55,7 +55,7 @@
 #' @param FCcolumn (character) optional column name of foldchanges in \code{genes} if \code{sortcolumn} is used elsewhere.
 #'           Used only for cnetplot of enrichment results. Omitted if NULL
 #' @param threshold_FC (numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
-#'               Only relevant for overrepresentation analysis if an unfiltered gene list is given in \code{genes}
+#'               Only relevant for over-representation analysis if an unfiltered gene list is given in \code{genes}
 #'               to allow for parallel GSEA.
 #' @param pAdjustMethod method for adjusting for multiple testing. 
 #'                One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
@@ -78,7 +78,7 @@
 
     
 ## Usage 
-clusterprof <- function (genes, 
+wrapClusterProfiler <- function (genes, 
                          newheader = NULL, 
                          backgroundlist=NULL, 
                          newheaderBackground = NULL,
@@ -325,7 +325,7 @@ clusterprof <- function (genes,
 
   #################### Start Enrichment analysis
   
-  # remove categories not supported by clusterProfile
+  # remove categories not supported by clusterProfiler
   enrichmentCat.found <- enrichmentCat %in% c("GO", "KEGG", "Reactome", "DO")
   enrichmentCat <- enrichmentCat[enrichmentCat.found]
   if(("DO" %in% enrichmentCat) & org !="human") {

@@ -1,6 +1,6 @@
 #' QTL Analysis for expression and methylation data.
 #'
-#' \code{matrixQTL} uses MatrixEQTL package for QTL analysis of expression or methylation data with SNP genotypes.
+#' \code{wrapMatrixEQTL} uses MatrixEQTL package for QTL analysis of expression or methylation data with SNP genotypes.
 #' 
 #' Expression or methylation data can be processed for QTL analysis. Coordinates 
 #' for genes and SNPs are either given in \code{SNPfile_transpAddCoded_name} or \code{genepos}, respectively,
@@ -8,7 +8,7 @@
 #' Analysis can be perfomed for either cis or trans QTLs or both simulatanously. 
 #'
 #'
-#' @param inputset Either ExpressionSet, SummerizedExperiment, DESeqDataSet, MethylSet or
+#' @param inputset Either ExpressionSet, SummarizedExperiment, DESeqDataSet, MethylSet or
 #' data.frame containing summarized methylation Island data from COHCAP.avg.by.island-function (package COHCAP).
 #' @param SNPfile_transpAddCoded_name character with path to genotype file (transposed and additive coded!).
 #' @param SNPfile_tfam character with path to tfam file with sample information. 
@@ -35,8 +35,8 @@
 #' @param pvOutputThreshold_cis Numeric significance threshold p-value for cis QTL tests.
 #' @param pvOutputThreshold_tra Numeric significance threshold p-value for trans QTL tests.
 #' @param pvOutputThreshold_all Numeric significance threshold p-value for all QTL tests (cis and trans mixed).
-#' @param genepos Character with path to gene position file for expression data. If NULL, genepos file is 
-#' generated with biomaRt.
+#' @param genepos dataframe with 4 columns (geneid, chr, left, right) or character with path to gene position 
+#' file. If \code{NULL}, genepos file is generated with biomaRt.
 #' @param genemart biomaRt object to be used for updating gene positions.
 #' @param ensembl_filter Character with filter name to search in genemart.
 #' @param updateSNPpos Boolean. Shall SNP-positions be updated via biomaRt?
@@ -50,7 +50,7 @@
 #' @export 
 
 
-matrixQTL <- function(inputset, 
+wrapMatrixEQTL <- function(inputset, 
                       SNPfile_transpAddCoded_name, 
                       SNPfile_tfam = NULL, 
                       covariates_file_name = NULL, 
@@ -227,8 +227,11 @@ if(class(inputset)== "ExpressionSet") {
         write.table(genepos, file=file.path(projectfolder, "eQTL", paste0(projectNameSuffix,"genepos_eQTL.txt")), quote = F, sep = "\t",  row.names = F)
         
           } else {
-            genepos <- read.table(file=genepos, header=T, sep="\t") 
-          }
+            
+            if(is.character(genepos)) {
+              genepos <- read.table(file=genepos, header=T, sep="\t") 
+              }           
+            }
   
   feature.pos  <- genepos
                             
@@ -243,8 +246,8 @@ if(class(inputset)== "ExpressionSet") {
  }
 
  
-## 3b: use SummerizedExperiment or DESeqDataSet and store SNP-file with relevant samples
-  if(class(inputset) %in% c("SummerizedExperiment", "DESeqDataSet")) {
+## 3b: use SummarizedExperiment or DESeqDataSet and store SNP-file with relevant samples
+  if(class(inputset) %in% c("SummarizedExperiment", "DESeqDataSet")) {
     if (!file.exists(file.path(projectfolder, "eQTL"))) {dir.create(file.path(projectfolder, "eQTL"))} # create subdirectory if not yet existing
     qtl=c("eQTL") # filename prefix
     
@@ -281,10 +284,13 @@ if(class(inputset)== "ExpressionSet") {
       write.table(genepos, file=file.path(projectfolder, "eQTL", paste0(projectNameSuffix,"genepos_eQTL.txt")), quote = F, sep = "\t",  row.names = F)
       
     } else {
+      
+      if(is.character(genepos)) {
       genepos <- read.table(file=genepos, header=T, sep="\t") 
+      } 
     }
     
-    feature.pos  <- genepos
+    feature.pos  <- genepos # genepos given as dataframe
     
     if(cov_exists) { # covar file
       covar_file_eQTL <- covar_file[covar_file$id %in% as.character(samplenames.eQTL),] # select samples given in "samplelist.GEX" only
@@ -399,7 +405,7 @@ rm(SNPfile) # SNPfile not needed any more
                                  "all" = "")
   
   
-  #### preparation for matrixQTL
+  #### preparation for MatrixEQTL
   
     cat("\n\nReading SNP-file for", qtl, "Analysis\n")
     snps = SlicedData$new()

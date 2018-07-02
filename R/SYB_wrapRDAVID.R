@@ -3,7 +3,7 @@
 #' Gene enrichment analysis using the DAVID Database 
 #' 
 #' Wrapper for gene enrichment analysis using the Database for Annotation, Visualization and Integrated Discovery (DAVID) 
-#' accessed by the RDAVIDWebService.
+#' accessed by the \code{RDAVIDWebService}
 #' 
 #' Function uses genelist and optionally background gene list as input to perform enrichment analysis 
 #' using the RDAVIDWebService. Registration for RDAVIDWebService is required at 
@@ -49,7 +49,7 @@
 #' @export 
 
     
-DavidEnrich <- function (genes, 
+wrapRDAVID <- function (genes, 
                          newheader = NULL, 
                          backgroundlist=NULL, 
                          newheaderBackground = NULL,

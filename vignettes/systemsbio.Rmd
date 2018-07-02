@@ -238,10 +238,10 @@ include_graphics(deg_images)
 
 
 ## Differential gene expression analysis with DESeq2
-Similarily, count data from RNA-Seq can be analysed for differential expression using the `DESeq2` package. The wrapper function `wrapDESeq` works analogously to `diffLimma` as described above. 
+Similarily, count data from RNA-Seq can be analysed for differential expression using the `DESeq2` package. The wrapper function `wrapDESeq2` works analogously to `diffLimma` as described above. 
 
 ```
-deg <- wrapDESeq(dds, 
+deg <- wrapDESeq2(dds, 
                   comparisons = c("case1-control", "case2-control"),
                   min_rowsum = 10,
                   p.value.threshold = 0.05, 
@@ -261,10 +261,10 @@ deg <- wrapDESeq(dds,
 ```
 
 ## Gene Enrichment analysis with clusterProfiler
-The function `clusterprof` takes genelist and optionally background gene list as input to perform enrichment analyses using the `clusterProfiler` package. By default, overrepresentation analysis and gene set enrichment analysis (GSEA) is performed for all categories given in `enrichmentCat`. While overrepresentation analysis applies a significance threshold to test the top genes, GSEA uses all genes of the list e.g. ranked by p-value. All result tables and plots (cnet plots and enrichment maps) are stored in the project folder.
+The function `wrapClusterProfiler` takes genelist and optionally background gene list as input to perform enrichment analyses using the `clusterProfiler` package. By default, overrepresentation analysis and gene set enrichment analysis (GSEA) is performed for all categories given in `enrichmentCat`. While overrepresentation analysis applies a significance threshold to test the top genes, GSEA uses all genes of the list e.g. ranked by p-value. All result tables and plots (cnet plots and enrichment maps) are stored in the project folder.
 
 ```
-clusterp.deg <- clusterprof(deg[["DEgenes.unfilt"]], 
+clusterp.deg <- wrapClusterProfiler(deg[["DEgenes.unfilt"]], 
                       backgroundlist = NULL, 
                       projectfolder = "example_analysis/GEX/clusterProfiler",
                       projectname = "example", 
@@ -298,12 +298,12 @@ include_graphics(deg_images)
 
 
 ## Enrichment of Transcription Factor Binding sites (TFBS)
-The function `TFsearch` uses the `PWMEnrich` package to search for enriched TFBS within an input gene list. It looks up all promotor sequences for theses genes defined by indicated distance from trancription start site (TSS) refering to human genome build hg19. If gene symbols are given instead of entrez IDs, symbols are converted to entrez IDs first. If `PromLookup == FALSE`, look up of promotor sequences is omitted and sequences of interest must be given as gene coordinates (hg19) in `sequences` instead.  
+The function `wrapPWMEnrich` uses the `PWMEnrich` package to search for enriched TFBS within an input gene list. It looks up all promotor sequences for theses genes defined by indicated distance from trancription start site (TSS) refering to human genome build hg19. If gene symbols are given instead of entrez IDs, symbols are converted to entrez IDs first. If `PromLookup == FALSE`, look up of promotor sequences is omitted and sequences of interest must be given as gene coordinates (hg19) in `sequences` instead.  
 Optionally, preselected motivs given in `SearchSelMotifs` are looked up in `sequences`. All result tables and plots are stored in the project folder.
 
 
 ```
-tf.deg <- TFsearch(deg[["DEgenes"]], 
+tf.deg <- wrapPWMEnrich(deg[["DEgenes"]], 
                      annoColumn = NULL,  
                      name.organism = "hsapiens", 
                      projectfolder= "example_analysis/GEX/TFBS",
