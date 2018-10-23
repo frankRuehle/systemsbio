@@ -20,14 +20,16 @@ Either \code{Symbol.column} or \code{Entrez.column} must be specified.}
 \item{org}{character with species name ("human", "mouse", "rat").}
 }
 \value{
-dataframe with added annotation column.
+dataframe with added annotation column (either \code{SYMBOL} or \code{ENTREZID}).
 }
 \description{
 Annotate gene symbols and EntrezIDs using an organism-specific annotation package.
 }
 \details{
-This function adds annotation of either gene symbol or EntrezID to \code{data}
+This function adds annotation of either gene \code{SYMBOL} or \code{ENTREZID} to \code{data}
 using the corresponding annotation package of the organism specified in \code{org}.
+and the \code{join}-function of the \code{plyr} package.
+Order of input object is not changed. No additional rows introduced.
 }
 \author{
 Frank Ruehle

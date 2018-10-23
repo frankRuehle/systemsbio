@@ -5,31 +5,41 @@
 \title{Wrapper for gene enrichment analysis using clusterProfiler}
 \usage{
 wrapClusterProfiler(genes, newheader = NULL, backgroundlist = NULL,
-  newheaderBackground = NULL, projectfolder = "GEX/clusterProfiler",
+  newheaderBackground = NULL, projectfolder = "clusterProfiler",
   projectname = "", enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
   maxInputGenes = 100, id.type = "ENTREZID", id.column = "ENTREZID",
-  sortcolumn = "adj.P.Val", sortdecreasing = FALSE,
-  sortcolumn.threshold = 0.05, fun.transf.incr.values = function(x) {    
-  -log10(x) }, FCcolumn = "logFC", threshold_FC = log2(1.5),
-  org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
+  sortcolumn = "adj.P.Val", highValueHighPriority = FALSE,
+  sortcolumn.threshold = 0.05, fun.transform = function(x) {     identity(x)
+  }, FCcolumn = "logFC", threshold_FC = log2(1.5), org = "human",
+  pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
   enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
   maxGSSize = 500, figure.res = 300)
 }
 \arguments{
-\item{genes}{vector with gene names to analyse or dataframe or character with path to dataframe or list thereof. 
-Supplied dataframe needs to include a column with identifiers specified in \code{id.column}.}
+\item{genes}{the input data object can be given in several formats. 
+\itemize{
+ \item vector with gene names/IDs: all genes are used for over-representation analysis. The gene names/IDs
+ must be in the format given in \code{id.type}.
+ \item dataframe with gene names/IDs and quantitative values: genes can be filtered for the quantitative value 
+ prior to over-representation analysis via the unfiltered list can be used as background list.
+ Additionally to over-representation analysis, a GSEA is perfomed using the full gene list ranked for the 
+ quantitative value. Columns of the dataframe must be named according to parameters \code{id.column} and \code{sortcolumn}.
+ \item character with path to dataframe: as above. The dataframe is loaded from the given path.
+ \item list of items: Each item is processed separately as indicated above.
+}}
 
 \item{newheader}{optional character vector with new header information for \code{genes} dataframe. Only relevant 
 if 'genes' is a dataframe (or character string with filepath to a table) with wrong or missing header. 
 NULL otherwise.}
 
-\item{backgroundlist}{optional background IDs for enrichment analysis. Can either be a vector with gene IDs 
-or dataframe or character with path to dataframe. If given, an \code{id.column} is needed as 
-in \code{genes} with type of IDs given in \code{id.type}. 
-If "genome", all ENTREZ IDs from the annotation package of the respective organism
-(denoted in \code{org}) are used as background.
-If NULL, full ID list from \code{genes} is used as background (i.e. that \code{genes} need to 
-contain all genes under investigation without pre-filtering for significance).}
+\item{backgroundlist}{the background list of gene names/IDs for enrichment analysis can be given in several formats.
+\itemize{
+  \item vector with gene names/IDs: The gene names/IDs must be in the format given in \code{id.type}.
+  \item dataframe with gene names/IDs: an \code{id.column} is needed as in \code{genes} with type of IDs given in \code{id.type}.
+  \item "genome": all ENTREZ IDs from the annotation package of the respective organism (denoted in \code{org}) are used as background.
+  \item NULL: full name/ID list from \code{genes} is used as background (i.e. that \code{genes} need to 
+                contain all genes under investigation without pre-filtering).      
+  }}
 
 \item{newheaderBackground}{optional character vector with new header information for \code{backgroundlist}.}
 
@@ -41,33 +51,37 @@ contain all genes under investigation without pre-filtering for significance).}
 \code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).
 Disease ontology is for human only.}
 
-\item{maxInputGenes}{(numeric) max number of top diff regulated elements used for enrichment analysis (or NULL).}
+\item{maxInputGenes}{(numeric) max number of top diff regulated elements used for over-representation analysis (or NULL).}
 
 \item{id.type}{character with identifier type from annotation package (\code{"ENTREZID"} or \code{"SYMBOL"})
-Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
+Gene symbols will be converted to EntrezIDs prior to enrichment analysis.}
 
 \item{id.column}{character with column name for identifier variable in \code{genes}.}
 
 \item{sortcolumn}{character with column name of quantitative data in \code{genes} used for ordering.
-If Null, ranking of genes is omitted and GSEA not possible.}
+If \code{Null}, ranking of genes is omitted and GSEA is not possible.}
 
-\item{sortdecreasing}{(boolean) order parameter for hierarchy of values in \code{sortcolumn}.
-FALSE for increasing values (e.g. p-values), TRUE for decreasing values (e.g. fold changes).
-If FALSE, values in sortcolumn will be transformed prior to GSEA.}
+\item{highValueHighPriority}{(logical) priority order of values in \code{sortcolumn}.
+\code{TRUE}: high values have highest priority (e.g. fold changes).
+\code{FALSE}: low values have highest priority (e.g. p-values); 
+If \code{FALSE}, values in \code{sortcolumn} should be transformed prior to GSEA (see \code{fun.transform}).}
 
 \item{sortcolumn.threshold}{numeric threshold for \code{sortcolumn} to be included in over-representation analysis.
-\code{If sortdecreasing=F, value < sortcolumn.threshold 
+\code{If highValueHighPriority=F, value < sortcolumn.threshold 
 else value > sortcolumn.threshold}}
 
-\item{fun.transf.incr.values}{function definition for transforming values in \code{sortcolumn} prior to GSEA.
-Is applied if \code{sortdecreasing=F}.}
+\item{fun.transform}{GSEA needs an input gene list with priority in decreasing order (high values have highest priority). 
+Since quatitative values given in \code{sortcolumn} may have priority in increasing order (e.g. p-values), these values must 
+be transformed by a custom function to generate priority in decreasing order prior to GSEA. A suitable function definition 
+can be given in \code{fun.transform}, e.g. \code{function(x) {-log10(x)}} for p-values or \code{abs} for absolute
+values of foldchange.}
 
-\item{FCcolumn}{(character) optional column name of foldchanges in \code{genes} if \code{sortcolumn} is used elsewhere.
-Used only for cnetplot of enrichment results. Omitted if NULL}
+\item{FCcolumn}{(character) optional column name of foldchanges in \code{genes} if \code{sortcolumn} is used for a different data column.
+Used only for annotation cnetplot of enrichment results. Omitted if NULL}
 
-\item{threshold_FC}{(numeric) Fold change threshold for filtering (threshold interpreted for log transformed foldchange values!)
+\item{threshold_FC}{(numeric) Fold change threshold for filtering (threshold interpreted for log2 transformed foldchange values!)
 Only relevant for over-representation analysis if an unfiltered gene list is given in \code{genes}
-to allow for parallel GSEA.}
+to allow for GSEA in parallel.}
 
 \item{org}{character with name of organism ("human", "mouse", "rat").}
 
@@ -84,32 +98,62 @@ One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"}
 
 \item{maxGSSize}{maximal size of genes annotated for testing}
 
-\item{figure.res}{numeric resolution for png.}
+\item{figure.res}{numeric resolution for output png.}
 }
 \value{
 List of enrichment-objects defined in \code{DOSE}-package (\code{enrichResult}-object for overrepresentation 
-  analysis, \code{gseaResult}-objects for gene set enrichment analysis).                          
+  analysis and \code{gseaResult}-objects for gene set enrichment analysis).                          
   Enrichment tables and plots are stored in the project folder as side effects.
 }
 \description{
 Applying over-representation analysis and gene set enrichment analysis to supplied gene list
 }
 \details{
-Function uses genelist and optionally background gene list as input to perform enrichment analysis 
-using the \code{clusterProfiler}-package. By default, over-representation analysis and gene set enrichment analysis 
-(GSEA) is performed for all categories given in \code{enrichmentCat}.
-The Gene list can be supplied as vector with ids given in \code{id.type},
-dataframe with IDs of type \code{id.type} given in column \code{id.column} or character string with path of data file.
-The IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the annotation package
-for the species denoted in \code{org}.
-Optionally, quantitative data can be included in \code{sortcolumn} for sorting and filtering (using \code{sortcolumn.threshold}) 
-the data. If quantitative data are no fold changes, fold changes may be given additionally in \code{FCcolumn}.
-This data is used for cnetplot of enrichment results as well as for KEGG pathway mapping of enriched 
-KEGG pathways (if any) using the \code{pathview} package.
-If \code{FCcolumn == NULL} the data in \code{sortcolumn} is also used for the cnetplots and pathway mapping. 
-Be aware that the legend of the cnetplots will be "Fold Change" anyway.
-If no quantitative data is provided, sorting and GSEA will be skipped.
-Optionally, a background list can be provided for enrichment analysis.
+This function uses genelist and optionally background gene list as input to perform enrichment analysis 
+using the \code{clusterProfiler} and \code{DOSE} packages. By default, the function performs two kinds 
+of analysis for all categories given in \code{enrichmentCat}.
+\itemize{
+ \item over-representation analysis: \code{DOSE} implements hypergeometric model to assess whether the 
+ number of selected genes annotated with a term or pathway is larger than expected by chance.
+ For this approach, usually a cut off has been applied to select genes of interest e.g. from differential
+ expression analysis. All selected genes are treated with equal priority.
+ \item gene set enrichment analysis (GSEA): for GSEA all genes under investigation can be used as input.
+ They are ranked based on a corresponding quantitative value given in \code{sortcolumn}. Given a priori 
+ defined set of genes S (e.g., genes sharing the same GO term), the goal of GSEA is to determine whether the 
+ members of S are randomly distributed throughout the ranked gene list (L) or primarily found at the top or bottom.
+ This approach can handle a situation where the extent of differential expression is small, but evidenced 
+ in coordinated way in a set of related genes. GSEA aggregates the per gene statistics across genes within 
+ a gene set, therefore making it possible to detect situations where all genes in a predefined set change 
+ in a small but coordinated way. If no quantitative data is provided (\code{sortcolumn = NULL}), GSEA is skipped.
+}
+The names/IDs are converted to ENTREZ IDs (if necessary) prior to enrichment using the annotation package
+for the species denoted in \code{org}. A background list with genes under investigation (e.g. expression array content) 
+can be provided in \code{backgroundlist} to be used as background for over-representation analysis. 
+Alternatively, all genes of the designated organism can be obtained from the respective
+annotation package (For GSEA, all genes of the designated organism are used anyway). 
+Optionally, quantitative data in \code{sortcolumn} can be used for sorting and filtering (using \code{sortcolumn.threshold}
+or \code{maxInputGenes}) the input gene list for over-representation analysis, if not filtered prior to that.
+The function generation visualisations for each enrichment result like cnetplots enrichment-maps and dotplots.
+Enriched KEGG pathway maps (if any) are annotated for input genes using the \code{pathview} package.
+If quantitative data in \code{sortcolumn} are not fold changes, fold changes may be given additionally in \code{FCcolumn} 
+for annotation purposes in cnetplots as well as for KEGG pathway mapping, otherwise the data in \code{sortcolumn} 
+is used for this. Be aware that the legend of the cnetplots will be "Fold Change" anyway.
+}
+\note{
+There are three key elements of the GSEA method (taken from 
+https://bioconductor.org/packages/release/bioc/vignettes/DOSE/inst/doc/GSEA.html):
+\itemize{
+ \item Calculation of an Enrichment Score: The enrichment score (ES) represent the degree to which a set S is 
+ over-represented at the top or bottom of the ranked list L. The score is calculated by walking down the list L, 
+ increasing a running-sum statistic when we encounter a gene in S and decreasing when it is not. The magnitude 
+ increment depends on the gene statistics (e.g., correlation of the gene with phenotype). The ES is the of the 
+ maximum deviation from zero encountered in the random walk; it corresponds to a weighted Kolmogorov-Smirnov-like statistic
+ \item Esimation of Significance Level of ES: The p-value of the ES is calculated using permutation test. Specifically, 
+ we permute the gene labels of the gene list L and recompute the ES of the gene set for the permutated data, which 
+ generate a null distribution for the ES. The p-value of the observed ES is then calculated relative to this null distribution.
+ \item Adjustment for Multiple Hypothesis Testing: When the entire gene sets were evaluated, \code{DOSE} adjust the estimated 
+ significance level to account for multiple hypothesis testing and also q-values were calculated for FDR control. 
+}
 }
 \author{
 Frank Ruehle

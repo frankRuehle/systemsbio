@@ -171,9 +171,9 @@ wrapWGCNA <- function(data,
   
 
   # load required libraries
-  pcksCRAN <- c("WGCNA", "ICC", "flashClust")
-  pcksBioc <- c("Biobase", "limma", "DESeq2", "SummarizedExperiment")
-  pks2detach <- attach_package(pcksCRAN, pcksBioc)
+  pkg.cran <- c("WGCNA", "ICC", "flashClust")
+  pkg.bioc <- c("Biobase", "limma", "DESeq2", "SummarizedExperiment")
+  pks2detach <- attach_package(pkg.cran, pkg.bioc)
   
   orig_par <- par(no.readonly=T)      # make a copy of current settings
   options(stringsAsFactors = FALSE)
@@ -231,7 +231,7 @@ wrapWGCNA <- function(data,
         # for class MethylSet      
         if(grepl("Methyl", class(data), ignore.case=T ) ) {
           cat("\nClass", class(data), "detected\n")
-          attach_package(pcksBioc="minfi")
+          attach_package(pkg.bioc="minfi")
           featuredata <- mcols(data, use.names=T)
           featuredata <- data.frame(rowfeatures= rownames(featuredata), featuredata)
           assaydata <- getBeta(data)
@@ -239,7 +239,7 @@ wrapWGCNA <- function(data,
           plot.label.pruned="MT"
           traitData = pData(data) # phenotype data 
           
-        } else {cat("wrong object class!");break}
+        } else {cat("wrong object class!");return()}
       }
     }
   

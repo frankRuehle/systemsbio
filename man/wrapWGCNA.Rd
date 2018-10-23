@@ -10,7 +10,7 @@ wrapWGCNA(data, projectfolder = "GEX/WGCNA", softThresholdPower = "auto",
   phDendro = NULL, phModule = NULL, sampleColumn = "Sample_Name",
   groupColumn = "Sample_Group", groupsets = NULL, symbolColumn = NULL,
   flashClustMethod = "average", moduleBoxplotsPerFigure = 16,
-  figure.res = 300, dendroRowText = T, autoColorHeight = FALSE,
+  figure.res = 300, dendroRowText = F, autoColorHeight = FALSE,
   colorHeight = 0.1, cex.labels = 0.6, ...)
 }
 \arguments{
