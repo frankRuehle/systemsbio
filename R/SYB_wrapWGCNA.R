@@ -162,7 +162,7 @@ wrapWGCNA <- function(data,
                   flashClustMethod = "average",
                   moduleBoxplotsPerFigure = 16, 
                   figure.res = 300,
-                  dendroRowText=T, autoColorHeight = FALSE, 
+                  dendroRowText=F, autoColorHeight = FALSE, 
                   colorHeight=0.1, cex.labels = 0.6,
                   ...
 ) {
@@ -437,10 +437,10 @@ wrapWGCNA <- function(data,
   par(cex = 0.6);
   par(mar = c(0,4,2,0))
   WGCNA::plotDendroAndColors(sampleTree, colors=traitColors, 
-                      rowText=rowText, rowTextAlignment="left", cex.rowText=cex.labels,
+                      rowText=rowText, rowTextAlignment="left", cex.rowText= cex.labels/2, # cex.rowText throws error if labels are too large for plotting
                       autoColorHeight = autoColorHeight, colorHeight=colorHeight, addGuide=T, guideAll=T,
                       groupLabels = names(datTraits.dendro), 
-                      cex.dendroLabels = cex.labels, cex.colorLabels = cex.labels,
+                      cex.dendroLabels = cex.labels, cex.colorLabels = cex.labels, 
                       main = paste("Sample Dendrogram -", plot.label))
   dev.off()
 
@@ -713,7 +713,7 @@ wrapWGCNA <- function(data,
   colorOfColumn <- substring(names(datKME),4)
 
   for (trait in phModule) {
-    modTraitName <- grep(trait, names(moduleTraitPvalue), value=T) # with prefix "p.cor" or "p.icc"
+    modTraitName <- grep(paste0(trait,"$"), names(moduleTraitPvalue), value=T) # with prefix "p.cor" or "p.icc"
     # select 8 top associated modules for each trait given in 'phModule': 
       cat(paste("\ntrait:", trait, "\n"))
       selectModules <- rownames(moduleTraitPvalue[order(moduleTraitPvalue[,modTraitName], decreasing=F), , drop=F])[1:min(8, ncol(MEs))]
@@ -727,7 +727,7 @@ wrapWGCNA <- function(data,
         for (module in selectModules) {
           column <- match(module,colorOfColumn)
           restModule <- moduleColors==module
-          WGCNA::verboseScatterplot(datKME[restModule,column],GS.datTraits[restModule, grep(trait,names(GS.datTraits), value=T)],
+          WGCNA::verboseScatterplot(datKME[restModule,column],GS.datTraits[restModule, grep(paste0(trait,"$"),names(GS.datTraits), value=T)],
                        xlab=paste("Module Membership:",module,"module"),ylab=paste("Gene significance:", trait),
                        main=paste(plot.label.pruned, "Module membership vs. gene significance\n"), 
                        cex = cex.labels, cex.axis = cex.labels, cex.lab = cex.labels, cex.main = 1.3 * cex.labels,
@@ -851,7 +851,7 @@ wrapWGCNA <- function(data,
   ### saving pruned result tables: the 8 most significant modules for each trait
   for (trait in phModule) {
       # select 8 top associated modules for each trait given in 'phModule': 
-      modTraitName <- grep(trait, names(moduleTraitPvalue), value=T) # with prefix "p.cor" or "p.icc"
+      modTraitName <- grep(paste0(trait,"$"), names(moduleTraitPvalue), value=T) # with prefix "p.cor" or "p.icc"
       selectModules <- rownames(moduleTraitPvalue[order(moduleTraitPvalue[,modTraitName], decreasing=F), , drop=F])[1:min(8, ncol(MEs))]
       selectModules <- substring(selectModules,3) # remove substring "ME"
       i <- 0      
@@ -859,8 +859,8 @@ wrapWGCNA <- function(data,
          i <- i+1
          restModule <- networkDatOutput_MM$moduleColors==module
          defColnames <- c(colnames(featuredata), "moduleColors", 
-                          grep(trait, names(GS.datTraits), value=T), 
-                          grep(trait, names(GSPvalue), value=T))  
+                          grep(paste0(trait,"$"), names(GS.datTraits), value=T), 
+                          grep(paste0(trait,"$"), names(GSPvalue), value=T))  
          moduleColnames <- grep(paste0("MM.",module, "$"), names(networkDatOutput_MM), value=T)
          
          Output.pruned <- networkDatOutput_MM[restModule, c(defColnames, moduleColnames)]

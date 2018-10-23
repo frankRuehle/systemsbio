@@ -12,7 +12,7 @@
 #' Volcano plots are generated for each group comparison given in \code{comparisons} with highligted 
 #' significance thresholds.
 #' Heatmaps with sample signal intensities are generated for top differentially expressed genes for each 
-#' group comparison. Additionally heatmaps indicating foldchanges are generated 
+#' group comparison. Additionally heatmaps indicating foldchanges can be generated 
 #' for each set of group comparisons given in \code{FC.heatmap.comparisons}. Selection of probes with respect 
 #' to these group comparisons is characterised in \code{FC.heatmap.geneselection}. If the resulting number 
 #' of probes exceeds \code{maxHM}, probes are prioritized by either F-Test p-value or by minimum p-value of

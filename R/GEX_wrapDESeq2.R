@@ -89,20 +89,13 @@ wrapDESeq2 <- function(dds,
 
   
   # load required packages. Packages are not detached afterwards
-  pkg.cran <- c("gplots", "VennDiagram")
-  pkg.bioc <- c("DESeq2", "limma", "Biobase")
+  pkg.cran <- c("gplots", "VennDiagram", "RColorBrewer")
+  pkg.bioc <- c("DESeq2", "limma", "Biobase", "EDASeq")
   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
   
   projectname <- if (!is.null(projectname) && projectname!=""  && !grepl("_$", projectname)) {paste0(projectname, "_")} else {""}
+  colors <- brewer.pal(length(unique(colData(dds)[,groupColumn])), "Set2") # e.g. for RLE plot
   
-  
-  # Create output directories if not yet existing 
-  if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
-  if (!file.exists(file.path(projectfolder, "deseq_unfiltered"))) {dir.create(file.path(projectfolder, "deseq_unfiltered")) }
-  if (!file.exists(file.path(projectfolder, "deseq_filtered"))) {dir.create(file.path(projectfolder, "deseq_filtered")) }
-  if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
-  if (!file.exists(file.path(projectfolder, "Volcano_plots"))) {dir.create(file.path(projectfolder, "Volcano_plots")) }
-  if (!file.exists(file.path(projectfolder, "MA_plots"))) {dir.create(file.path(projectfolder, "MA_plots")) }
   
   
   if (class(dds) != "DESeqDataSet") {stop("\ndds is not of class DESeqDataSet!")}
@@ -112,7 +105,6 @@ wrapDESeq2 <- function(dds,
   if (grepl("row", scale)) {heatmap_legend_xaxis <- "row z-score"}
   if (grepl("col", scale)) {heatmap_legend_xaxis <- "column z-score"}
 
-  
   
   # if no thresholds given for p-value and foldchange, values are applied to omit filtering
   if(is.null(p.value.threshold)) {p.value.threshold <- 1}
@@ -124,11 +116,23 @@ wrapDESeq2 <- function(dds,
   # automatically applied via independent filtering on the mean of normalized counts within the results function.
   dds <- dds[rowSums(counts(dds)) >= min_rowsum,]
   cat("\nApply pre-filtering for rowSums >=", min_rowsum, ".", nrow(dds), "genes remaining.")
+  if(nrow(dds)==0) {return(NULL)}
+
+  
+  # Create output directories if not yet existing 
+  if (!file.exists(file.path(projectfolder))) {dir.create(file.path(projectfolder), recursive=T) }
+  if (!file.exists(file.path(projectfolder, "deseq_unfiltered"))) {dir.create(file.path(projectfolder, "deseq_unfiltered")) }
+  if (!file.exists(file.path(projectfolder, "deseq_filtered"))) {dir.create(file.path(projectfolder, "deseq_filtered")) }
+  if (!file.exists(file.path(projectfolder, "Heatmaps"))) {dir.create(file.path(projectfolder, "Heatmaps")) }
+  if (!file.exists(file.path(projectfolder, "Volcano_plots"))) {dir.create(file.path(projectfolder, "Volcano_plots")) }
+  if (!file.exists(file.path(projectfolder, "MA_plots"))) {dir.create(file.path(projectfolder, "MA_plots")) }
   
 
+  
    # preparing data matrix using variance Stabilizing Transformation
     cat("\nUsing variance Stabilizing Transformation for generating heatmaps and pca plot")
     vsd <- DESeq2::varianceStabilizingTransformation(dds) # includes normalisation for library size
+    rld <- DESeq2::rlog(dds)
     # class: DESeqTransform
     # expmatrix <- DESeq2::rlog(dds, fitType="local") 
     expmatrix <- assay(vsd)
@@ -137,22 +141,61 @@ wrapDESeq2 <- function(dds,
   
   
   # pca plot
-  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot.png"))
+  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot_rld_all_genes.png"))
   cat("\nWrite pca plot to", filename.pca)
-  print(vsd)
+  png(filename= filename.pca, width = 150, height = 150, units = "mm", res= figure.res)
+  print(DESeq2::plotPCA(rld, intgroup= groupColumn, ntop = nrow(rld))) # use all genes for pca plot instead top 500 selected by highest row variance
+  dev.off()
+    
+  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot_vst_all_genes.png"))
+  cat("\nWrite pca plot to", filename.pca)
   png(filename= filename.pca, width = 150, height = 150, units = "mm", res= figure.res)
   print(DESeq2::plotPCA(vsd, intgroup= groupColumn, ntop = nrow(vsd))) # use all genes for pca plot instead top 500 selected by highest row variance
   dev.off()
   
- 
+  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot_vst_top500_genes.png"))
+  cat("\nWrite pca plot to", filename.pca)
+  png(filename= filename.pca, width = 150, height = 150, units = "mm", res= figure.res)
+  print(DESeq2::plotPCA(vsd, intgroup= groupColumn, ntop = 500)) # use top 500 selected by highest row variance
+  dev.off()
+  
+  
+  # Relative Log Expression (RLE) plot using EDASeq package
+  filename.rle <- file.path(projectfolder, paste0(projectname, "rle_plot_raw_counts.png"))
+  cat("\nWrite RLE plot to", filename.rle)
+  png(filename= filename.rle, width = 150, height = 150, units = "mm", res= figure.res)
+  EDASeq::plotRLE(assay(dds), outline=FALSE, col=colors[colData(dds)[,groupColumn]], las=2, cex.axis=0.8, ylab="log-ratio of gene-level read counts",  main="Rel. log expression of raw counts") 
+  dev.off()
+  
+  
+  # Relative Log Expression (RLE) plot using EDASeq package
+  filename.rle <- file.path(projectfolder, paste0(projectname, "rle_plot_vst.png"))
+  cat("Write RLE plot of vst transformed data to", filename.rle)
+  png(filename= filename.rle, width = 150, height = 150, units = "mm", res= figure.res)
+  EDASeq::plotRLE(assay(vsd), outline=FALSE, col=colors[colData(vsd)[,groupColumn]], las=2, cex.axis=0.8, ylab="log-ratio of gene-level read counts",  main="Rel. log expression of vst transformed counts") 
+  dev.off()
+  
+  
+  
+  
+  
   
    
-  # Differential expression
+#### Differential expression
   # also generates sizefactors for library size normalisation used in results function.
-  cat("\nDifferential expression analysis with DESeq2.")
+  cat("\n\nDifferential expression analysis with DESeq2.")
   dds <- DESeq(dds) 
   
- 
+
+  # Dispersion plot
+  filename.Disp <- file.path(projectfolder, paste0(projectname, "Dispersion_plot.png"))
+  cat("\nWrite Dispersion plot to", filename.Disp)
+  png(filename= filename.Disp, width = 150, height = 150, units = "mm", res=figure.res)
+  DESeq2::plotDispEsts(dds, main="Dispersion Estimates")
+  dev.off()
+  
+  
+  
 
 ######### differential group comparisons
 res.unfilt <- list()
@@ -326,7 +369,7 @@ for (i in 1:length(comparisons)) {
      
 
 ### Venn Diagram
-if(is.null(venn_comparisons)) {venn_comparisons <- comparisons}
+if(!is.null(venn_comparisons)) {
   if(!is.list(venn_comparisons)) {venn_comparisons <- list(venn_comparisons)}
   for(v in 1:length(venn_comparisons)) {
     
@@ -347,16 +390,10 @@ if(is.null(venn_comparisons)) {venn_comparisons <- comparisons}
       dev.off()
     }
   } # end v-loop
+}
 
 
 
-
-# Dispersion plot
-filename.Disp <- file.path(projectfolder, paste0(projectname, "Dispersion_plot.png"))
-cat("\nWrite Dispersion plot to", filename.Disp)
-png(filename= filename.Disp, width = 150, height = 150, units = "mm", res=figure.res)
-DESeq2::plotDispEsts(dds, main="Dispersion Estimates")
-dev.off()
 
 
 # # plot counts: examine the counts of reads for a single gene across the groups

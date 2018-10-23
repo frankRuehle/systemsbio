@@ -3,9 +3,10 @@
 #'
 #' Annotate gene symbols and EntrezIDs using an organism-specific annotation package. 
 #' 
-#' This function adds annotation of either gene symbol or EntrezID to \code{data}
+#' This function adds annotation of either gene \code{SYMBOL} or \code{ENTREZID} to \code{data}
 #' using the corresponding annotation package of the organism specified in \code{org}.
-#' 
+#' and the \code{join}-function of the \code{plyr} package.
+#' Order of input object is not changed. No additional rows introduced.
 #' 
 #' @param data dataframe or character with filepath to data to be loaded.
 #' @param Symbol.column character with column name of Gene Symbols in \code{data}.
@@ -16,7 +17,7 @@
 #' @param org character with species name ("human", "mouse", "rat").
 #' 
 #' 
-#' @return dataframe with added annotation column.
+#' @return dataframe with added annotation column (either \code{SYMBOL} or \code{ENTREZID}).
 #' 
 #' @author Frank Ruehle
 #' 
