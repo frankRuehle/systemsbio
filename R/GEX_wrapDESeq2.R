@@ -17,14 +17,14 @@
 #' @param comparisons character vector with group comparisons in format \code{"groupA-groupB"} 
 #' @param min_rowsum numeric. Minimum rowsum of countmatrix of \code{dds}. All rows with \code{rowSums < min_rowsum}
 #' are removed from the count matrix. 
-#' @param p.value.threshold numeric p-value threshold 
+#' @param p_value_threshold numeric p-value threshold 
 #' @param adjust.method adjustment method for multiple testing (\code{"none", "BH", "BY" and "holm"})
-#' @param FC.threshold numeric foldchange threshold. 
+#' @param fc_threshold numeric foldchange threshold on logarithmic scale to base 2. 
 #' 
 #' @param projectfolder character with directory for output files (will be generated if not exisiting).
 #' @param projectname optional character prefix for output file names.
 #' 
-#' @param Symbol.column character with column name of Gene Symbols in \code{dds} or NULL.
+#' @param symbolColumn character with column name of Gene Symbols in \code{dds} or NULL.
 #' @param sampleColumn character with column name of Sample names in \code{dds}
 #' @param groupColumn character with column name of group names in \code{dds}. Group names must match \code{comparisons}!
 #' @param add_anno_columns character with names of feature annotation columns given in \code{dds}, which shall
@@ -63,14 +63,14 @@
 wrapDESeq2 <- function(dds, 
                   comparisons,
                   min_rowsum = 10,
-                  p.value.threshold = 0.05, 
+                  p_value_threshold = 0.05, 
                   adjust.method="BH", 
-                  FC.threshold = log2(1.5),
+                  fc_threshold = log2(1.5),
                       
                   projectfolder = file.path("GEX/deseq"),
                   projectname = "", 
                       
-                  Symbol.column = NULL,
+                  symbolColumn = NULL,
                   sampleColumn = "Sample_Name",   
                   groupColumn= "Sample_Group", 
                   add_anno_columns = NULL,
@@ -107,8 +107,8 @@ wrapDESeq2 <- function(dds,
 
   
   # if no thresholds given for p-value and foldchange, values are applied to omit filtering
-  if(is.null(p.value.threshold)) {p.value.threshold <- 1}
-  if(is.null(FC.threshold)) {FC.threshold <- 0}
+  if(is.null(p_value_threshold)) {p_value_threshold <- 1}
+  if(is.null(fc_threshold)) {fc_threshold <- 0}
   
   
   # Pre-filtering
@@ -141,7 +141,7 @@ wrapDESeq2 <- function(dds,
   
   
   # pca plot
-  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot_rld_all_genes.png"))
+  filename.pca <- file.path(projectfolder, paste0(projectname, "pca_plot_rld_all_genes.png")) # rlog data
   cat("\nWrite pca plot to", filename.pca)
   png(filename= filename.pca, width = 150, height = 150, units = "mm", res= figure.res)
   print(DESeq2::plotPCA(rld, intgroup= groupColumn, ntop = nrow(rld))) # use all genes for pca plot instead top 500 selected by highest row variance
@@ -207,7 +207,7 @@ for (i in 1:length(comparisons)) {
   cat("\n\nProcessing comparison", i, ":", comparisons[i])
   contrast_i <- c(groupColumn, sub("-.*$", "", comparisons[i]), sub("^.*-", "", comparisons[i]))
   
-  # Calculate differential expressed genes (filtered and unfiltered)
+  # Calculate differential expressed genes 
 
 
   res.unfilt[[comparisons[i]]] <- DESeq2::results(dds, lfcThreshold = 0,  alpha = 0.05, 
@@ -220,17 +220,6 @@ for (i in 1:length(comparisons)) {
   # add column with rownames id
   table_unfilt[[comparisons[i]]] <- data.frame(id.rownames= rownames(table_unfilt[[comparisons[i]]]), table_unfilt[[comparisons[i]]])
 
-  #  # add Symbol column
-  # if(!is.null(Symbol.column)) {
-  #   if(!(Symbol.column %in% names(mcols(dds)))) {stop("Symbolcolumn not found in feature data!")}
-  #   table_unfilt[[comparisons[i]]][, Symbol.column] <- mcols(dds)[match(rownames(table_unfilt[[comparisons[i]]]), rownames(dds)), Symbol.column]
-  # }
-  # # add ENTREZID column
-  # if(any(grepl("entrezid", names(mcols(dds)), ignore.case = T))) {
-  #   entrezIdColumnname <- grep("entrezid", names(mcols(dds)), ignore.case = T, value = T)[1] # get name of (first) EntrezID column 
-  #       table_unfilt[[comparisons[i]]][, entrezIdColumnname] <- mcols(dds)[match(rownames(table_unfilt[[comparisons[i]]]), rownames(dds)), entrezIdColumnname]
-  # }
-  # 
 
   if(!is.null(add_anno_columns)) { # add annotation columns from dds object to diff expression tables
     if(all(add_anno_columns %in% names(mcols(dds)))) {
@@ -242,26 +231,28 @@ for (i in 1:length(comparisons)) {
     }
  }
    
-   
-  # filter for significance
-  table_filt[[comparisons[i]]]  <- filterGeneLists(table_unfilt[[comparisons[i]]],
-                                               newheader=NULL,
-                                               filtercat1 = "padj",
-                                               filtercat1.decreasing = FALSE,
-                                               filtercat1.function = identity,
-                                               filtercat1.threshold=p.value.threshold,
-                                               filtercat2 = "log2FoldChange",
-                                               filtercat2.decreasing = TRUE,
-                                               filtercat2.function = abs,
-                                               filtercat2.threshold = FC.threshold)
-  
-
   # comment bioconductor workflow on http://www.bioconductor.org/help/workflows/rnaseqGene/
   # The column log2FoldChange is the effect size estimate. It tells us how much the gene's expression seems to 
   # have changed due to treatment in comparison to untreated samples. This value is reported 
   # on a logarithmic scale to base 2: for example, a log2 fold change of 1.5 means that the gene's expression 
   # is increased by a multiplicative factor of 2**1.5=2.82. 
   
+  
+  
+  ######## Volcano plots per group comparison and filtering for significance
+  
+  volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, comparisons[i], ".png", sep="" ))
+  
+  cat("\nWrite Volcano plot to", volcanoplot_filename)  
+  
+  png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=figure.res) 
+    table_filt[[comparisons[i]]] <- plot_volcano(table_unfilt[[comparisons[i]]], 
+                                      column_name_geme = symbolColumn, column_name_p ="padj", column_name_fc = "log2FoldChange", 
+                                      title = comparisons[i], p_value_threshold = p_value_threshold, fc_threshold = fc_threshold,
+                                      color_down_reg= "red", color_up_reg= "darkgreen")
+  dev.off()
+  
+   
   
   # Writing result gene tables
   write.table(table_unfilt[[comparisons[i]]], sep="\t", quote=F, row.names=F,
@@ -274,28 +265,7 @@ for (i in 1:length(comparisons)) {
   cat(paste("\nWrite gene tables to", file.path(projectfolder, "deseq_unfiltered", paste0(projectname, comparisons[i], "_unfilt.txt")),
             "and", file.path(projectfolder, "deseq_filtered", paste0(projectname, comparisons[i], ".txt"))))
   
-  
- 
-  ######## Volcano plots per group comparison 
-  
-  volcanoplot_filename <- file.path(projectfolder, "Volcano_plots", paste("Volcano_", projectname, comparisons[i], ".png", sep="" ))
-  
-  cat("\nWrite Volcano plot to", volcanoplot_filename)  
-  
-  png(file=volcanoplot_filename, width = 150, height = 150, units = "mm", res=figure.res) 
-  plot(table_unfilt[[comparisons[i]]]$log2FoldChange, -log10(table_unfilt[[comparisons[i]]]$padj), main=comparisons[i],
-       col="gray", pch=16, cex=0.5, xlab="fold change", ylab="-log10 p-value") 
-  if(!is.null(p.value.threshold)) {abline(h=-log10(p.value.threshold),lty=c(1))}
-  if(!is.null(FC.threshold)) {abline(v=c(FC.threshold, -FC.threshold),lty=2)}
-  
-  if(nrow(table_filt[[comparisons[i]]]) >=1) {  # no highlighting if no diff expressed genes
-    points(table_filt[[comparisons[i]]]$log2FoldChange, -log10(table_filt[[comparisons[i]]]$padj),pch=16, col="black", cex=0.8) 
-  } 
-  dev.off()
-  
-  
-  
-  
+
  
   ######## Heatmaps per group comparison with signal intensities
       if(nrow(table_filt[[comparisons[i]]]) >1) {  # no Heatmap if just one diff expressed gene
@@ -311,9 +281,9 @@ for (i in 1:length(comparisons)) {
         # If Symbols are available, rows are annotated with symbols instead of probe IDs   
         indexRownames <- match(rownames(plotmatrix), rownames(features))
 
-        if(!is.null(Symbol.column)) {
-          rownames(plotmatrix) <- ifelse(features[indexRownames,Symbol.column] != "" & !is.na(features[indexRownames,Symbol.column]), 
-                                         as.character(features[indexRownames,Symbol.column]), rownames(plotmatrix))
+        if(!is.null(symbolColumn)) {
+          rownames(plotmatrix) <- ifelse(features[indexRownames,symbolColumn] != "" & !is.na(features[indexRownames,symbolColumn]), 
+                                         as.character(features[indexRownames,symbolColumn]), rownames(plotmatrix))
           }
         
         groupColorCode <- rainbow(length(unique(colData(dds)[,groupColumn])))[as.numeric(factor(colData(dds)[,groupColumn]))] # for ColSideColors in heatmaps

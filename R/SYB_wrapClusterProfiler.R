@@ -85,6 +85,7 @@
 #' @param threshold_FC (numeric) Fold change threshold for filtering (threshold interpreted for log2 transformed foldchange values!)
 #'               Only relevant for over-representation analysis if an unfiltered gene list is given in \code{genes}
 #'               to allow for GSEA in parallel.
+#' @param returnSymbolsInResultObject logical. if \code{TRUE} gene symbols are returned in result objects. ENTREZIDs otherwise.
 #' @param pAdjustMethod method for adjusting for multiple testing. 
 #'                One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"
 #' @param org character with name of organism ("human", "mouse", "rat").
@@ -138,6 +139,7 @@ wrapClusterProfiler <- function (genes,
                          fun.transform = function(x) {identity(x)},
                          FCcolumn = "logFC",
                          threshold_FC= log2(1.5),
+                         returnSymbolsInResultObject =TRUE,
                          org = "human",
                          pAdjustMethod = "BH", 
                          enrich.p.valueCutoff = 0.05, 
@@ -191,7 +193,7 @@ wrapClusterProfiler <- function (genes,
   
   if(!is.null(sortcolumn) & highValueHighPriority == FALSE) {
     cat(paste("\nCAUTION: You indicated high prority for low values in 'sortcolumn',", 
-                "but GSEA will assess high values with  higher priority than", 
+                "but GSEA will assess high values with higher priority than", 
                 "low values. Make sure that you have given a suitable function", 
                 "in 'fun.transform' for transforming your data", 
                 "(e.g. -log10(x) for p-values).\n"))
@@ -210,6 +212,8 @@ wrapClusterProfiler <- function (genes,
   
   # initialise result list
   enrichresult <- list()
+  enrichresult_kegg_entrez <- list() # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE 
+  
   
   for(ge in names(genes)) {
     
@@ -247,7 +251,9 @@ wrapClusterProfiler <- function (genes,
             names(genes[[ge]]) <- c(id.column)        
             }
         }
-  
+
+  cat(paste("\n", nrow(genes[[ge]]), "gene entries loaded.\n"))
+    
   # now 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
       genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,id.column]), , drop=F] # remove rows without entry in id.column
       if (!is.null(sortcolumn)) {
@@ -260,8 +266,7 @@ wrapClusterProfiler <- function (genes,
           }
       }
      
- 
-      
+
   ## convert IDs to ENTREZ IDs if necessary 
     if(id.type!="ENTREZID") {
       
@@ -272,18 +277,24 @@ wrapClusterProfiler <- function (genes,
       cat(paste("For dublicated", id.type, "only the first element is used (after sorting if applicable)\n")) 
       genes[[ge]] <- plyr::join(genes[[ge]], entrezids, by=id.column, type="right", match="first") 
       # joined dataframe contains all entries even without available ENTREZIDs and keeps order of 'genes[[ge]]'
+ 
 
     } else {names(genes[[ge]])[names(genes[[ge]])==id.column] <- "ENTREZID"}
     
+
+
      # 'genes[[ge]]' now definitively provides a column 'ENTREZID'   
      # remove entries without 'ENTREZID'
-     genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,"ENTREZID"]),]
-     genes[[ge]] <- genes[[ge]][genes[[ge]][,"ENTREZID"] != "",]
+     genes[[ge]] <- genes[[ge]][!is.na(genes[[ge]][,"ENTREZID"]), , drop=F]
+     genes[[ge]] <- genes[[ge]][genes[[ge]][,"ENTREZID"] != "", , drop=F]
      # if multiple probes per gene, only the first gene entry is used 
      # (after sorting, if sortcolumn available).
-     genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,"ENTREZID"]),] 
-      
+     genes[[ge]] <- genes[[ge]][!duplicated(genes[[ge]][,"ENTREZID"]), , drop=F] 
 
+
+           
+     cat(paste("\n", nrow(genes[[ge]]), "genes with unique Entrez IDs found.\n"))
+     
   ### Filtering: Threshold applied to gene list: 'maxInputGenes' as well as 'sortcolumn.threshold' if applicable
 
      filtgenes <- filterGeneLists(genes[[ge]],
@@ -400,6 +411,7 @@ wrapClusterProfiler <- function (genes,
   
   # initialise result list
   enrichresult[[ge]] <- list()
+  enrichresult_kegg_entrez[[ge]] <- list() # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE 
   
   ##### Gene Ontology Enrichment
   ## Over representation analysis
@@ -418,7 +430,7 @@ wrapClusterProfiler <- function (genes,
                                     pAdjustMethod = pAdjustMethod, 
                                     pvalueCutoff  = enrich.p.valueCutoff,
                                     qvalueCutoff  = enrich.q.valueCutoff,
-                                    readable      = T) # if readable =T, EntrezIDs displayed as gene Symbols
+                                    readable      = returnSymbolsInResultObject) # if readable =T, EntrezIDs displayed as gene Symbols
       cat(paste("Overrepresentation analysis for", go, "GO-terms results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_",go)]])), "enriched terms.\n"))
     }
 
@@ -434,6 +446,12 @@ wrapClusterProfiler <- function (genes,
                                                   pvalueCutoff = enrich.p.valueCutoff,
                                                   pAdjustMethod = pAdjustMethod, 
                                                   verbose      = FALSE)
+      
+      if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+        if(nrow(enrichresult[[ge]][[paste0("GSEA_",go)]]) >=1) {
+          enrichresult[[ge]][[paste0("GSEA_",go)]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_",go)]], OrgDb=annotationdb, keytype = "ENTREZID")
+            }
+        }
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_",go)]])), "enriched terms.\n"))
   }
   
@@ -456,7 +474,13 @@ wrapClusterProfiler <- function (genes,
                      minGSSize    = minGSSize,
                      maxGSSize    = maxGSSize,
                      use_internal_data = FALSE)
-    
+      
+      if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+        if(nrow(enrichresult[[ge]][[paste0("Overrep_","KEGG")]]) >=1) {
+          enrichresult_kegg_entrez[[ge]][[paste0("Overrep_","KEGG")]] <- enrichresult[[ge]][[paste0("Overrep_","KEGG")]] # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE 
+          enrichresult[[ge]][[paste0("Overrep_","KEGG")]] <- setReadable(enrichresult[[ge]][[paste0("Overrep_","KEGG")]], OrgDb=annotationdb, keytype = "ENTREZID")
+      }
+     }  
     cat(paste("Overrepresentation analysis for KEGG pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","KEGG")]])), "enriched pathways\n"))
     }
 
@@ -474,6 +498,12 @@ if (!is.null(sortcolumn)) { # quantitative data available?
                  verbose      = FALSE,
                  use_internal_data = FALSE)
   
+  if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+    if(nrow(enrichresult[[ge]][[paste0("GSEA_","KEGG")]]) >=1) {
+      enrichresult_kegg_entrez[[ge]][[paste0("GSEA_","KEGG")]] <- enrichresult[[ge]][[paste0("GSEA_","KEGG")]] # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE
+      enrichresult[[ge]][[paste0("GSEA_","KEGG")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","KEGG")]], OrgDb=annotationdb, keytype = "ENTREZID")
+    }
+  }
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","KEGG")]])), "enriched pathways\n"))
   }
 }
@@ -492,7 +522,7 @@ if ("Reactome" %in% enrichmentCat) {
                       pAdjustMethod = pAdjustMethod, 
                       minGSSize    = minGSSize,
                       maxGSSize    = maxGSSize,
-                      readable     = TRUE)
+                      readable     = returnSymbolsInResultObject)
   
   cat(paste("Overrepresentation analysis for Reactome pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","Reactome")]])), "enriched pathways\n"))
   }
@@ -510,7 +540,12 @@ if ("Reactome" %in% enrichmentCat) {
                       pvalueCutoff = enrich.p.valueCutoff,
                       pAdjustMethod = pAdjustMethod, 
                       verbose      = FALSE)
-  
+    
+    if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+      if(nrow(enrichresult[[ge]][[paste0("GSEA_","Reactome")]]) >=1) {
+        enrichresult[[ge]][[paste0("GSEA_","Reactome")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","Reactome")]], OrgDb=annotationdb, keytype = "ENTREZID")
+    }
+  } 
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","Reactome")]])), "enriched pathways\n"))
   }
 
@@ -530,7 +565,7 @@ if ("Reactome" %in% enrichmentCat) {
                     pAdjustMethod = pAdjustMethod, 
                     minGSSize    = minGSSize,
                     maxGSSize    = maxGSSize,
-                    readable     = TRUE)
+                    readable     = returnSymbolsInResultObject)
     
     cat(paste("Overrepresentation analysis for Disease Ontology results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","DO")]])), "enriched terms\n"))
     } 
@@ -546,7 +581,12 @@ if ("Reactome" %in% enrichmentCat) {
                           pvalueCutoff = enrich.p.valueCutoff,
                           pAdjustMethod = pAdjustMethod, 
                           verbose      = FALSE)
-  
+    
+    if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+      if(nrow(enrichresult[[ge]][[paste0("GSEA_","DO")]]) >=1) {
+        enrichresult[[ge]][[paste0("GSEA_","DO")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","DO")]], OrgDb=annotationdb, keytype = "ENTREZID")
+    }
+  }  
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","DO")]])), "enriched terms.\n"))
   }
 }
@@ -585,19 +625,27 @@ for(usedcat in names(enrichresult[[ge]])) {
     
     ## cnet plot (Remark: legend will be 'Fold change' even if other quantitative data are included)
     cnetplot_anno_column <- "ENTREZID" # by default, gene names are ENTREZIDs, because the enrichment is done with Entrez IDs
-    if(grepl("Overrep", usedcat) & grepl("MF|BP|CC|Reactome", usedcat)) {
-      # some enrichment functions (see line above) offer to translate enriched ENTREZIDs to SYMBOLs via parameter readable = TRUE
-      # For those, SYMBOLs must be used to refer to quantitaive information in cnetplots (foldchange or other data).
+    if(returnSymbolsInResultObject) {  ### outdated: grepl("Overrep", usedcat) & grepl("MF|BP|CC|Reactome", usedcat) for functions with 'readable' parameter
+      # if returnSymbolsInResultObject==TRUE genes symbols are returned instead of ENTREZIDs
+      # either via parameter readable = TRUE in the enrichment function or via function setReadable.
+      # Then, SYMBOLs must be used to refer to quantitaive information in cnetplots (foldchange or other data).
       if(id.type == "SYMBOL") {
         cnetplot_anno_column <- id.column 
-      } else {
-        if(any(grepl("symbol", names(genes[[ge]]), ignore.case = T))) { # if dataframe containes unused symbol annotation
-          cnetplot_anno_column <- grep("symbol", names(genes[[ge]]), value=T, ignore.case = T)[1]
-        } else { # if SYMBOLs must be derived from ENTREZIDs
-          genes[[ge]] <- basicAnno(data=genes[[ge]], Symbol.column = NULL, Entrez.column = "ENTREZID", org=org)
-          cnetplot_anno_column <- "SYMBOL" 
-        }
-      }
+          } else {
+              if(any(grepl("symbol", names(genes[[ge]]), ignore.case = T))) { 
+                # if dataframe containes unused symbol annotation, else annotate with org object
+                # Anyhow, additional symbol columns are not kept in the current gene[[ge]], 
+                # so they have to be obtained from org object anyway.
+                temp_symbol_column <- grep("symbol", names(genes[[ge]]), value=T, ignore.case = T)[1]
+                if(!(any(is.na(genes[[ge]][,temp_symbol_column])) | any(genes[[ge]][,temp_symbol_column]==""))) { 
+                  # check if found symbol column in complete
+                  cnetplot_anno_column <- temp_symbol_column
+                }
+            } else { # if SYMBOLs must be derived from ENTREZIDs
+              genes[[ge]] <- basicAnno(data=genes[[ge]], Symbol.column = NULL, Entrez.column = "ENTREZID", org=org)
+              cnetplot_anno_column <- "SYMBOL" 
+            }
+          }
     }
     # annotation of cnet plots (either by FCcolumn or sortcolumn)
     if(!is.null(FCcolumn)) {
@@ -638,7 +686,6 @@ for(usedcat in names(enrichresult[[ge]])) {
     
  
     
-    
     # Pathview maps for KEGG
     if(grepl("KEGG", usedcat)) {
      
@@ -647,14 +694,14 @@ for(usedcat in names(enrichresult[[ge]])) {
       workingdir <- getwd()
       setwd(pathway.dir)
       
-      for(k in 1:nrow(enrichresult[[ge]][[usedcat]])) {
+      for(k in 1:nrow(enrichresult_kegg_entrez[[ge]][[usedcat]])) {
         
         if(grepl("gsea", usedcat, ignore.case =T)) { # column name with gene IDs differs for GSEA and overrep analysis
                 temp_geneid_column <- "core_enrichment"} else {
                 temp_geneid_column <- "geneID"
                 }
         
-        kegggenes <- enrichresult[[ge]][[usedcat]][k, temp_geneid_column]  # Entrez IDs
+        kegggenes <- enrichresult_kegg_entrez[[ge]][[usedcat]][k, temp_geneid_column]  # Entrez IDs
         kegggenes <- unlist(strsplit(kegggenes, split="/", fixed=T))
         # 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
         kegggenes <- genes[[ge]][genes[[ge]][,"ENTREZID"] %in% kegggenes, ]
@@ -684,9 +731,9 @@ for(usedcat in names(enrichresult[[ge]])) {
          pathview::pathview(
             # numeric vector named with ENTREZ IDs
             gene.data  = kegggenes,
-            pathway.id = enrichresult[[ge]][[usedcat]][k, "ID"],
+            pathway.id = enrichresult_kegg_entrez[[ge]][[usedcat]][k, "ID"],
             species    = org_alt_name,
-            gene.idtype = "entrez",
+            gene.idtype = "entrez", # may also be "SYMBOL" here, but entrez is more reliable and organism independant
             limit= list(gene= kegglimit, cpd=1),
             plot.col.key = plot.col.key)
          ,silent=F)

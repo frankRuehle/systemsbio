@@ -261,7 +261,7 @@ deg <- wrapDESeq2(dds,
 ```
 
 ## Gene Enrichment analysis with clusterProfiler
-The function `wrapClusterProfiler` takes genelist and optionally background gene list as input to perform enrichment analyses using the `clusterProfiler` package. By default, overrepresentation analysis and gene set enrichment analysis (GSEA) is performed for all categories given in `enrichmentCat`. While overrepresentation analysis applies a significance threshold to test the top genes, GSEA uses all genes of the list e.g. ranked by p-value. All result tables and plots (cnet plots and enrichment maps) are stored in the project folder.
+The function `wrapClusterProfiler` takes genelist and optionally background gene list as input to perform enrichment analyses using the `clusterProfiler` package. By default, overrepresentation analysis and gene set enrichment analysis (GSEA) is performed for all categories given in `enrichmentCat`. While overrepresentation analysis applies a significance threshold to test the top genes, GSEA uses all genes of the list e.g. ranked by p-value. All result tables and plots (cnet plots, enrichment maps, dot plots, GOgraphs and KEGG pathway maps) are stored in the project folder.
 
 ```
 clusterp.deg <- wrapClusterProfiler(deg[["DEgenes.unfilt"]], 
@@ -273,8 +273,9 @@ clusterp.deg <- wrapClusterProfiler(deg[["DEgenes.unfilt"]],
                       id.type = "SYMBOL",
                       id.column = "SYMBOL",   
                       sortcolumn = "adj.P.Val",  
-                      sortdecreasing = FALSE, 
+                      highValueHighPriority = FALSE, 
                       sortcolumn.threshold = 0.05,
+                      fun.transform = function(x) {-log10(x)},
                       FCcolumn = "logFC",
                       threshold_FC = log2(1.5),
                       org = "human",

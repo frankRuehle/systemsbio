@@ -10,10 +10,10 @@ wrapClusterProfiler(genes, newheader = NULL, backgroundlist = NULL,
   maxInputGenes = 100, id.type = "ENTREZID", id.column = "ENTREZID",
   sortcolumn = "adj.P.Val", highValueHighPriority = FALSE,
   sortcolumn.threshold = 0.05, fun.transform = function(x) {     identity(x)
-  }, FCcolumn = "logFC", threshold_FC = log2(1.5), org = "human",
-  pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
-  enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
-  maxGSSize = 500, figure.res = 300)
+  }, FCcolumn = "logFC", threshold_FC = log2(1.5),
+  returnSymbolsInResultObject = TRUE, org = "human", pAdjustMethod = "BH",
+  enrich.p.valueCutoff = 0.05, enrich.q.valueCutoff = 0.05, nPerm = 1000,
+  minGSSize = 10, maxGSSize = 500, figure.res = 300)
 }
 \arguments{
 \item{genes}{the input data object can be given in several formats. 
@@ -82,6 +82,8 @@ Used only for annotation cnetplot of enrichment results. Omitted if NULL}
 \item{threshold_FC}{(numeric) Fold change threshold for filtering (threshold interpreted for log2 transformed foldchange values!)
 Only relevant for over-representation analysis if an unfiltered gene list is given in \code{genes}
 to allow for GSEA in parallel.}
+
+\item{returnSymbolsInResultObject}{logical. if \code{TRUE} gene symbols are returned in result objects. ENTREZIDs otherwise.}
 
 \item{org}{character with name of organism ("human", "mouse", "rat").}
 

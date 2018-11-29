@@ -4,10 +4,10 @@
 \alias{wrapDESeq2}
 \title{Differential expression analysis with DESeq2}
 \usage{
-wrapDESeq2(dds, comparisons, min_rowsum = 10, p.value.threshold = 0.05,
-  adjust.method = "BH", FC.threshold = log2(1.5),
+wrapDESeq2(dds, comparisons, min_rowsum = 10, p_value_threshold = 0.05,
+  adjust.method = "BH", fc_threshold = log2(1.5),
   projectfolder = file.path("GEX/deseq"), projectname = "",
-  Symbol.column = NULL, sampleColumn = "Sample_Name",
+  symbolColumn = NULL, sampleColumn = "Sample_Name",
   groupColumn = "Sample_Group", add_anno_columns = NULL,
   venn_comparisons = NULL, maxHM = 50, scale = c("none"),
   HMcexRow = 1.1, HMcexCol = 1.1, figure.res = 300,
@@ -21,17 +21,17 @@ wrapDESeq2(dds, comparisons, min_rowsum = 10, p.value.threshold = 0.05,
 \item{min_rowsum}{numeric. Minimum rowsum of countmatrix of \code{dds}. All rows with \code{rowSums < min_rowsum}
 are removed from the count matrix.}
 
-\item{p.value.threshold}{numeric p-value threshold}
+\item{p_value_threshold}{numeric p-value threshold}
 
 \item{adjust.method}{adjustment method for multiple testing (\code{"none", "BH", "BY" and "holm"})}
 
-\item{FC.threshold}{numeric foldchange threshold.}
+\item{fc_threshold}{numeric foldchange threshold on logarithmic scale to base 2.}
 
 \item{projectfolder}{character with directory for output files (will be generated if not exisiting).}
 
 \item{projectname}{optional character prefix for output file names.}
 
-\item{Symbol.column}{character with column name of Gene Symbols in \code{dds} or NULL.}
+\item{symbolColumn}{character with column name of Gene Symbols in \code{dds} or NULL.}
 
 \item{sampleColumn}{character with column name of Sample names in \code{dds}}
 

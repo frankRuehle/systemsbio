@@ -55,14 +55,16 @@ filterGeneLists <- function(genes,
   # apply filtercat2  
   if (!is.null(filtercat2)) {
     if(filtercat2 %in% names(genes)) {
-      genes <- genes[order(filtercat2.function(genes[,filtercat2]), decreasing=filtercat2.decreasing),]
+      genes <- genes[order(filtercat2.function(genes[,filtercat2]), decreasing=filtercat2.decreasing),] 
+      # filtercat2.function used just for ordering and filtering. Values in 'genes' are not transformed. 
       
       if(!is.null(filtercat2.threshold)) {        
         if(is.character(filtercat2.threshold) & grepl("top", filtercat2.threshold, ignore.case=T)) { # select top hits
           topthreshold <- min(nrow(genes), as.numeric(sub("top", "", filtercat2.threshold, ignore.case=T)))
           cat("\nTop", topthreshold, "entries selected according to", filtercat2, "(decreasing =",filtercat2.decreasing, ")\n")
           genes <- genes[1:topthreshold,]
-        } else {
+        } else { # filter for threshold in appropriate direction
+          
           if(filtercat2.decreasing==FALSE) { # less than threshold
             genes <- genes[!is.na(genes[,filtercat2]) & filtercat2.function(genes[,filtercat2]) < filtercat2.threshold, ]
           } else { # greater than threshold
@@ -79,16 +81,17 @@ filterGeneLists <- function(genes,
   if (!is.null(filtercat1)) {
     if(filtercat1 %in% names(genes)) {
       genes <- genes[order(filtercat1.function(genes[,filtercat1]), decreasing=filtercat1.decreasing),]
-
+      # filtercat1.function used just for ordering and filtering. Values in 'genes' are not transformed. 
+      
       if(!is.null(filtercat1.threshold)) {        
         if(is.character(filtercat1.threshold) & grepl("top", filtercat1.threshold, ignore.case=T)) { # select top hits
           topthreshold <- min(nrow(genes), as.numeric(sub("top", "", filtercat1.threshold, ignore.case=T)))
           cat("\nTop", topthreshold, "entries selected according to", filtercat1, "(decreasing =",filtercat1.decreasing, ")\n")
           genes <- genes[1:topthreshold,]
-        } else {
+        } else { # filter for threshold in appropriate direction
+          
           if(filtercat1.decreasing==FALSE) { # lower than threshold
             genes <- genes[!is.na(genes[,filtercat1]) & filtercat1.function(genes[,filtercat1]) < filtercat1.threshold, ] 
-            
           } else { # greater than threshold
             genes <- genes[!is.na(genes[,filtercat1]) & filtercat1.function(genes[,filtercat1]) > filtercat1.threshold, ]
           }
