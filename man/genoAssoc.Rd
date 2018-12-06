@@ -23,7 +23,7 @@ genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
 \item{fun.assoc}{character with association function from GenABEL package to be used. 
 Either \code{mlreg} for linear or logistic regression or \code{qtscore} for fast score test.}
 
-\item{gtmode}{character with mode of inheritence if regression is used. 
+\item{gtmode}{character with mode of inheritance if regression is used. 
 Either \code{additive}, \code{dominant}, \code{recessive} or \code{overdominant}.}
 
 \item{times}{If more than one, the number of permutations to be used for calculationg empirical p-values.

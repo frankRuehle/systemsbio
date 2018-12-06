@@ -16,6 +16,8 @@
 #' @param title character with title of volcano plot.
 #' @param p_value_threshold numeric significance threshold for p-value.
 #' @param fc_threshold numeric significance threshold for logarithmized fold changes.
+#' @param xlabel character with label for x-axis
+#' @param ylabel character with label for y-axis
 #' @param color_up_reg character with color name for indicating up regulated genes.
 #' @param color_down_reg character with color name for indicating down regulated genes.
 #' @param color_not_reg character with color name for indicating genes not differentially regulated.
@@ -30,6 +32,7 @@
 
 plot_volcano <- function (data, column_name_geme = NULL, column_name_p ="padj", column_name_fc = "log2FoldChange", 
                           title = "Volcano plot", p_value_threshold = 0.05, fc_threshold = log2(1.5),
+                          xlabel="log fold change", ylabel="-log10 p-value (adjusted)", 
                           color_down_reg= "red", color_up_reg= "darkgreen", color_not_reg = "darkgray")
                           {
 
@@ -50,7 +53,7 @@ plot_volcano <- function (data, column_name_geme = NULL, column_name_p ="padj", 
   data_filt$up <- data_filt[, column_name_fc] > 0
 
   plot(data[,column_name_fc], -log10(data[,column_name_p]), main = title,
-     col= color_not_reg, pch=16, cex=0.7, xlab="log fold change", ylab="-log10 p-value") 
+     col= color_not_reg, pch=16, cex=0.7, xlab=xlabel, ylab=ylabel) 
 
   if(!is.null(p_value_threshold)) {abline(h=-log10(p_value_threshold),lty=2)}
 

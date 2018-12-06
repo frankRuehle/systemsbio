@@ -59,6 +59,8 @@
 #' @param newheaderBackground optional character vector with new header information for \code{backgroundlist}.
 #' @param projectfolder character with directory for output files (will be generated if not existing).
 #' @param projectname optional character prefix for output file names.
+#' @param analysis_type character vector giving the type of analysis to be performed. Eiter "over-representation",
+#' "GSEA" or both.
 #' @param enrichmentCat character vector with categories to be enriched (\code{GO}: gene ontology (MF, BP, CC), 
 #'                \code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).
 #'                Disease ontology is for human only.
@@ -129,6 +131,7 @@ wrapClusterProfiler <- function (genes,
                          newheaderBackground = NULL,
                          projectfolder= "clusterProfiler",
                          projectname="", 
+                         analysis_type = c("over-representation", "GSEA"),
                          enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
                          maxInputGenes = 100,  
                          id.type = "ENTREZID",
@@ -183,8 +186,15 @@ wrapClusterProfiler <- function (genes,
   pkg.cran <- c("plyr")
 
   pks2detach <- attach_package(pkg.cran=pkg.cran, pkg.bioc=pkg.bioc)
-  
+ 
+  # determine analysis type(s)
+  do_overrep <- ifelse("over-representation" %in% analysis_type, T, F)
+  do_gsea <- ifelse("GSEA" %in% analysis_type, T, F)
+
+   
   # warnings
+  if(!any(c(do_overrep, do_gsea))) {stop("\n\nSelect analysis_type\n")}
+  
   if(!is.null(id.column)) {
     if(id.column!="ENTREZID" && "ENTREZID" %in% names(genes)) {
       cat("CAUTION: Column ENTREZIDs found. Consider these data for id.column.")
@@ -309,15 +319,18 @@ wrapClusterProfiler <- function (genes,
                         filtercat2.threshold= threshold_FC)
      
   filtgenes[,"ENTREZID"] <- as.character(filtgenes[,"ENTREZID"]) # convert numeric EntrezIDs to characters
-  cat(paste("\nTop", min(nrow(filtgenes), maxInputGenes), "unique genes selected for overrepresentation analysis:\n"))  
-  print(head(filtgenes$ENTREZID))  
-    cat("\n")
 
+  if(do_overrep) {
+    cat(paste("\nTop", min(nrow(filtgenes), maxInputGenes), "unique genes selected for overrepresentation analysis:\n"))  
+    print(head(filtgenes$ENTREZID))  
+    cat("\n")
+  }
   filtgenes <- filtgenes[1:min(nrow(filtgenes), maxInputGenes), , drop=F]
   
   
   ## Processing list for Gene Set Enrichment Analysis (GSEA). Named Vector needed in decreasing order.
-  if (!is.null(sortcolumn)) { # quantitative data available?
+ if(do_gsea) {
+   if (!is.null(sortcolumn)) { # quantitative data available?
 
     # Requirements for input gene list according to https://github.com/GuangchuangYu/DOSE/wiki/how-to-prepare-your-own-geneList
     # - numeric vector: fold change or other type of numerical variable
@@ -333,7 +346,7 @@ wrapClusterProfiler <- function (genes,
     print(head(names(gseagenes)))  
     cat("\n")
   }
-  
+ }
   
   ###### read background list if available. Otherwise unfiltered ID list from 'genes[[ge]]' used as background Vector.
   if(!is.null(backgroundlist)) {
@@ -419,8 +432,8 @@ wrapClusterProfiler <- function (genes,
   if ("GO" %in% enrichmentCat) {
 
   for (go in c("MF", "BP", "CC")) {
+   if(do_overrep) {
     if(nrow(filtgenes)>1) {
-
       enrichresult[[ge]][[paste0("Overrep_",go)]] <- clusterProfiler::enrichGO(gene = filtgenes[,"ENTREZID"],
                                     universe      = backgroundlist,
                                     OrgDb      = annotationdb,
@@ -433,8 +446,9 @@ wrapClusterProfiler <- function (genes,
                                     readable      = returnSymbolsInResultObject) # if readable =T, EntrezIDs displayed as gene Symbols
       cat(paste("Overrepresentation analysis for", go, "GO-terms results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_",go)]])), "enriched terms.\n"))
     }
-
+  }
   # GO Gene Set Enrichment Analysis
+ if(do_gsea) {
     if (!is.null(sortcolumn)) { # quantitative data available?
       cat(paste("GeneSet Enrichment analysis for", go, "GO-terms results in "))
       enrichresult[[ge]][[paste0("GSEA_",go)]] <- clusterProfiler::gseGO(geneList = gseagenes,
@@ -453,9 +467,9 @@ wrapClusterProfiler <- function (genes,
             }
         }
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_",go)]])), "enriched terms.\n"))
-  }
-  
-  } # end go-loop
+   }
+  } 
+ } # end go-loop
 } # end if GO
 
 
@@ -464,7 +478,8 @@ wrapClusterProfiler <- function (genes,
 
 
   if ("KEGG" %in% enrichmentCat) {
-    if(nrow(filtgenes)>1) {
+    if(do_overrep) {
+      if(nrow(filtgenes)>1) {
       enrichresult[[ge]][[paste0("Overrep_","KEGG")]] <- clusterProfiler::enrichKEGG(gene = filtgenes[,"ENTREZID"],
                      organism      = org_alt_name,
                      universe    = backgroundlist, 
@@ -483,37 +498,40 @@ wrapClusterProfiler <- function (genes,
      }  
     cat(paste("Overrepresentation analysis for KEGG pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","KEGG")]])), "enriched pathways\n"))
     }
-
+  }
 
 # KEGG Gene Set Enrichment Analysis
-if (!is.null(sortcolumn)) { # quantitative data available?
-  cat(paste("GeneSet Enrichment analysis for KEGG pathways results in "))
-  enrichresult[[ge]][[paste0("GSEA_","KEGG")]] <- clusterProfiler::gseKEGG(geneList  = gseagenes,
-                 organism      = org_alt_name,
-                 nPerm        = nPerm,
-                 minGSSize    = minGSSize,
-                 maxGSSize    = maxGSSize,
-                 pvalueCutoff = enrich.p.valueCutoff,
-                 pAdjustMethod = pAdjustMethod, 
-                 verbose      = FALSE,
-                 use_internal_data = FALSE)
-  
-  if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
-    if(nrow(enrichresult[[ge]][[paste0("GSEA_","KEGG")]]) >=1) {
-      enrichresult_kegg_entrez[[ge]][[paste0("GSEA_","KEGG")]] <- enrichresult[[ge]][[paste0("GSEA_","KEGG")]] # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE
-      enrichresult[[ge]][[paste0("GSEA_","KEGG")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","KEGG")]], OrgDb=annotationdb, keytype = "ENTREZID")
-    }
+  if(do_gsea) {
+      if (!is.null(sortcolumn)) { # quantitative data available?
+        cat(paste("GeneSet Enrichment analysis for KEGG pathways results in "))
+        enrichresult[[ge]][[paste0("GSEA_","KEGG")]] <- clusterProfiler::gseKEGG(geneList  = gseagenes,
+                       organism      = org_alt_name,
+                       nPerm        = nPerm,
+                       minGSSize    = minGSSize,
+                       maxGSSize    = maxGSSize,
+                       pvalueCutoff = enrich.p.valueCutoff,
+                       pAdjustMethod = pAdjustMethod, 
+                       verbose      = FALSE,
+                       use_internal_data = FALSE)
+        
+        if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
+          if(nrow(enrichresult[[ge]][[paste0("GSEA_","KEGG")]]) >=1) {
+            enrichresult_kegg_entrez[[ge]][[paste0("GSEA_","KEGG")]] <- enrichresult[[ge]][[paste0("GSEA_","KEGG")]] # needed for KEGG pathway maps if returnSymbolsInResultObject =TRUE
+            enrichresult[[ge]][[paste0("GSEA_","KEGG")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","KEGG")]], OrgDb=annotationdb, keytype = "ENTREZID")
+           }
+          }
+   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","KEGG")]])), "enriched pathways\n"))
   }
-  cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","KEGG")]])), "enriched pathways\n"))
-  }
-}
+ }
+}# end if KEGG
 
 
 ##### Reactome pathway enrichment
 # Reactome over-representation test
   
 if ("Reactome" %in% enrichmentCat) {
-  if(nrow(filtgenes)>1) {
+  if(do_overrep) {
+    if(nrow(filtgenes)>1) {
     enrichresult[[ge]][[paste0("Overrep_","Reactome")]] <- ReactomePA::enrichPathway(gene =  filtgenes[,"ENTREZID"],
                       organism      = org,
                       universe    = backgroundlist, 
@@ -526,20 +544,21 @@ if ("Reactome" %in% enrichmentCat) {
   
   cat(paste("Overrepresentation analysis for Reactome pathways results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","Reactome")]])), "enriched pathways\n"))
   }
-
+ }
 
 
 # Reactome Gene Set Enrichment Analysis
-  if (!is.null(sortcolumn)) { # quantitative data available?
-    cat(paste("GeneSet Enrichment analysis for Reactome pathways results in "))
-    enrichresult[[ge]][[paste0("GSEA_","Reactome")]] <- ReactomePA::gsePathway(geneList  = gseagenes,
-                      organism      = org,
-                      nPerm        = nPerm,
-                      minGSSize    = minGSSize,
-                      maxGSSize    = maxGSSize,
-                      pvalueCutoff = enrich.p.valueCutoff,
-                      pAdjustMethod = pAdjustMethod, 
-                      verbose      = FALSE)
+  if(do_gsea) {
+    if (!is.null(sortcolumn)) { # quantitative data available?
+      cat(paste("GeneSet Enrichment analysis for Reactome pathways results in "))
+      enrichresult[[ge]][[paste0("GSEA_","Reactome")]] <- ReactomePA::gsePathway(geneList  = gseagenes,
+                        organism      = org,
+                        nPerm        = nPerm,
+                        minGSSize    = minGSSize,
+                        maxGSSize    = maxGSSize,
+                        pvalueCutoff = enrich.p.valueCutoff,
+                        pAdjustMethod = pAdjustMethod, 
+                        verbose      = FALSE)
     
     if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
       if(nrow(enrichresult[[ge]][[paste0("GSEA_","Reactome")]]) >=1) {
@@ -548,15 +567,16 @@ if ("Reactome" %in% enrichmentCat) {
   } 
   cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","Reactome")]])), "enriched pathways\n"))
   }
-
-}
+ }
+} # end if Reactome
 
 
   ##### Disease Ontology enrichment (for human only!)
   # DO over-representation test
   if ("DO" %in% enrichmentCat) {
 
-    if(nrow(filtgenes)>1) {
+    if(do_overrep) {
+      if(nrow(filtgenes)>1) {
       enrichresult[[ge]][[paste0("Overrep_","DO")]] <- DOSE::enrichDO(gene =  filtgenes[,"ENTREZID"],
                     ont="DO",
                     universe    = backgroundlist, 
@@ -569,10 +589,11 @@ if ("Reactome" %in% enrichmentCat) {
     
     cat(paste("Overrepresentation analysis for Disease Ontology results in", nrow(as.data.frame(enrichresult[[ge]][[paste0("Overrep_","DO")]])), "enriched terms\n"))
     } 
-
+  }
 
   # DO Gene Set Enrichment Analysis
-  if (!is.null(sortcolumn)) { # quantitative data available?
+    if(do_gsea) {
+      if (!is.null(sortcolumn)) { # quantitative data available?
     cat(paste("GeneSet Enrichment analysis for Disease Ontology results in "))
     enrichresult[[ge]][[paste0("GSEA_","DO")]] <- DOSE::gseDO(geneList  = gseagenes,
                           nPerm        = nPerm,
@@ -585,12 +606,12 @@ if ("Reactome" %in% enrichmentCat) {
     if(returnSymbolsInResultObject) { # replace ENTREZ IDs by symbols
       if(nrow(enrichresult[[ge]][[paste0("GSEA_","DO")]]) >=1) {
         enrichresult[[ge]][[paste0("GSEA_","DO")]] <- setReadable(enrichresult[[ge]][[paste0("GSEA_","DO")]], OrgDb=annotationdb, keytype = "ENTREZID")
+        }
+      }  
+     cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","DO")]])), "enriched terms.\n"))
     }
-  }  
-  cat(paste(nrow(as.data.frame(enrichresult[[ge]][[paste0("GSEA_","DO")]])), "enriched terms.\n"))
   }
-}
-
+} # end if DO
 
 
 # Creating result tables and plot 
@@ -705,7 +726,7 @@ for(usedcat in names(enrichresult[[ge]])) {
         kegggenes <- unlist(strsplit(kegggenes, split="/", fixed=T))
         # 'genes[[ge]]' is a data.frame with 1, 2 or 3 columns (id.column, sortcolumn, FCcolumn)
         kegggenes <- genes[[ge]][genes[[ge]][,"ENTREZID"] %in% kegggenes, ]
-        if(!is.null(FCcolumn)) {
+        if(!is.null(FCcolumn)) { # foldchanges available
           tmp.entrezids <- kegggenes$ENTREZID    
           kegggenes <- kegggenes[,FCcolumn]
           names(kegggenes) <- tmp.entrezids
@@ -713,15 +734,15 @@ for(usedcat in names(enrichresult[[ge]])) {
           plot.col.key <- T
         } else {
           
-            if(!is.null(sortcolumn)) {
+            if(!is.null(sortcolumn)) { # no foldchanges available values in sortcolumn to be plotted
               tmp.entrezids <- kegggenes$ENTREZID    
               kegggenes <- kegggenes[,sortcolumn]
               names(kegggenes) <- tmp.entrezids
               kegglimit <- c(min(kegggenes), max(kegggenes))  
               plot.col.key <- T
 
-              } else {
-                kegggenes <- kegggenes[,"ENTREZID"]
+              } else { # neither foldchanges nor sortcolumn values available. Just highlight included genes.
+                kegggenes <- as.character(kegggenes[,"ENTREZID"])
                 kegglimit <- 1
                 plot.col.key <- F
                 }

@@ -23,7 +23,7 @@
 #' (latter option guesses trait type).
 #' @param fun.assoc character with association function from GenABEL package to be used. 
 #' Either \code{mlreg} for linear or logistic regression or \code{qtscore} for fast score test.
-#' @param gtmode character with mode of inheritence if regression is used. 
+#' @param gtmode character with mode of inheritance if regression is used. 
 #' Either \code{additive}, \code{dominant}, \code{recessive} or \code{overdominant}. 
 #' @param times If more than one, the number of permutations to be used for calculationg empirical p-values.
 #' Relevant for score test only.

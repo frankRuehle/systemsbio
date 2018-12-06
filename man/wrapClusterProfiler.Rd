@@ -6,14 +6,15 @@
 \usage{
 wrapClusterProfiler(genes, newheader = NULL, backgroundlist = NULL,
   newheaderBackground = NULL, projectfolder = "clusterProfiler",
-  projectname = "", enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
-  maxInputGenes = 100, id.type = "ENTREZID", id.column = "ENTREZID",
-  sortcolumn = "adj.P.Val", highValueHighPriority = FALSE,
-  sortcolumn.threshold = 0.05, fun.transform = function(x) {     identity(x)
-  }, FCcolumn = "logFC", threshold_FC = log2(1.5),
-  returnSymbolsInResultObject = TRUE, org = "human", pAdjustMethod = "BH",
-  enrich.p.valueCutoff = 0.05, enrich.q.valueCutoff = 0.05, nPerm = 1000,
-  minGSSize = 10, maxGSSize = 500, figure.res = 300)
+  projectname = "", analysis_type = c("over-representation", "GSEA"),
+  enrichmentCat = c("GO", "KEGG", "Reactome", "DO"), maxInputGenes = 100,
+  id.type = "ENTREZID", id.column = "ENTREZID", sortcolumn = "adj.P.Val",
+  highValueHighPriority = FALSE, sortcolumn.threshold = 0.05,
+  fun.transform = function(x) {     identity(x) }, FCcolumn = "logFC",
+  threshold_FC = log2(1.5), returnSymbolsInResultObject = TRUE,
+  org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
+  enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
+  maxGSSize = 500, figure.res = 300)
 }
 \arguments{
 \item{genes}{the input data object can be given in several formats. 
@@ -46,6 +47,9 @@ NULL otherwise.}
 \item{projectfolder}{character with directory for output files (will be generated if not existing).}
 
 \item{projectname}{optional character prefix for output file names.}
+
+\item{analysis_type}{character vector giving the type of analysis to be performed. Eiter "over-representation",
+"GSEA" or both.}
 
 \item{enrichmentCat}{character vector with categories to be enriched (\code{GO}: gene ontology (MF, BP, CC), 
 \code{KEGG}: KEGG pathways, \code{Reactome}: Reactome pathways, \code{DO}: Disease ontology).

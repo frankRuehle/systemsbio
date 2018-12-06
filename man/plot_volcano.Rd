@@ -7,6 +7,7 @@
 plot_volcano(data, column_name_geme = NULL, column_name_p = "padj",
   column_name_fc = "log2FoldChange", title = "Volcano plot",
   p_value_threshold = 0.05, fc_threshold = log2(1.5),
+  xlabel = "log fold change", ylabel = "-log10 p-value (adjusted)",
   color_down_reg = "red", color_up_reg = "darkgreen",
   color_not_reg = "darkgray")
 }
@@ -25,6 +26,10 @@ Column names can be given in \code{column_name_geme}, \code{column_name_p} and \
 \item{p_value_threshold}{numeric significance threshold for p-value.}
 
 \item{fc_threshold}{numeric significance threshold for logarithmized fold changes.}
+
+\item{xlabel}{character with label for x-axis}
+
+\item{ylabel}{character with label for y-axis}
 
 \item{color_down_reg}{character with color name for indicating down regulated genes.}
 
