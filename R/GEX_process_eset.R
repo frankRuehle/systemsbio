@@ -6,8 +6,8 @@
 #' Expression data is normalised and/or transformed by algorithms dedicated in 'method_norm' and/or 'transform'.
 #' If a column \code{PROBEQUALITY} is available within the feature data as for Illumina expression arrays, 
 #' probes assigned a `Bad' or `No match' quality score after normalisiation are removed from the dataset.
-#' Lastly, if the input object is of class \code{ExpressionSetIllumina}, it is changed to \code{ExpressionSet} to avoid later
-#' incompabilities with the 'limma'-package.
+#' Lastly, if the input object is of class \code{ExpressionSetIllumina}, it is changed to \code{ExpressionSet}
+#' to avoid later incompabilities with the 'limma'-package. 
 #' 
 #' 
 #' @param eset ExpressionSet or ExpressionSetIllumina 

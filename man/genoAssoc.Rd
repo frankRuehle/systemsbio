@@ -6,7 +6,8 @@
 \usage{
 genoAssoc(gwaa, projectfolder = "GT/Assoc_GenAbel", projectname = NULL,
   trait.name, trait.type = "binomial", fun.assoc = "mlreg",
-  gtmode = "additive", times = 1, quiet = FALSE, TopHitsReported = 1000)
+  gtmode = "additive", times = 1, quiet = FALSE,
+  TopHitsReported = 1000)
 }
 \arguments{
 \item{gwaa}{\code{gwaa} object from GenABEL}

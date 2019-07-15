@@ -8,6 +8,8 @@
 #' is collapsed to a single column. 
 #' \code{granges2df} generates a data.frame from an GRanges containing the meta data.
 #' Meta data stored in \code{CompressedCharacterList} is collapsed to a single column.
+
+#' @describeIn subsetByOverlaps.keepAllMeta subsetByOverlaps which keeps meta data from both objects
 #' 
 #' @param gr1,gr2 GRanges object
 #' @param write.ranges.tofile character with file path. If given, a data.frame is generated
@@ -64,8 +66,7 @@ subsetByOverlaps.keepAllMeta <- function(gr1, gr2, write.ranges.tofile = NULL, a
 
 
 
-
-#### Convert GRanges object to dataframe
+#' @describeIn subsetByOverlaps.keepAllMeta Convert GRanges object to dataframe
 granges2df <- function(gr1, addStart=0) {
   
   if(is.null(names(gr1))) {names(gr1) <- 1:length(gr1)}

@@ -4,12 +4,13 @@
 \alias{readGeno}
 \title{Read Genotype Data Using GenABEL.}
 \usage{
-readGeno(genoFilename, mapFilename, covarFilename, existingRawFile = NULL,
-  covarsampleID = "IID", sexvar = "Gender", projectfolder = "GT",
-  projectname = NULL, organism = "human", Gonosomes2char = T,
-  removeNullPositions = T, updateSNPpos = NULL,
-  snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org",
-  dataset = "hsapiens_snp"), GTarrayDescriptionFile = NULL,
+readGeno(genoFilename, mapFilename, covarFilename,
+  existingRawFile = NULL, covarsampleID = "IID", sexvar = "Gender",
+  projectfolder = "GT", projectname = NULL, organism = "human",
+  Gonosomes2char = T, removeNullPositions = T, updateSNPpos = NULL,
+  snpmart = useMart("ENSEMBL_MART_SNP", host =
+  "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"),
+  GTarrayDescriptionFile = NULL,
   GTarrayDescription.lines2skip.start = "\\\\[Assay\\\\]",
   GTarrayDescription.lines2skip.end = "\\\\[Controls\\\\]",
   GTarrayDescription.colname.identifier = "Name",
@@ -62,9 +63,13 @@ All rows from that number on (incl. \code{GTarrayDescription.lines2skip.end}) ar
 
 \item{GTarrayDescription.colname.identifier}{Character with colnames for SNP identifier in Array description file.}
 
-\item{GTarrayDescription.colname.coding}{Character with colnames for allele coding information}
+\item{GTarrayDescription.colname.coding}{Character with colnames for allele coding information.}
 
 \item{GTarrayDescription.colname.strand}{Character with colnames for strand information.}
+
+\item{GTarrayDescription.colname.chromosome}{Character with colnames for chromosome name.}
+
+\item{GTarrayDescription.colname.position}{Character with colnames for pb position.}
 }
 \value{
 GenABEL gwaa object

@@ -63,11 +63,11 @@ Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.}
 
 \item{PromSeqUpstreamTSS}{definition of promotor regions to download upstream to TSS.}
 
+\item{PromSeqDownstreamTSS}{definition of promotor regions to download downstream to TSS.}
+
+\item{SearchSelMotifs}{Character Vector of selected motives to search in \code{sequences}. Omitted if NULL.}
+
 \item{motif.min.score}{minimum score to match motif pwm to target sequence (ignored if SearchSelMotifs = NULL).}
-
-\item{PromSeqDownstreamTSS:}{definition of promotor regions to download downstream to TSS.}
-
-\item{SearchSelMotivs}{Character Vector of selected motives to search in \code{sequences}. Omitted if NULL.}
 }
 \value{
 groupReport of motifEnrichment results.

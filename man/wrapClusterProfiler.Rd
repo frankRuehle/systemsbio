@@ -7,12 +7,13 @@
 wrapClusterProfiler(genes, newheader = NULL, backgroundlist = NULL,
   newheaderBackground = NULL, projectfolder = "clusterProfiler",
   projectname = "", analysis_type = c("over-representation", "GSEA"),
-  enrichmentCat = c("GO", "KEGG", "Reactome", "DO"), maxInputGenes = 100,
-  id.type = "ENTREZID", id.column = "ENTREZID", sortcolumn = "adj.P.Val",
-  highValueHighPriority = FALSE, sortcolumn.threshold = 0.05,
-  fun.transform = function(x) {     identity(x) }, FCcolumn = "logFC",
-  threshold_FC = log2(1.5), returnSymbolsInResultObject = TRUE,
-  org = "human", pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
+  enrichmentCat = c("GO", "KEGG", "Reactome", "DO"),
+  maxInputGenes = 100, id.type = "ENTREZID", id.column = "ENTREZID",
+  sortcolumn = "adj.P.Val", highValueHighPriority = FALSE,
+  sortcolumn.threshold = 0.05, fun.transform = function(x) {    
+  identity(x) }, FCcolumn = "logFC", threshold_FC = log2(1.5),
+  returnSymbolsInResultObject = TRUE, org = "human",
+  pAdjustMethod = "BH", enrich.p.valueCutoff = 0.05,
   enrich.q.valueCutoff = 0.05, nPerm = 1000, minGSSize = 10,
   maxGSSize = 500, figure.res = 300)
 }

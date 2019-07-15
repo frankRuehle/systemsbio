@@ -2,10 +2,13 @@
 % Please edit documentation in R/HLP_geneRanges.R
 \name{subsetByOverlaps.keepAllMeta}
 \alias{subsetByOverlaps.keepAllMeta}
+\alias{granges2df}
 \title{Help functions for handling gene ranges}
 \usage{
 subsetByOverlaps.keepAllMeta(gr1, gr2, write.ranges.tofile = NULL,
   addStart = 0)
+
+granges2df(gr1, addStart = 0)
 }
 \arguments{
 \item{gr1, gr2}{GRanges object}
@@ -34,6 +37,13 @@ is collapsed to a single column.
 \code{granges2df} generates a data.frame from an GRanges containing the meta data.
 Meta data stored in \code{CompressedCharacterList} is collapsed to a single column.
 }
+\section{Functions}{
+\itemize{
+\item \code{subsetByOverlaps.keepAllMeta}: subsetByOverlaps which keeps meta data from both objects
+
+\item \code{granges2df}: Convert GRanges object to dataframe
+}}
+
 \author{
 Frank Ruehle
 }

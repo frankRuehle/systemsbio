@@ -2,35 +2,47 @@
 % Please edit documentation in R/HLP_attach_packages.R
 \name{attach_package}
 \alias{attach_package}
+\alias{detach_package}
 \title{Organise temporarily needed packages}
 \usage{
-attach_package(pkg.cran = NULL, pkg.bioc = NULL, suppressUpdatesBioc = T,
-  source.bioc = "http://bioconductor.org/biocLite.R")
+attach_package(pkg.cran = NULL, pkg.bioc = NULL,
+  update_bioc_pkgs = F)
+
+detach_package(pkg)
 }
 \arguments{
 \item{pkg.cran}{Character vector with names of CRAN packages to attach}
 
 \item{pkg.bioc}{Character vector with names of Bioconductor packages to attach}
 
-\item{suppressUpdatesBioc}{logical. If \code{FALSE}, the user is asked whether old bioconductor packages should 
-be updated. If \code{TRUE}, the user is not prompted to update old packages.}
-
-\item{source.bioc}{character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})}
+\item{update_bioc_pkgs}{logical. When \code{FALSE}, \code{BiocManager::install()} does not attempt to 
+update old packages. When TRUE, update old packages according to ask.}
 
 \item{pkg}{Character vector with names of packages to be detached}
 }
 \value{
 character vector with package names which have not yet been attached to workspace before call of
-        \code{attach_package}. This vector may be used to detach packages not needed any more with \code{detach_package}.
+        \code{attach_package}. This vector may be used to detach packages not needed any more with 
+        \code{detach_package}. \code{detach_package} invisibly returns the set of identified stray DLLs 
+        reported by \code{R.utils::gcDLLs}.
 }
 \description{
 Attach required packages which may be detached after function run.
 }
 \details{
 Help functions to organise package loading. Some functions require huge annotation packages which shall 
-not be loaded for the full session. These packages are attached for an individual function and detached 
-after function run. Packages are installed if necessary.
+not be loaded for the full session. The function \code{attach_package} attaches these packages 
+for an individual function run and installes them from CRAN and/or Bioconductor if necessary. 
+\code{detach_package} can be used to detach these packages after function run. DLLs of unloaded packages
+are removed as well.
 }
+\section{Functions}{
+\itemize{
+\item \code{attach_package}: Attach and install packages.
+
+\item \code{detach_package}: Remove packages not needed anymore
+}}
+
 \author{
 Frank Ruehle
 }

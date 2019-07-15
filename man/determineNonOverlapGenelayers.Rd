@@ -5,8 +5,9 @@
 \title{Non-overlapping gene layers for plotting}
 \usage{
 determineNonOverlapGenelayers(gr, ystart = 0, ysize = 1,
-  minDistance = 0.1, gene_name_column = NULL, prot_domain_column = NULL,
-  scale.factor = 1, units = "user", sortGeneStart = FALSE)
+  minDistance = 0.1, gene_name_column = NULL,
+  prot_domain_column = NULL, scale.factor = 1, units = "user",
+  sortGeneStart = FALSE)
 }
 \arguments{
 \item{gr}{GRanges object containing gene coordinates.}

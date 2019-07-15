@@ -1,7 +1,7 @@
 
 #' Plot p-values in regional genomic context
 #' 
-#' \code{plot.region} reads p-value data e.g. from association analysis and prepares a regional plot of a given chromosomal region of interest.
+#' \code{plot_region} reads p-value data e.g. from association analysis and prepares a regional plot of a given chromosomal region of interest.
 #' 
 #' Up to 5 dataframes can be committed in \code{data} and are plotted in one diagram. 
 #' If functional information for variants is available, respective variants which fulfill the 
@@ -77,13 +77,14 @@
 #' 
 #' @author Frank Ruehle
 #' 
-#' @export plot.region
+#' @export
+#' 
 
 
 
 
 
-plot.region <- function (region, 
+plot_region <- function (region, 
                          region_ext=50000, 
                          title = NULL,
                          data = list(),

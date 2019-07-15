@@ -46,8 +46,10 @@
 #'                        e.g. \code{[Controls]} in Illumina annotation files as start of annotation of control probes.
 #'                        All rows from that number on (incl. \code{GTarrayDescription.lines2skip.end}) are skipped.  
 #' @param GTarrayDescription.colname.identifier Character with colnames for SNP identifier in Array description file.
-#' @param GTarrayDescription.colname.coding Character with colnames for allele coding information
+#' @param GTarrayDescription.colname.coding Character with colnames for allele coding information.
 #' @param GTarrayDescription.colname.strand Character with colnames for strand information.
+#' @param GTarrayDescription.colname.chromosome Character with colnames for chromosome name.
+#' @param GTarrayDescription.colname.position Character with colnames for pb position.
 #' 
 #' @return GenABEL gwaa object
 #' 

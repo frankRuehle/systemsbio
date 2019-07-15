@@ -1,34 +1,33 @@
 
-
 #' Organise temporarily needed packages
 #' 
 #' Attach required packages which may be detached after function run.
 #' 
 #' Help functions to organise package loading. Some functions require huge annotation packages which shall 
-#' not be loaded for the full session. These packages are attached for an individual function and detached 
-#' after function run. Packages are installed if necessary.
+#' not be loaded for the full session. The function \code{attach_package} attaches these packages 
+#' for an individual function run and installes them from CRAN and/or Bioconductor if necessary. 
+#' \code{detach_package} can be used to detach these packages after function run. DLLs of unloaded packages
+#' are removed as well.
+#' 
+#' @describeIn attach_package Attach and install packages.
 #' 
 #' @param pkg.cran Character vector with names of CRAN packages to attach
 #' @param pkg.bioc Character vector with names of Bioconductor packages to attach
-#' @param suppressUpdatesBioc logical. If \code{FALSE}, the user is asked whether old bioconductor packages should 
-#' be updated. If \code{TRUE}, the user is not prompted to update old packages. 
-#' @param source.bioc character with Bioconductor source site (e.g. \code{http://bioconductor.org/biocLite.R})
+#' @param update_bioc_pkgs logical. When \code{FALSE}, \code{BiocManager::install()} does not attempt to 
+#' update old packages. When TRUE, update old packages according to ask. 
 #' @param pkg Character vector with names of packages to be detached
 #' 
 #' @return character vector with package names which have not yet been attached to workspace before call of
-#'         \code{attach_package}. This vector may be used to detach packages not needed any more with \code{detach_package}. 
+#'         \code{attach_package}. This vector may be used to detach packages not needed any more with 
+#'         \code{detach_package}. \code{detach_package} invisibly returns the set of identified stray DLLs 
+#'         reported by \code{R.utils::gcDLLs}.
 #' 
 #' @author Frank Ruehle
 #' 
 #' @export attach_package 
 #' @export detach_package  
 
-
-
-
-##### Attach packages
-# either from CRAN or Bioconductor
-attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, suppressUpdatesBioc=T, source.bioc="http://bioconductor.org/biocLite.R") {
+attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, update_bioc_pkgs=F) {
  
   not.yet.attached.pkg.cran <- NULL
   not.yet.attached.pkg.bioc <- NULL
@@ -46,10 +45,13 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, suppressUpdatesBioc=T, 
   # install Bioconductor libraries
   if(!is.null(pkg.bioc)) {
     not.yet.attached.pkg.bioc <- pkg.bioc[!(pkg.bioc %in% loadedNamespaces())]
-    source(source.bioc)
+    
+    if (!requireNamespace("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+    
     for (p in 1:length(pkg.bioc)) {  
       if (!is.element(pkg.bioc[p], installed.packages()[,1])) {
-        biocLite(pkg.bioc[p], suppressUpdates = suppressUpdatesBioc)}
+        BiocManager::install(pkg.bioc[p], update = update_bioc_pkgs)}
       require(pkg.bioc[p], character.only = TRUE) 
     }
   }
@@ -57,13 +59,10 @@ attach_package <- function(pkg.cran=NULL, pkg.bioc=NULL, suppressUpdatesBioc=T, 
   pkg2detach <- c(unique(not.yet.attached.pkg.cran, not.yet.attached.pkg.bioc))
    
   return(pkg2detach) 
-} # end function definition
+} 
 
 
-##### Detach packages
-# It is possible to have multiple versions of a package loaded at once (for example, if you have a development 
-# version and a stable version in different libraries). To detach guarantee that all copies are 
-# detached, use this function.
+#' @describeIn attach_package Remove packages not needed anymore
 detach_package <- function(pkg)
 {
   for(p in pkg) {
@@ -77,4 +76,7 @@ detach_package <- function(pkg)
   R.utils::gcDLLs() # Identifies and removes DLLs of packages already unloaded
 } # end function definition
 
+# It is possible to have multiple versions of a package loaded at once (for example, if you have a development 
+# version and a stable version in different libraries). To detach guarantee that all copies are 
+# detached, use this function.
 

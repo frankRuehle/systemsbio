@@ -6,8 +6,8 @@
 \usage{
 QC_expressionset(eset, projectfolder = "GEX/QC", projectname = NULL,
   groupColumn = "Sample_Group", phDendro = "Sample_Group",
-  flashClustMethod = "average", cex.dendroLabels = 0.6, figure.res = 300,
-  threshold.Z.k = -5)
+  flashClustMethod = "average", cex.dendroLabels = 0.6,
+  figure.res = 300, threshold.Z.k = -5)
 }
 \arguments{
 \item{eset}{ExpressionSet or ExpressionSetIllumina object}

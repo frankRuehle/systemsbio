@@ -79,6 +79,8 @@ gex <- readData2eset(exprsData, phenoData, featureData=NULL,
 The example dataset `gex` was imported using `read_Illu_expr_array` and contains 12 samples belonging to 3 experimental groups. The data is log2-transformed but not normalized yet. This is an artificial dataset for demonstration purposes and does not reflect any biological insights. You can access the expression data, phenotype data and feature data using the accessors `exprs(gex)`, `pData(gex)` and `fData(gex)`, respectively.
 
 ```{r} 
+library(beadarray)
+library(Biobase)
 beadarray::exprs(gex)[1:5, 1:5]
 Biobase::pData(gex)[,1:5]
 Biobase::fData(gex)[1:5, ]
@@ -96,12 +98,12 @@ qcMetrics <- QC_expressionset(gex, projectfolder="example_analysis/GEX/QC",
 
 If internal Illmumina quality control probes are present, boxplots are prepared for all categories of control probes (see below) and are stored in the project folder. A technical note about Illumina control probes is available [here](https://www.illumina.com/Documents/products/technotes/technote_gene_expression_data_quality_control.pdf).
 
-All results from `arrayqualitymetrics` (distance plots, principal component analysis, array intensity distribution, density and MA plots) including outlier detection and further description are given [here](./figures/quality_metrics/index.html).
+All results from `arrayqualitymetrics` (distance plots, principal component analysis, array intensity distribution, density and MA plots) including outlier detection and further description are stored in the subfolder [`quality_metrics`](../inst/quality_metrics/index.html).
 Finally, a sample dendrogram including outlier detection is prepared using the `WGCNA` package.
 
 ```{r, echo = TRUE, out.width="47%"}
-deg_images<-c("../inst/doc/figures/example_boxplot_controlprofile.png",
-                         "../inst/doc/figures/example_SampleDendrogram_noNorm_adjacency.png")
+deg_images<-c("figures/example_boxplot_controlprofile.png",
+                         "figures/example_SampleDendrogram_noNorm_adjacency.png")
 include_graphics(deg_images)
 ```
 
@@ -151,8 +153,8 @@ pca.gexn <- wrapPCAgoprom(gexn, groupsoi=c('case1', 'case2', 'control'),
 ```
 
 ```{r, echo = TRUE, out.width="47%"}
-deg_images<-c("../inst/doc/figures/example_pcainfoplot_PC1_2.png",
-              "../inst/doc/figures/example_pcaplot3d_PC1_2_3.png")
+deg_images<-c("figures/example_pcainfoplot_PC1_2.png",
+              "figures/example_pcaplot3d_PC1_2_3.png")
 include_graphics(deg_images)
 ```
 
@@ -191,16 +193,16 @@ wgcnaNET.gexn <- wrapWGCNA(gexn,
 ```
 
 ```{r, echo = TRUE, out.width="47%"}
-deg_images<-c("../inst/doc/figures/module_boxplot_1_of_3.png",
-              "../inst/doc/figures/ModuleDendrogram_Block.png")
+deg_images<-c("figures/module_boxplot_1_of_3.png",
+              "figures/ModuleDendrogram_Block.png")
 include_graphics(deg_images)
 ```
 
 The modules are correlated with phenotypes of interest given in `phModule` as well as with group assignments given in `groupsets`. The correlation results are illustrated in heatmaps. Next, correlated genes of high connectivity (hub genes) within their module are identified and are illustrated in scatter plots (correlation with phenotype/groupset vs. module membership). All result data is also stored as tables within the project folder.
 
 ```{r, echo = TRUE, out.width="47%"}
-deg_images<-c("../inst/doc/figures/Heatmap_Module-Groupset_relationship.png",
-              "../inst/doc/figures/Intramodular_analysis_case1-control.png")
+deg_images<-c("figures/Heatmap_Module-Groupset_relationship.png",
+              "figures/Intramodular_analysis_case1-control.png")
 include_graphics(deg_images)
 ```
 
@@ -230,9 +232,9 @@ deg <- wrapLimma(gexn,
 
 
 ```{r, echo = TRUE, out.width="31%"}
-deg_images<-c("../inst/doc/figures/Heatmap_example_case1-control.png",
-              "../inst/doc/figures/Venn_Diagram_example_allcomp.png",
-              "../inst/doc/figures/Volcano_example_case1-control.png")
+deg_images<-c("figures/Heatmap_example_case1-control.png",
+              "figures/Venn_Diagram_example_allcomp.png",
+              "figures/Volcano_example_case1-control.png")
 include_graphics(deg_images)
 ```
 
@@ -289,11 +291,11 @@ head(as.data.frame(clusterp.gexn[["case1-control"]]["Overrep_BP"]))
 ```
 
 ```{r, echo = TRUE, out.width="47%"}
-Overrep_BP <- read.table("../inst/doc/figures/example_case1-control_Overrep_BP_resulttable.txt", sep="\t", header=T)
+Overrep_BP <- read.table("figures/example_case1-control_Overrep_BP_resulttable.txt", sep="\t", header=T)
 head(Overrep_BP)
 
-deg_images<-c("../inst/doc/figures/example_case1-control_Overrep_BP_cnetPlot.png",
-              "../inst/doc/figures/example_case1-control_Overrep_BP_enrichmentMap.png")
+deg_images<-c("figures/example_case1-control_Overrep_BP_cnetPlot.png",
+              "figures/example_case1-control_Overrep_BP_enrichmentMap.png")
 include_graphics(deg_images)
 ```
 
@@ -320,11 +322,11 @@ tf.deg <- wrapPWMEnrich(deg[["DEgenes"]],
 ```
 
 ```{r, echo = TRUE, out.width="47%"}
-tf <- read.table("../inst/doc/figures/example_case1-control_PWMEnrich_report.txt", sep="\t", header=T)
+tf <- read.table("figures/example_case1-control_PWMEnrich_report.txt", sep="\t", header=T)
 head(tf)
 
-deg_images<-c("../inst/doc/figures/example_case1-control_PWMEnrich_top.png",
-              "../inst/doc/figures/example_case2-control_PWMEnrich_top.png")
+deg_images<-c("figures/example_case1-control_PWMEnrich_top.png",
+              "figures/example_case2-control_PWMEnrich_top.png")
 include_graphics(deg_images)
 ```
 

@@ -38,8 +38,8 @@
 #'          Gene symbols Will be converted to EntrezIDs prior to enrichment analysis.
 #' @param id.column character with column name for identifier variable in \code{sequences}. 
 #' @param PromSeqUpstreamTSS definition of promotor regions to download upstream to TSS.
-#' @param PromSeqDownstreamTSS: definition of promotor regions to download downstream to TSS.
-#' @param SearchSelMotivs Character Vector of selected motives to search in \code{sequences}. Omitted if NULL.
+#' @param PromSeqDownstreamTSS definition of promotor regions to download downstream to TSS.
+#' @param SearchSelMotifs Character Vector of selected motives to search in \code{sequences}. Omitted if NULL.
 #' @param motif.min.score minimum score to match motif pwm to target sequence (ignored if SearchSelMotifs = NULL).
 #' 
 #' @return groupReport of motifEnrichment results.
@@ -311,7 +311,7 @@ dev.off()
 
   
 
-######## Optional Search for preselected motivs given in 'SearchSelMotivs'
+######## Optional Search for preselected motivs given in 'SearchSelMotifs'
 if(!is.null(SearchSelMotifs)) {
   if (!file.exists(file.path(projectfolder, "Search_Selected_Motifs"))) {dir.create(file.path(projectfolder, "Search_Selected_Motifs"))}
   cat("\nSearch for selected motivs in input sequences", SearchSelMotifs)

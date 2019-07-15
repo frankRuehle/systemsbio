@@ -4,9 +4,9 @@
 \alias{regionalplot.genelabels}
 \title{Plot genes as arrows}
 \usage{
-regionalplot.genelabels(genes, levels, exons, xstart, xstop, ystart, ygenesize,
-  scale.factor, arrow.scale.factor = scale.factor, truncate = TRUE,
-  genecol = "forestgreen", genenamecol = "black")
+regionalplot.genelabels(genes, levels, exons, xstart, xstop, ystart,
+  ygenesize, scale.factor, arrow.scale.factor = scale.factor,
+  truncate = TRUE, genecol = "forestgreen", genenamecol = "black")
 }
 \arguments{
 \item{genes}{a dataframe of genes to plot, with columns \code{start}, \code{end}, \code{name}, \code{strand}.

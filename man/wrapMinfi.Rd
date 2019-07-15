@@ -4,9 +4,10 @@
 \alias{wrapMinfi}
 \title{Finding differentially methylated CpG positions or regions}
 \usage{
-wrapMinfi(GRset, projectfolder = "MT/minfi", projectname = NULL, phenotype,
-  type.covar = "categorical", returnResults = c("DMP", "DMR"),
-  qCutoff = 0.001, bumpcutoff = 0.1, nResamples = 1000, maxGap = 500)
+wrapMinfi(GRset, projectfolder = "MT/minfi", projectname = NULL,
+  phenotype, type.covar = "categorical", returnResults = c("DMP",
+  "DMR"), qCutoff = 0.001, bumpcutoff = 0.1, nResamples = 1000,
+  maxGap = 500)
 }
 \arguments{
 \item{GRset}{GenomicRatioSet or MethylSet}

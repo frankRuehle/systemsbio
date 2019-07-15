@@ -5,13 +5,15 @@
 \title{SNP annotation using biomaRt and/or manufacturer data}
 \usage{
 basic_SNP_annotation(data, max.SNPs.per.biomaRt.call = 10000,
-  data.SNP.columnName = "SNP", snpmaRt = useMart("ENSEMBL_MART_SNP", host =
-  "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"),
+  data.SNP.columnName = "SNP", snpmaRt = useMart("ENSEMBL_MART_SNP",
+  host = "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"),
   biomaRt.SNP.columnName = "refsnp_id", biomaRt.filter = "snp_filter",
-  biomaRt.attributes.groupColumns = c("refsnp_id", "chr_name", "chrom_start"),
-  biomaRt.attributes.summarized = c("ensembl_gene_stable_id", "ensembl_type"),
-  annotationFile = NULL, lines2skip.start = 0, lines2skip.end = -1,
-  annofile.SNP.columnName = "Name", annofile.columns = NULL)
+  biomaRt.attributes.groupColumns = c("refsnp_id", "chr_name",
+  "chrom_start"),
+  biomaRt.attributes.summarized = c("ensembl_gene_stable_id",
+  "ensembl_type"), annotationFile = NULL, lines2skip.start = 0,
+  lines2skip.end = -1, annofile.SNP.columnName = "Name",
+  annofile.columns = NULL)
 }
 \arguments{
 \item{data}{dataframe containing SNP IDs.}
