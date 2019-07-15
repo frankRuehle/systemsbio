@@ -98,7 +98,7 @@ qcMetrics <- QC_expressionset(gex, projectfolder="example_analysis/GEX/QC",
 
 If internal Illmumina quality control probes are present, boxplots are prepared for all categories of control probes (see below) and are stored in the project folder. A technical note about Illumina control probes is available [here](https://www.illumina.com/Documents/products/technotes/technote_gene_expression_data_quality_control.pdf).
 
-All results from `arrayqualitymetrics` (distance plots, principal component analysis, array intensity distribution, density and MA plots) including outlier detection and further description are stored in the subfolder [`quality_metrics`](quality_metrics/index.html).
+All results from `arrayqualitymetrics` (distance plots, principal component analysis, array intensity distribution, density and MA plots) including outlier detection and further description are stored in the subfolder [`quality_metrics`](vignettes/quality_metrics/index.html).
 Finally, a sample dendrogram including outlier detection is prepared using the `WGCNA` package.
 
 ```{r, echo = TRUE, out.width="47%"}
