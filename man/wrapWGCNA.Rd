@@ -4,15 +4,31 @@
 \alias{wrapWGCNA}
 \title{Wrapper for weighted gene co-expression network analysis.}
 \usage{
-wrapWGCNA(data, projectfolder = "GEX/WGCNA",
-  softThresholdPower = "auto", corType = "bicor",
-  networkType = "signed", TOMType = "signed", maxBlockSize = 45000,
-  TOMplot = FALSE, MDSplot = FALSE, phDendro = NULL,
-  phModule = NULL, sampleColumn = "Sample_Name",
-  groupColumn = "Sample_Group", groupsets = NULL,
-  symbolColumn = NULL, flashClustMethod = "average",
-  moduleBoxplotsPerFigure = 16, figure.res = 300, dendroRowText = F,
-  autoColorHeight = FALSE, colorHeight = 0.1, cex.labels = 0.6, ...)
+wrapWGCNA(
+  data,
+  projectfolder = "GEX/WGCNA",
+  softThresholdPower = "auto",
+  corType = "bicor",
+  networkType = "signed",
+  TOMType = "signed",
+  maxBlockSize = 45000,
+  TOMplot = FALSE,
+  MDSplot = FALSE,
+  phDendro = NULL,
+  phModule = NULL,
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
+  groupsets = NULL,
+  symbolColumn = NULL,
+  flashClustMethod = "average",
+  moduleBoxplotsPerFigure = 16,
+  figure.res = 300,
+  dendroRowText = F,
+  autoColorHeight = FALSE,
+  colorHeight = 0.1,
+  cex.labels = 0.6,
+  ...
+)
 }
 \arguments{
 \item{data}{ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet. If \code{data} is character containing a filepath, the functions assumes

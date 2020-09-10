@@ -5,8 +5,12 @@
 \alias{granges2df}
 \title{Help functions for handling gene ranges}
 \usage{
-subsetByOverlaps.keepAllMeta(gr1, gr2, write.ranges.tofile = NULL,
-  addStart = 0)
+subsetByOverlaps.keepAllMeta(
+  gr1,
+  gr2,
+  write.ranges.tofile = NULL,
+  addStart = 0
+)
 
 granges2df(gr1, addStart = 0)
 }

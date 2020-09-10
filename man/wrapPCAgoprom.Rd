@@ -4,13 +4,24 @@
 \alias{wrapPCAgoprom}
 \title{Principal component analysis for gene expression data}
 \usage{
-wrapPCAgoprom(expca, groupsoi = NULL, groupby = "Sample_Group",
-  sample.name.column = "Sample_Name", samples2exclude = NULL,
-  projectfolder = file.path("pcaGoPromoter"), projectname = NULL,
-  figure.res = 300, inputType = "geneSymbol",
-  print.sample.names = TRUE, print.symbol.colors = TRUE, org = "Hs",
+wrapPCAgoprom(
+  expca,
+  groupsoi = NULL,
+  groupby = "Sample_Group",
+  sample.name.column = "Sample_Name",
+  samples2exclude = NULL,
+  projectfolder = file.path("pcaGoPromoter"),
+  projectname = NULL,
+  figure.res = 300,
+  inputType = "geneSymbol",
+  print.sample.names = TRUE,
+  print.symbol.colors = TRUE,
+  org = "Hs",
   annotation.packages = c("pcaGoPromoter.Hs.hg19", "org.Hs.eg.db"),
-  PCs4table = 2, PCs2plot = c(1, 2, 3), probes2enrich = 0.025)
+  PCs4table = 2,
+  PCs2plot = c(1, 2, 3),
+  probes2enrich = 0.025
+)
 }
 \arguments{
 \item{expca}{\code{ExpressionSet} object or a table with expression data with variables (probes) in rows and 

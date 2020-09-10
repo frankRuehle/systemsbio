@@ -4,8 +4,12 @@
 \alias{makeDomainsFromExons}
 \title{Calculate genomic coordinates for amino acid positions of protein domains}
 \usage{
-makeDomainsFromExons(ID, biomaRt, uniprot_domains.gff,
-  suffix.outputFilname = ".txt")
+makeDomainsFromExons(
+  ID,
+  biomaRt,
+  uniprot_domains.gff,
+  suffix.outputFilname = ".txt"
+)
 }
 \arguments{
 \item{ID}{character with either Ensembl transcript ID, Ensembl gene ID or gene symbol.}

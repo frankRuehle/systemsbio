@@ -4,12 +4,21 @@
 \alias{readGeno}
 \title{Read Genotype Data Using GenABEL.}
 \usage{
-readGeno(genoFilename, mapFilename, covarFilename,
-  existingRawFile = NULL, covarsampleID = "IID", sexvar = "Gender",
-  projectfolder = "GT", projectname = NULL, organism = "human",
-  Gonosomes2char = T, removeNullPositions = T, updateSNPpos = NULL,
-  snpmart = useMart("ENSEMBL_MART_SNP", host =
-  "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"),
+readGeno(
+  genoFilename,
+  mapFilename,
+  covarFilename,
+  existingRawFile = NULL,
+  covarsampleID = "IID",
+  sexvar = "Gender",
+  projectfolder = "GT",
+  projectname = NULL,
+  organism = "human",
+  Gonosomes2char = T,
+  removeNullPositions = T,
+  updateSNPpos = NULL,
+  snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org", dataset =
+    "hsapiens_snp"),
   GTarrayDescriptionFile = NULL,
   GTarrayDescription.lines2skip.start = "\\\\[Assay\\\\]",
   GTarrayDescription.lines2skip.end = "\\\\[Controls\\\\]",
@@ -17,7 +26,8 @@ readGeno(genoFilename, mapFilename, covarFilename,
   GTarrayDescription.colname.coding = "SNP",
   GTarrayDescription.colname.strand = "RefStrand",
   GTarrayDescription.colname.chromosome = "Chr",
-  GTarrayDescription.colname.position = "MapInfo")
+  GTarrayDescription.colname.position = "MapInfo"
+)
 }
 \arguments{
 \item{genoFilename}{Character with path to ped file.}
@@ -85,7 +95,7 @@ in \code{GTarrayDescriptionFile}, an extended map file is generated for GenABEL 
 information. Otherwise strand information is set to unknown. If indicated in \code{updateSNPpos} SNP 
 chromosomal postions can be updated according either to biomaRt (if a biomaRt object is given in \code{snpmart}) or 
 to \code{GTarrayDescriptionFile}. Mind that GenABEL does not allow strings of characters as alleles in the 
-corresponding ped-file (as for Indels), but just 1-character-alleles or "-".
+corresponding ped-file (as for Indels), but just 1-character-alleles or "-". 
 
 After loading the GenABEL raw file, phenotype information is added from the supplied covariates file \code{covarFilename}.
 I.e. no phenotype or gender data is considered from initial ped-file. No white space allowed in phenotype entries.

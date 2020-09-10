@@ -4,10 +4,18 @@
 \alias{wrapMinfi}
 \title{Finding differentially methylated CpG positions or regions}
 \usage{
-wrapMinfi(GRset, projectfolder = "MT/minfi", projectname = NULL,
-  phenotype, type.covar = "categorical", returnResults = c("DMP",
-  "DMR"), qCutoff = 0.001, bumpcutoff = 0.1, nResamples = 1000,
-  maxGap = 500)
+wrapMinfi(
+  GRset,
+  projectfolder = "MT/minfi",
+  projectname = NULL,
+  phenotype,
+  type.covar = "categorical",
+  returnResults = c("DMP", "DMR"),
+  qCutoff = 0.001,
+  bumpcutoff = 0.1,
+  nResamples = 1000,
+  maxGap = 500
+)
 }
 \arguments{
 \item{GRset}{GenomicRatioSet or MethylSet}
@@ -56,7 +64,7 @@ linear regression for continuous phenotypes and F-test for categorical phenotype
 phenotype with many groups (e.g. experimental groups), F-test is applied over all groups. 
 Tests are performed on M values, which are logit transformed Beta values 
 (beta = Methylated allele intensity / (Unmethylated allele intensity + Methylated allele intensity + 100)).
-Annotation data of \code{GRset} is added to the result table.
+Annotation data of \code{GRset} is added to the result table.  
 
 Instead of looking for association between a single genomic location and a phenotype of interest, 
 \code{bumphunter} looks for genomic regions that are differentially methylated (beta values). In the context of the 450k array, 

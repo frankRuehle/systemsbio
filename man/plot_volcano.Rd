@@ -4,12 +4,20 @@
 \alias{plot_volcano}
 \title{Generating Volcano plot for differential gene expression results}
 \usage{
-plot_volcano(data, column_name_geme = NULL, column_name_p = "padj",
-  column_name_fc = "log2FoldChange", title = "Volcano plot",
-  p_value_threshold = 0.05, fc_threshold = log2(1.5),
-  xlabel = "log fold change", ylabel = "-log10 p-value (adjusted)",
-  color_down_reg = "red", color_up_reg = "darkgreen",
-  color_not_reg = "darkgray")
+plot_volcano(
+  data,
+  column_name_geme = NULL,
+  column_name_p = "padj",
+  column_name_fc = "log2FoldChange",
+  title = "Volcano plot",
+  p_value_threshold = 0.05,
+  fc_threshold = log2(1.5),
+  xlabel = "log fold change",
+  ylabel = "-log10 p-value (adjusted)",
+  color_down_reg = "red",
+  color_up_reg = "darkgreen",
+  color_not_reg = "darkgray"
+)
 }
 \arguments{
 \item{data}{data.frame containing gene ID or Symbol (optional), p-value and logarithmized foldchange.

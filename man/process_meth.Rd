@@ -4,10 +4,16 @@
 \alias{process_meth}
 \title{Preprocessing and annotation of methylation array data}
 \usage{
-process_meth(RGset, projectfolder = "MT", projectname = NULL,
-  preprocessing = c("illumina", "swan"), addAnno = T,
-  SNPloci2drop = c("CpG", "SBE"), MAF2drop = 0,
-  return.EpiSNPs.only = F)
+process_meth(
+  RGset,
+  projectfolder = "MT",
+  projectname = NULL,
+  preprocessing = c("illumina", "swan"),
+  addAnno = T,
+  SNPloci2drop = c("CpG", "SBE"),
+  MAF2drop = 0,
+  return.EpiSNPs.only = F
+)
 }
 \arguments{
 \item{RGset}{RGChannelSet object with methylation data.}

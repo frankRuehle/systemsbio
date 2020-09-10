@@ -4,11 +4,18 @@
 \alias{filterGeneLists}
 \title{Filter gene lists}
 \usage{
-filterGeneLists(genes, newheader = NULL, filtercat1 = "adj.P.Val",
-  filtercat1.decreasing = FALSE, filtercat1.function = abs,
-  filtercat1.threshold = 0.05, filtercat2 = "logFC",
-  filtercat2.decreasing = TRUE, filtercat2.function = abs,
-  filtercat2.threshold = log2(1.5))
+filterGeneLists(
+  genes,
+  newheader = NULL,
+  filtercat1 = "adj.P.Val",
+  filtercat1.decreasing = FALSE,
+  filtercat1.function = abs,
+  filtercat1.threshold = 0.05,
+  filtercat2 = "logFC",
+  filtercat2.decreasing = TRUE,
+  filtercat2.function = abs,
+  filtercat2.threshold = log2(1.5)
+)
 }
 \arguments{
 \item{genes}{dataframe or character with path directing to table with genelist and columns to filter for.}

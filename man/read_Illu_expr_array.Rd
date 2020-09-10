@@ -4,13 +4,25 @@
 \alias{read_Illu_expr_array}
 \title{Reading expression data from Illumina arrays}
 \usage{
-read_Illu_expr_array(dataFile, qcFile, sampleSheet, ProbeID = "ProbeID",
-  skip = 0, controlID = "ProbeID", qc.skip = 0,
+read_Illu_expr_array(
+  dataFile,
+  qcFile,
+  sampleSheet,
+  ProbeID = "ProbeID",
+  skip = 0,
+  controlID = "ProbeID",
+  qc.skip = 0,
   qc.columns = list(exprs = "AVG_Signal", Detection = "Detection Pval"),
-  sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
-  exprchip = NULL, org = NULL, covarfile = NULL,
-  covarsampleID = "ID", method_norm = "none", transform = "log2",
-  fields2Add = NULL)
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
+  exprchip = NULL,
+  org = NULL,
+  covarfile = NULL,
+  covarsampleID = "ID",
+  method_norm = "none",
+  transform = "log2",
+  fields2Add = NULL
+)
 }
 \arguments{
 \item{dataFile}{character with filepath to SampleProbeProfile from GenomeStudio (tab-delimited txt-file) 

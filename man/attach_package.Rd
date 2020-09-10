@@ -5,8 +5,7 @@
 \alias{detach_package}
 \title{Organise temporarily needed packages}
 \usage{
-attach_package(pkg.cran = NULL, pkg.bioc = NULL,
-  update_bioc_pkgs = F)
+attach_package(pkg.cran = NULL, pkg.bioc = NULL, update_bioc_pkgs = F)
 
 detach_package(pkg)
 }

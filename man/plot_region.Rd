@@ -4,16 +4,27 @@
 \alias{plot_region}
 \title{Plot p-values in regional genomic context}
 \usage{
-plot_region(region, region_ext = 50000, title = NULL, data = list(),
-  lines_pvalue_threshold = NULL, variant2highlight = "centered",
-  EFFECT2highlight = c(green = "splice", red = "miss", red = "frame", red
-  = "start|stop"), recombination.rate = NULL, biomaRt,
-  hgnc.symbols.only = TRUE, LNCipedia = NULL,
-  gene.color.coding = c(lightgreen = "pseudogene", brown = "snRNA",
-  forestgreen = "ncRNA|antisense", orange = "miRNA", darkblue =
-  "protein_coding"), numberOfRowsForGenePlotting = "auto",
-  plot.protein.domains = NULL, cex.plot = 1.1, cex.legend = 1,
-  gene.scale.factor = 2)
+plot_region(
+  region,
+  region_ext = 50000,
+  title = NULL,
+  data = list(),
+  lines_pvalue_threshold = NULL,
+  variant2highlight = "centered",
+  EFFECT2highlight = c(green = "splice", red = "miss", red = "frame", red =
+    "start|stop"),
+  recombination.rate = NULL,
+  biomaRt,
+  hgnc.symbols.only = TRUE,
+  LNCipedia = NULL,
+  gene.color.coding = c(lightgreen = "pseudogene", brown = "snRNA", forestgreen =
+    "ncRNA|antisense", orange = "miRNA", darkblue = "protein_coding"),
+  numberOfRowsForGenePlotting = "auto",
+  plot.protein.domains = NULL,
+  cex.plot = 1.1,
+  cex.legend = 1,
+  gene.scale.factor = 2
+)
 }
 \arguments{
 \item{region}{Character with region of interest of form \code{chr1:20000-30000} or \code{chr1:20000}.}

@@ -4,10 +4,17 @@
 \alias{readData2eset}
 \title{Create ExpressionSet object from expression data}
 \usage{
-readData2eset(exprsData, phenoData, featureData = NULL,
-  ProbeID = "PROBE_ID", sampleColumn = "Sample_Name",
-  groupColumn = "Sample_Group", experimentData = MIAME(),
-  annotation = character(), transform = log2)
+readData2eset(
+  exprsData,
+  phenoData,
+  featureData = NULL,
+  ProbeID = "PROBE_ID",
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
+  experimentData = MIAME(),
+  annotation = character(),
+  transform = log2
+)
 }
 \arguments{
 \item{exprsData}{dataframe or character with filepath to expression data to be loaded.

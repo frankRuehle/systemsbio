@@ -4,8 +4,14 @@
 \alias{process_dds}
 \title{Processing and data transformation of DESeqDataSet}
 \usage{
-process_dds(dds, min_rowsum = 10, norm_sizeFactors = FALSE,
-  transform.function = NULL, return_SummarizedExperiment = FALSE, ...)
+process_dds(
+  dds,
+  min_rowsum = 10,
+  norm_sizeFactors = FALSE,
+  transform.function = NULL,
+  return_SummarizedExperiment = FALSE,
+  ...
+)
 }
 \arguments{
 \item{dds}{\code{DESeqDataSet}}

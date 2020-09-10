@@ -4,16 +4,31 @@
 \alias{wrapPWMEnrich}
 \title{Transcription factor binding site enrichment}
 \usage{
-wrapPWMEnrich(sequences, newheader = NULL, annoColumn = NULL,
-  name.organism = "hsapiens", projectfolder = "GEX/TFBS",
-  projectname = "", figure.res = 300, applyFilter = FALSE,
-  filtercat1 = "adj.P.Val", filtercat1.decreasing = FALSE,
-  filtercat1.function = abs, filtercat1.threshold = 0.05,
-  filtercat2 = "logFC", filtercat2.decreasing = TRUE,
-  filtercat2.function = abs, filtercat2.threshold = log2(1.5),
-  PromLookup = TRUE, id.type = "ENTREZID", id.column = "ENTREZID",
-  PromSeqUpstreamTSS = 2000, PromSeqDownstreamTSS = 200,
-  SearchSelMotifs = NULL, motif.min.score = 0.9)
+wrapPWMEnrich(
+  sequences,
+  newheader = NULL,
+  annoColumn = NULL,
+  name.organism = "hsapiens",
+  projectfolder = "GEX/TFBS",
+  projectname = "",
+  figure.res = 300,
+  applyFilter = FALSE,
+  filtercat1 = "adj.P.Val",
+  filtercat1.decreasing = FALSE,
+  filtercat1.function = abs,
+  filtercat1.threshold = 0.05,
+  filtercat2 = "logFC",
+  filtercat2.decreasing = TRUE,
+  filtercat2.function = abs,
+  filtercat2.threshold = log2(1.5),
+  PromLookup = TRUE,
+  id.type = "ENTREZID",
+  id.column = "ENTREZID",
+  PromSeqUpstreamTSS = 2000,
+  PromSeqDownstreamTSS = 200,
+  SearchSelMotifs = NULL,
+  motif.min.score = 0.9
+)
 }
 \arguments{
 \item{sequences}{dataframe or character with file path to dataframe or named list containing dataframes. The dataframe must either contain

@@ -4,15 +4,26 @@
 \alias{wrapRDAVID}
 \title{Gene enrichment analysis using the DAVID Database}
 \usage{
-wrapRDAVID(genes, newheader = NULL, backgroundlist = NULL,
-  newheaderBackground = NULL, davidAccount = NULL,
-  projectfolder = "GEX/DAVID_Enrichment", projectname = "",
-  maxDavid = 100, davidCat = c("GOTERM_BP_ALL", "GOTERM_MF_ALL",
-  "GOTERM_CC_ALL", "KEGG_PATHWAY", "BIOCARTA", "UCSC_TFBS"),
-  id.type = "ENTREZ_GENE_ID", id.column = "ENTREZID",
-  sortcolumn = "adj.P.Val", sortdecreasing = FALSE,
-  sortcolumn.threshold = 0.05, org = "Homo sapiens",
-  threshold4enrich = 0.05, mincount = 2L)
+wrapRDAVID(
+  genes,
+  newheader = NULL,
+  backgroundlist = NULL,
+  newheaderBackground = NULL,
+  davidAccount = NULL,
+  projectfolder = "GEX/DAVID_Enrichment",
+  projectname = "",
+  maxDavid = 100,
+  davidCat = c("GOTERM_BP_ALL", "GOTERM_MF_ALL", "GOTERM_CC_ALL", "KEGG_PATHWAY",
+    "BIOCARTA", "UCSC_TFBS"),
+  id.type = "ENTREZ_GENE_ID",
+  id.column = "ENTREZID",
+  sortcolumn = "adj.P.Val",
+  sortdecreasing = FALSE,
+  sortcolumn.threshold = 0.05,
+  org = "Homo sapiens",
+  threshold4enrich = 0.05,
+  mincount = 2L
+)
 }
 \arguments{
 \item{genes}{vector with gene names to analyse or dataframe or character with path to dataframe. Supplied

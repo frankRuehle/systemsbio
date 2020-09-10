@@ -22,14 +22,15 @@ Encoding: UTF-8
 Depends:
     R (>= 3.5.0)
 Imports:
+    beadarray,
+    Biobase,
     ggplot2,
     gplots,
     gridSVG,
+    knitr,
     plyr
 Suggests:
     arrayQualityMetrics,
-    beadarray,
-    Biobase,
     BiocManager,
     BiocGenerics,
     clusterProfiler,
@@ -46,7 +47,6 @@ Suggests:
     MASS,
     minfi,
     MotifDb,
-    knitr,
     pathview,
     pcaGoPromoter,
     PWMEnrich,
@@ -61,4 +61,4 @@ Suggests:
     VennDiagram,
     WGCNA
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.1

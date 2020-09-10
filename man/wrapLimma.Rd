@@ -4,16 +4,31 @@
 \alias{wrapLimma}
 \title{Differential expression analysis with limma}
 \usage{
-wrapLimma(data, comparisons, p.value.threshold = 0.05,
-  adjust.method = "BH", FC.threshold = log2(1.5),
-  projectfolder = file.path("GEX/limma"), projectname = "",
-  matchvar = NULL, Symbol.column = "SYMBOL",
-  sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
-  useWeights = TRUE, geneAnno2keep = NULL, venn_comparisons = NULL,
-  maxHM = 50, scale = c("none"), HMcexRow = 1.1, HMcexCol = 1.1,
-  figure.res = 300, HMincludeRelevantSamplesOnly = TRUE,
-  color.palette = "heat.colors", FC.heatmap.comparisons = NULL,
-  FC.heatmap.geneselection = c("allprobes", "intersect", "union"))
+wrapLimma(
+  data,
+  comparisons,
+  p.value.threshold = 0.05,
+  adjust.method = "BH",
+  FC.threshold = log2(1.5),
+  projectfolder = file.path("GEX/limma"),
+  projectname = "",
+  matchvar = NULL,
+  Symbol.column = "SYMBOL",
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
+  useWeights = TRUE,
+  geneAnno2keep = NULL,
+  venn_comparisons = NULL,
+  maxHM = 50,
+  scale = c("none"),
+  HMcexRow = 1.1,
+  HMcexCol = 1.1,
+  figure.res = 300,
+  HMincludeRelevantSamplesOnly = TRUE,
+  color.palette = "heat.colors",
+  FC.heatmap.comparisons = NULL,
+  FC.heatmap.geneselection = c("allprobes", "intersect", "union")
+)
 }
 \arguments{
 \item{data}{ExpressionSet, SummarizedExperiment, DESeqDataSet or MethylSet.}

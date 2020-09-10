@@ -4,14 +4,28 @@
 \alias{wrapDESeq2}
 \title{Differential expression analysis with DESeq2}
 \usage{
-wrapDESeq2(dds, comparisons, min_rowsum = 10, p_value_threshold = 0.05,
-  adjust.method = "BH", fc_threshold = log2(1.5),
-  projectfolder = file.path("GEX/deseq"), projectname = "",
-  symbolColumn = NULL, sampleColumn = "Sample_Name",
-  groupColumn = "Sample_Group", add_anno_columns = NULL,
-  venn_comparisons = NULL, maxHM = 50, scale = c("none"),
-  HMcexRow = 1.1, HMcexCol = 1.1, figure.res = 300,
-  HMincludeRelevantSamplesOnly = TRUE, color.palette = "heat.colors")
+wrapDESeq2(
+  dds,
+  comparisons,
+  min_rowsum = 10,
+  p_value_threshold = 0.05,
+  adjust.method = "BH",
+  fc_threshold = log2(1.5),
+  projectfolder = file.path("GEX/deseq"),
+  projectname = "",
+  symbolColumn = NULL,
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
+  add_anno_columns = NULL,
+  venn_comparisons = NULL,
+  maxHM = 50,
+  scale = c("none"),
+  HMcexRow = 1.1,
+  HMcexCol = 1.1,
+  figure.res = 300,
+  HMincludeRelevantSamplesOnly = TRUE,
+  color.palette = "heat.colors"
+)
 }
 \arguments{
 \item{dds}{DESeqDataSet}

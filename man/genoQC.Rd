@@ -4,10 +4,21 @@
 \alias{genoQC}
 \title{Quality Control for genotype data}
 \usage{
-genoQC(gwaa, projectfolder = "GT/QC", projectname = "QC1",
-  trait.name = "affection01", trait.type = "binomial",
-  export.genofile = "ped", p.level.hwe = 0.05, hwe.id.subset = T,
-  maf = 0.01, checkX = T, PCA = T, maxCenters = 5, ...)
+genoQC(
+  gwaa,
+  projectfolder = "GT/QC",
+  projectname = "QC1",
+  trait.name = "affection01",
+  trait.type = "binomial",
+  export.genofile = "ped",
+  p.level.hwe = 0.05,
+  hwe.id.subset = T,
+  maf = 0.01,
+  checkX = T,
+  PCA = T,
+  maxCenters = 5,
+  ...
+)
 }
 \arguments{
 \item{gwaa}{gwaa object from GenABEL}

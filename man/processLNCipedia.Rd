@@ -4,8 +4,12 @@
 \alias{processLNCipedia}
 \title{Process LNCipedia bed-file}
 \usage{
-processLNCipedia(LNCipedia, collapseTranscripts2Genes = T,
-  makeExonRanges = T, addBases = c(0, 0))
+processLNCipedia(
+  LNCipedia,
+  collapseTranscripts2Genes = T,
+  makeExonRanges = T,
+  addBases = c(0, 0)
+)
 }
 \arguments{
 \item{LNCipedia}{Either character with filepath to LNCipedia bed-file (no header), dataframe 

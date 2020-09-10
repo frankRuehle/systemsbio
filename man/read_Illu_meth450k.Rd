@@ -4,9 +4,13 @@
 \alias{read_Illu_meth450k}
 \title{Reading methylation data from Illumina array HumanMethylation450k}
 \usage{
-read_Illu_meth450k(baseDir, SampleSheetRegExp = ".csv",
-  sampleColumn = "Sample_Name", covarfile = NULL,
-  covarsampleID = "ID")
+read_Illu_meth450k(
+  baseDir,
+  SampleSheetRegExp = ".csv",
+  sampleColumn = "Sample_Name",
+  covarfile = NULL,
+  covarsampleID = "ID"
+)
 }
 \arguments{
 \item{baseDir}{character with path to base directory containing IDAT files for all arrays.}

@@ -4,13 +4,21 @@
 \alias{QC_methylation}
 \title{Quality control of methylation array data}
 \usage{
-QC_methylation(RGset, projectfolder = "MT/QC", projectname = NULL,
-  sampleColumn = "Sample_Name", groupColumn = "Sample_Group",
+QC_methylation(
+  RGset,
+  projectfolder = "MT/QC",
+  projectname = NULL,
+  sampleColumn = "Sample_Name",
+  groupColumn = "Sample_Group",
   preprocessing = c("raw", "illumina", "swan"),
-  QC_procedures = c("minfi", "WGCNA"), numPositionsMDSplot = 1000,
-  methPlatform = "450k-UCSC", phDendro = "Sample_Group",
-  flashClustMethod = "average", cex.dendroLabels = 0.6,
-  threshold.Z.k = -5)
+  QC_procedures = c("minfi", "WGCNA"),
+  numPositionsMDSplot = 1000,
+  methPlatform = "450k-UCSC",
+  phDendro = "Sample_Group",
+  flashClustMethod = "average",
+  cex.dendroLabels = 0.6,
+  threshold.Z.k = -5
+)
 }
 \arguments{
 \item{RGset}{RGChannelSet object with methylation data.}

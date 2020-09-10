@@ -4,8 +4,12 @@
 \alias{basicAnno}
 \title{Basic gene annotation}
 \usage{
-basicAnno(data, Symbol.column = "SYMBOL", Entrez.column = "ENTREZID",
-  org = "human")
+basicAnno(
+  data,
+  Symbol.column = "SYMBOL",
+  Entrez.column = "ENTREZID",
+  org = "human"
+)
 }
 \arguments{
 \item{data}{dataframe or character with filepath to data to be loaded.}

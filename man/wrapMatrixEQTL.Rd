@@ -4,18 +4,31 @@
 \alias{wrapMatrixEQTL}
 \title{QTL Analysis for expression and methylation data.}
 \usage{
-wrapMatrixEQTL(inputset, SNPfile_transpAddCoded_name,
-  SNPfile_tfam = NULL, covariates_file_name = NULL,
-  covarsampleID = "IID", covar2adjust = NULL, projectfolder = "QTL",
-  projectname = NULL, sampleColumn = "Sample_Name",
-  useModel = modelLINEAR, errorCovariance = numeric(),
-  QTLtype = "both", cisDist = 1e+06, pvOutputThreshold_cis = 1e-06,
-  pvOutputThreshold_tra = 1e-06, pvOutputThreshold_all = 1e-06,
-  genepos = NULL, genemart = useMart("ENSEMBL_MART_ENSEMBL", host =
-  "feb2014.archive.ensembl.org", dataset = "hsapiens_gene_ensembl"),
-  ensembl_filter = "illumina_humanht_12_v4", updateSNPpos = FALSE,
-  snpmart = useMart("ENSEMBL_MART_SNP", host =
-  "feb2014.archive.ensembl.org", dataset = "hsapiens_snp"))
+wrapMatrixEQTL(
+  inputset,
+  SNPfile_transpAddCoded_name,
+  SNPfile_tfam = NULL,
+  covariates_file_name = NULL,
+  covarsampleID = "IID",
+  covar2adjust = NULL,
+  projectfolder = "QTL",
+  projectname = NULL,
+  sampleColumn = "Sample_Name",
+  useModel = modelLINEAR,
+  errorCovariance = numeric(),
+  QTLtype = "both",
+  cisDist = 1e+06,
+  pvOutputThreshold_cis = 1e-06,
+  pvOutputThreshold_tra = 1e-06,
+  pvOutputThreshold_all = 1e-06,
+  genepos = NULL,
+  genemart = useMart("ENSEMBL_MART_ENSEMBL", host = "feb2014.archive.ensembl.org",
+    dataset = "hsapiens_gene_ensembl"),
+  ensembl_filter = "illumina_humanht_12_v4",
+  updateSNPpos = FALSE,
+  snpmart = useMart("ENSEMBL_MART_SNP", host = "feb2014.archive.ensembl.org", dataset =
+    "hsapiens_snp")
+)
 }
 \arguments{
 \item{inputset}{Either ExpressionSet, SummarizedExperiment, DESeqDataSet, MethylSet or
